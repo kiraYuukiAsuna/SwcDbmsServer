@@ -1,7 +1,7 @@
 package bll
 
 import (
-	"DBMS/Generated/proto/message"
+	"DBMS/SwcDbmsCommon/Generated/go/proto/message"
 	"DBMS/dbmodel"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"google.golang.org/protobuf/types/known/timestamppb"

@@ -1,7 +1,7 @@
 package bll
 
 import (
-	"DBMS/Generated/proto/service"
+	"DBMS/SwcDbmsCommon/Generated/go/proto/service"
 	"DBMS/config"
 	"DBMS/dal"
 	"google.golang.org/grpc"

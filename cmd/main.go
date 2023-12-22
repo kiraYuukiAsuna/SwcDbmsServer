@@ -1,7 +1,7 @@
 package main
 
 import (
-	"DBMS/Generated/proto/service"
+	"DBMS/SwcDbmsCommon/Generated/go/proto/service"
 	"DBMS/UnitTest"
 	"DBMS/apihandler"
 	"DBMS/bll"

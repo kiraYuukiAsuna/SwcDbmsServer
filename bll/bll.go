@@ -1,10 +1,10 @@
 package bll
 
 import (
-	"DBMS/Generated/proto/message"
-	"DBMS/Generated/proto/request"
-	"DBMS/Generated/proto/response"
-	"DBMS/Generated/proto/service"
+	"DBMS/SwcDbmsCommon/Generated/go/proto/message"
+	"DBMS/SwcDbmsCommon/Generated/go/proto/request"
+	"DBMS/SwcDbmsCommon/Generated/go/proto/response"
+	"DBMS/SwcDbmsCommon/Generated/go/proto/service"
 	"DBMS/dal"
 	"DBMS/dbmodel"
 	"context"
