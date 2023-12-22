@@ -1,0 +1,39 @@
+version: '3.1'
+services:
+  mongo:
+    image: mongo:7.0
+    restart: always
+    networks:
+      - swcdbmsnet
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: defaultuser
+      MONGO_INITDB_ROOT_PASSWORD: defaultpassword
+    volumes:
+      - ./mongodbdata/db:/data/db
+      - ./mongodbdata/configdb:/data/configdb
+
+  swcdbms:
+    image: swcdbms:v1
+    restart: always
+    depends_on: 
+      - mongo
+    ports:
+      - 8088:8088
+      - 8089:8089
+    networks:
+      - swcdbmsnet
+
+  nginx:
+    image: nginx:1.24
+    restart: always
+    ports:
+      - 14251:8088
+      - 14252:8089
+    networks:
+      - swcdbmsnet
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+
+networks:
+    swcdbmsnet:
+        name: swcdbmsnet

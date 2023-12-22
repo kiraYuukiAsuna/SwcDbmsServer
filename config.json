@@ -1,0 +1,8 @@
+{
+  "GrpcIP":"0.0.0.0",
+  "GrpcPort": 8088,
+  "MongodbIP":"mongo",
+  "MongodbPort": 27017,
+  "MongodbUser": "defaultuser",
+  "MongodbPassword": "defaultpassword"
+}
