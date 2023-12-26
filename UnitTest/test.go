@@ -12,7 +12,7 @@ import (
 
 func InitializeDb() {
 	// create db
-	dal.InitializeNewDataBaseIfNotExist(dal.DefaultMetaInfoDataBaseName, dal.DefaultSwcDataBaseName)
+	dal.InitializeNewDataBaseIfNotExist(dal.DefaultMetaInfoDataBaseName, dal.DefaultSwcDataBaseName, dal.DefaultSwcSnapshotDataBaseName, dal.DefaultSwcIncrementOperationDataBaseName)
 
 	// init db
 	var createInfo dal.MongoDbConnectionCreateInfo

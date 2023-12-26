@@ -30,6 +30,12 @@ const (
 
 	DefaultSwcDataBaseName string = "SwcDataBase"
 	DevSwcDataBaseName     string = "DevSwcDataBase"
+
+	DefaultSwcSnapshotDataBaseName string = "DefaultSwcSnapshotDataBase"
+	DevSwcSnapshotDataBaseName     string = "DevSwcSnapshotDataBase"
+
+	DefaultSwcIncrementOperationDataBaseName string = "DefaultSwcIncrementOperationDataBase"
+	DevSwcIncrementOperationDataBaseName     string = "DevSwcIncrementOperationDataBase"
 )
 
 const (

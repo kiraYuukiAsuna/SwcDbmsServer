@@ -13,6 +13,13 @@ const (
 	DailyStatisticsMetaInfoCollectionString = "DailyStatisticsMetaInfoCollection"
 )
 
+const (
+	Unknown = "Unknown"
+	Create  = "Create"
+	Delete  = "Delete"
+	Update  = "Update"
+)
+
 type MetaInfoBase struct {
 	Id         primitive.ObjectID `bson:"_id"`
 	ApiVersion string             `bson:"ApiVersion"`
@@ -74,15 +81,23 @@ type ProjectMetaInfoV1 struct {
 }
 
 type SwcSnapshot struct {
-	SwcSnapshotCollectionName string    `bson:"SwcSnapshotCollectionName"`
-	CreateTime                time.Time `bson:"CreateTime"`
+	Base                      MetaInfoBase `bson:"Base,inline"`
+	SwcSnapshotCollectionName string       `bson:"SwcSnapshotCollectionName"`
+	CreateTime                time.Time    `bson:"CreateTime"`
 }
 
 type SwcIncrementOperation struct {
-	StartSnapshot                    string    `bson:"StartSnapshot"`
-	EndSnapshot                      string    `bson:"EndSnapshot"`
-	CreateTime                       time.Time `bson:"CreateTime"`
-	IncrementOperationCollectionName string    `bson:"IncrementOperationCollectionName"`
+	Base                             MetaInfoBase `bson:"Base,inline"`
+	StartSnapshot                    string       `bson:"StartSnapshot"`
+	EndSnapshot                      string       `bson:"EndSnapshot"`
+	CreateTime                       time.Time    `bson:"CreateTime"`
+	IncrementOperationCollectionName string       `bson:"IncrementOperationCollectionName"`
+}
+
+type SwcIncrementOperationV1 struct {
+	Base               MetaInfoBase  `bson:"Base,inline"`
+	IncrementOperation string        `bson:"IncrementOperation"`
+	SwcNodeData        SwcNodeDataV1 `bson:"SwcNodeData"`
 }
 
 type SwcMetaInfoV1 struct {

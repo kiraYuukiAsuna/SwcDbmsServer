@@ -9,7 +9,7 @@ import (
 )
 
 func InitializeNewDataBaseIfNotExistHandler(context *gin.Context) {
-	dal.InitializeNewDataBaseIfNotExist(dal.DefaultMetaInfoDataBaseName, dal.DefaultSwcDataBaseName)
+	dal.InitializeNewDataBaseIfNotExist(dal.DefaultMetaInfoDataBaseName, dal.DefaultSwcDataBaseName, dal.DefaultSwcSnapshotDataBaseName, dal.DefaultSwcIncrementOperationDataBaseName)
 }
 
 func CreateUserHandler(context *gin.Context) {
