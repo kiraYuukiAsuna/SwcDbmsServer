@@ -80,16 +80,15 @@ type ProjectMetaInfoV1 struct {
 	WorkMode               string                             `bson:"WorkMode"`
 }
 
-type SwcSnapshot struct {
+type SwcSnapshotMetaInfoV1 struct {
 	Base                      MetaInfoBase `bson:"Base,inline"`
 	SwcSnapshotCollectionName string       `bson:"SwcSnapshotCollectionName"`
 	CreateTime                time.Time    `bson:"CreateTime"`
 }
 
-type SwcIncrementOperation struct {
+type SwcIncrementOperationMetaInfoV1 struct {
 	Base                             MetaInfoBase `bson:"Base,inline"`
 	StartSnapshot                    string       `bson:"StartSnapshot"`
-	EndSnapshot                      string       `bson:"EndSnapshot"`
 	CreateTime                       time.Time    `bson:"CreateTime"`
 	IncrementOperationCollectionName string       `bson:"IncrementOperationCollectionName"`
 }
@@ -101,15 +100,16 @@ type SwcIncrementOperationV1 struct {
 }
 
 type SwcMetaInfoV1 struct {
-	Base                      MetaInfoBase            `bson:"Base,inline"`
-	Name                      string                  `bson:"Name"`
-	Description               string                  `bson:"Description"`
-	Creator                   string                  `bson:"Creator"`
-	SwcType                   string                  `bson:"SwcType"`
-	CreateTime                time.Time               `bson:"CreateTime"`
-	LastModifiedTime          time.Time               `bson:"LastModifiedTime"`
-	SwcSnapshotList           []string                `bson:"SwcSnapshotList"`
-	SwcIncrementOperationList []SwcIncrementOperation `bson:"SwcIncrementOperationList"`
+	Base                                    MetaInfoBase                      `bson:"Base,inline"`
+	Name                                    string                            `bson:"Name"`
+	Description                             string                            `bson:"Description"`
+	Creator                                 string                            `bson:"Creator"`
+	SwcType                                 string                            `bson:"SwcType"`
+	CreateTime                              time.Time                         `bson:"CreateTime"`
+	LastModifiedTime                        time.Time                         `bson:"LastModifiedTime"`
+	SwcSnapshotList                         []SwcSnapshotMetaInfoV1           `bson:"SwcSnapshotList"`
+	SwcIncrementOperationList               []SwcIncrementOperationMetaInfoV1 `bson:"SwcIncrementOperationList"`
+	CurrentIncrementOperationCollectionName string                            `bson:"CurrentIncrementOperationCollectionName"`
 }
 
 type SwcNodeInternalDataV1 struct {

@@ -38,6 +38,8 @@ func InitializeNewDataBaseIfNotExist(metaInfoDataBaseName string, swcDataBaseNam
 	var dbInfo MongoDbDataBaseInfo
 	dbInfo.MetaInfoDb = connectionInfo.Client.Database(metaInfoDataBaseName)
 	dbInfo.SwcDb = connectionInfo.Client.Database(swcDataBaseName)
+	dbInfo.SnapshotDb = connectionInfo.Client.Database(swcSnapshotDataBaseName)
+	dbInfo.IncrementOperationDb = connectionInfo.Client.Database(swcIncrementOperationDataBaseName)
 
 	var deleteIfExist bool
 	deleteIfExist = false

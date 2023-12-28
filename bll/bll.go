@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -49,38 +50,34 @@ func (D DBMSServerController) CreateUser(ctx context.Context, request *request.C
 }
 
 func (D DBMSServerController) DeleteUser(ctx context.Context, request *request.DeleteUserRequest) (*response.DeleteUserResponse, error) {
+	status, onlineUserInfoCache := UserTokenVerify(request.UserToken)
+	if !status {
+		return &response.DeleteUserResponse{
+			Status:  false,
+			Message: "Verify UserToken Failed!",
+		}, nil
+	}
+
+	if onlineUserInfoCache.UserInfo.UserPermissionGroup != dal.PermissionGroupAdmin {
+		return &response.DeleteUserResponse{
+			Status:  false,
+			Message: "You don't have permission to delete a user!",
+		}, nil
+	}
+
 	userMetaInfo := UserMetaInfoV1ProtobufToDbmodel(request.UserInfo)
 
-	result := dal.QueryUser(userMetaInfo, dal.GetDbInstance())
-	if result.Status == false {
-		return &response.DeleteUserResponse{
-			Status:   false,
-			Message:  result.Message,
-			UserInfo: UserMetaInfoV1DbmodelToProtobuf(userMetaInfo),
-		}, nil
-	}
-
-	if userMetaInfo.UserPermissionGroup != dal.PermissionGroupAdmin {
-		return &response.DeleteUserResponse{
-			Status:   false,
-			Message:  "You don't have permission to delete user!",
-			UserInfo: UserMetaInfoV1DbmodelToProtobuf(userMetaInfo),
-		}, nil
-	}
-
-	result = dal.DeleteUser(*userMetaInfo, dal.GetDbInstance())
+	result := dal.DeleteUser(*userMetaInfo, dal.GetDbInstance())
 	if result.Status == true {
 		log.Println("User " + request.UserInfo.Name + " Deleted")
 		return &response.DeleteUserResponse{
-			Status:   true,
-			Message:  result.Message,
-			UserInfo: UserMetaInfoV1DbmodelToProtobuf(userMetaInfo),
+			Status:  true,
+			Message: result.Message,
 		}, nil
 	} else {
 		return &response.DeleteUserResponse{
-			Status:   false,
-			Message:  result.Message,
-			UserInfo: UserMetaInfoV1DbmodelToProtobuf(userMetaInfo),
+			Status:  false,
+			Message: result.Message,
 		}, nil
 	}
 }
@@ -155,9 +152,10 @@ func (D DBMSServerController) GetAllUser(ctx context.Context, request *request.G
 func (D DBMSServerController) UserLogin(ctx context.Context, request *request.UserLoginRequest) (*response.UserLoginResponse, error) {
 	if request == nil {
 		return &response.UserLoginResponse{
-			Status:   false,
-			Message:  "Request is nil",
-			UserInfo: nil,
+			Status:    false,
+			Message:   "Request is nil",
+			UserInfo:  nil,
+			UserToken: "",
 		}, nil
 	}
 	var userMetaInfo dbmodel.UserMetaInfoV1
@@ -169,37 +167,47 @@ func (D DBMSServerController) UserLogin(ctx context.Context, request *request.Us
 			log.Println("User " + request.UserName + " Login")
 
 			bFind := false
-			for _, onlineUserInfo := range OnlineUserInfoCache {
+			var idx int
+			var onlineUserInfo OnlineUserInfo
+			for idx, onlineUserInfo = range OnlineUserInfoCache {
 				if userMetaInfo.Name == onlineUserInfo.UserInfo.Name {
 					bFind = true
 				}
 			}
+
+			userToken := ""
 			if !bFind {
+				userToken = uuid.NewString()
 				DailyStatisticsInfo.ActiveUserNumber += 1
 				OnlineUserInfoCache = append(OnlineUserInfoCache,
-					OnlineUserInfo{userMetaInfo, false, time.Now().Add(30 * time.Second)})
+					OnlineUserInfo{userMetaInfo, userToken, false, time.Now().Add(30 * time.Second)})
 				log.Println("User " + userMetaInfo.Name + " HeartBeat Init")
+			} else {
+				userToken = OnlineUserInfoCache[idx].Token
 			}
 
 			return &response.UserLoginResponse{
-				Status:   true,
-				Message:  result.Message,
-				UserInfo: UserMetaInfoV1DbmodelToProtobuf(&userMetaInfo),
+				Status:    true,
+				Message:   result.Message,
+				UserInfo:  UserMetaInfoV1DbmodelToProtobuf(&userMetaInfo),
+				UserToken: userToken,
 			}, nil
 		} else {
 			userMetaInfo.Password = ""
 			return &response.UserLoginResponse{
-				Status:   false,
-				Message:  result.Message,
-				UserInfo: UserMetaInfoV1DbmodelToProtobuf(&userMetaInfo),
+				Status:    false,
+				Message:   result.Message,
+				UserInfo:  UserMetaInfoV1DbmodelToProtobuf(&userMetaInfo),
+				UserToken: "",
 			}, nil
 		}
 	} else {
 		userMetaInfo.Password = ""
 		return &response.UserLoginResponse{
-			Status:   false,
-			Message:  result.Message,
-			UserInfo: UserMetaInfoV1DbmodelToProtobuf(&userMetaInfo),
+			Status:    false,
+			Message:   result.Message,
+			UserInfo:  UserMetaInfoV1DbmodelToProtobuf(&userMetaInfo),
+			UserToken: "",
 		}, nil
 	}
 }
@@ -267,19 +275,24 @@ func (D DBMSServerController) UserOnlineHeartBeatNotifications(ctx context.Conte
 					bFind = true
 				}
 			}
+
+			userToken := ""
 			if bFind {
+				userToken = OnlineUserInfoCache[idx].Token
 				OnlineUserInfoCache[idx].LastHeartBeatTime = time.Now().Add(30 * time.Second)
 				log.Println("User " + onlineUserInfo.UserInfo.Name + " HeartBeat Refresh")
 			} else {
+				userToken = uuid.NewString()
 				DailyStatisticsInfo.ActiveUserNumber += 1
 				OnlineUserInfoCache = append(OnlineUserInfoCache,
-					OnlineUserInfo{userMetaInfo, false, time.Now().Add(30 * time.Second)})
+					OnlineUserInfo{userMetaInfo, userToken, false, time.Now().Add(30 * time.Second)})
 				log.Println("User " + userMetaInfo.Name + " HeartBeat Init by HeartBeat Notification")
 			}
 
 			return &response.UserOnlineHeartBeatResponse{
-				Status:  true,
-				Message: result.Message,
+				Status:    true,
+				Message:   result.Message,
+				UserToken: userToken,
 			}, nil
 		}
 	}
@@ -913,15 +926,22 @@ func (D DBMSServerController) GetAllSwcMetaInfo(ctx context.Context, request *re
 }
 
 func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *request.CreateSwcNodeDataRequest) (*response.CreateSwcNodeDataResponse, error) {
-	userMetaInfo := UserMetaInfoV1ProtobufToDbmodel(request.UserInfo)
-	swcMetaInfo := SwcMetaInfoV1ProtobufToDbmodel(request.SwcInfo)
+	status, onlineUserInfoCache := UserTokenVerify(request.UserToken)
+	if !status {
+		return &response.CreateSwcNodeDataResponse{
+			Status:  false,
+			Message: "Verify UserToken Failed!",
+		}, nil
+	}
 
-	result := dal.QueryUser(userMetaInfo, dal.GetDbInstance())
+	var userMetaInfo dbmodel.UserMetaInfoV1
+	userMetaInfo.Name = onlineUserInfoCache.UserInfo.Name
+
+	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
 	if result.Status == false {
 		return &response.CreateSwcNodeDataResponse{
 			Status:  false,
 			Message: result.Message,
-			SwcData: request.SwcData,
 		}, nil
 	}
 
@@ -932,7 +952,6 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 		return &response.CreateSwcNodeDataResponse{
 			Status:  false,
 			Message: result.Message,
-			SwcData: request.SwcData,
 		}, nil
 	}
 
@@ -940,7 +959,6 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 		return &response.CreateSwcNodeDataResponse{
 			Status:  false,
 			Message: "You don't have permission to create swc node!",
-			SwcData: request.SwcData,
 		}, nil
 	}
 
@@ -959,34 +977,43 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 		swcData[idx].CheckerUserUuid = ""
 	}
 
+	swcMetaInfo := SwcMetaInfoV1ProtobufToDbmodel(request.SwcInfo)
+
 	result = dal.CreateSwcData(*swcMetaInfo, swcData, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + request.UserInfo.Name + " Create Swc node " + swcMetaInfo.Name)
+		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Create Swc node " + swcMetaInfo.Name)
 		DailyStatisticsInfo.CreateSwcNodeNumber += 1
 		return &response.CreateSwcNodeDataResponse{
 			Status:  true,
 			Message: result.Message,
-			SwcData: request.SwcData,
 		}, nil
 	} else {
 		return &response.CreateSwcNodeDataResponse{
 			Status:  false,
 			Message: result.Message,
-			SwcData: request.SwcData,
 		}, nil
 	}
 }
 
 func (D DBMSServerController) DeleteSwcNodeData(ctx context.Context, request *request.DeleteSwcNodeDataRequest) (*response.DeleteSwcNodeDataResponse, error) {
-	userMetaInfo := UserMetaInfoV1ProtobufToDbmodel(request.UserInfo)
+	status, onlineUserInfoCache := UserTokenVerify(request.UserToken)
+	if !status {
+		return &response.DeleteSwcNodeDataResponse{
+			Status:  false,
+			Message: "Verify UserToken Failed!",
+		}, nil
+	}
+
+	var userMetaInfo dbmodel.UserMetaInfoV1
+	userMetaInfo.Name = onlineUserInfoCache.UserInfo.Name
+
 	swcMetaInfo := SwcMetaInfoV1ProtobufToDbmodel(request.SwcInfo)
 
-	result := dal.QueryUser(userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
 	if result.Status == false {
 		return &response.DeleteSwcNodeDataResponse{
 			Status:  false,
 			Message: result.Message,
-			SwcData: request.SwcData,
 		}, nil
 	}
 
@@ -997,7 +1024,6 @@ func (D DBMSServerController) DeleteSwcNodeData(ctx context.Context, request *re
 		return &response.DeleteSwcNodeDataResponse{
 			Status:  false,
 			Message: result.Message,
-			SwcData: request.SwcData,
 		}, nil
 	}
 
@@ -1005,7 +1031,6 @@ func (D DBMSServerController) DeleteSwcNodeData(ctx context.Context, request *re
 		return &response.DeleteSwcNodeDataResponse{
 			Status:  false,
 			Message: "You don't have permission to delete swc node!",
-			SwcData: request.SwcData,
 		}, nil
 	}
 
@@ -1016,32 +1041,39 @@ func (D DBMSServerController) DeleteSwcNodeData(ctx context.Context, request *re
 
 	result = dal.DeleteSwcData(*swcMetaInfo, swcData, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + request.UserInfo.Name + " Delete Swc " + swcMetaInfo.Name)
+		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Delete Swc " + swcMetaInfo.Name)
 		DailyStatisticsInfo.DeletedSwcNodeNumber += 1
 		return &response.DeleteSwcNodeDataResponse{
 			Status:  true,
 			Message: result.Message,
-			SwcData: request.SwcData,
 		}, nil
 	} else {
 		return &response.DeleteSwcNodeDataResponse{
 			Status:  false,
 			Message: result.Message,
-			SwcData: request.SwcData,
 		}, nil
 	}
 }
 
 func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *request.UpdateSwcNodeDataRequest) (*response.UpdateSwcNodeDataResponse, error) {
-	userMetaInfo := UserMetaInfoV1ProtobufToDbmodel(request.UserInfo)
+	status, onlineUserInfoCache := UserTokenVerify(request.UserToken)
+	if !status {
+		return &response.UpdateSwcNodeDataResponse{
+			Status:  false,
+			Message: "Verify UserToken Failed!",
+		}, nil
+	}
+
+	var userMetaInfo dbmodel.UserMetaInfoV1
+	userMetaInfo.Name = onlineUserInfoCache.UserInfo.Name
+
 	swcMetaInfo := SwcMetaInfoV1ProtobufToDbmodel(request.SwcInfo)
 
-	result := dal.QueryUser(userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
 	if result.Status == false {
 		return &response.UpdateSwcNodeDataResponse{
-			Status:      false,
-			Message:     result.Message,
-			SwcNodeData: request.SwcNodeData,
+			Status:  false,
+			Message: result.Message,
 		}, nil
 	}
 
@@ -1050,17 +1082,15 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 	result = dal.QueryPermissionGroup(&permissionGroup, dal.GetDbInstance())
 	if result.Status == false {
 		return &response.UpdateSwcNodeDataResponse{
-			Status:      false,
-			Message:     result.Message,
-			SwcNodeData: request.SwcNodeData,
+			Status:  false,
+			Message: result.Message,
 		}, nil
 	}
 
 	if permissionGroup.Project.WritePermissionModifyData == false {
 		return &response.UpdateSwcNodeDataResponse{
-			Status:      false,
-			Message:     "You don't have permission to modify swc node!",
-			SwcNodeData: request.SwcNodeData,
+			Status:  false,
+			Message: "You don't have permission to modify swc node!",
 		}, nil
 	}
 
@@ -1070,18 +1100,16 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 
 	result = dal.ModifySwcData(*swcMetaInfo, *swcNodeData, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + request.UserInfo.Name + " Update Swc " + swcMetaInfo.Name)
+		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Update Swc " + swcMetaInfo.Name)
 		DailyStatisticsInfo.ModifiedSwcNodeNumber += 1
 		return &response.UpdateSwcNodeDataResponse{
-			Status:      true,
-			Message:     result.Message,
-			SwcNodeData: request.SwcNodeData,
+			Status:  true,
+			Message: result.Message,
 		}, nil
 	} else {
 		return &response.UpdateSwcNodeDataResponse{
-			Status:      false,
-			Message:     result.Message,
-			SwcNodeData: request.SwcNodeData,
+			Status:  false,
+			Message: result.Message,
 		}, nil
 	}
 }
@@ -1442,4 +1470,110 @@ func (D DBMSServerController) GetAllDailyStatistics(ctx context.Context, request
 			DailyStatisticsInfo: dailyStatisticsInfoProto,
 		}, nil
 	}
+}
+
+func (D DBMSServerController) CreateSwcSnapshot(ctx context.Context, request *request.CreateSwcSnapshotRequest) (*response.CreateSwcSnapshotResponse, error) {
+	status, _ := UserTokenVerify(request.UserToken)
+	if !status {
+		return &response.CreateSwcSnapshotResponse{
+			Status:  false,
+			Message: "Verify UserToken Failed!",
+		}, nil
+	}
+
+	var swcMetaInfo dbmodel.SwcMetaInfoV1
+	result := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
+	if !result.Status {
+		return &response.CreateSwcSnapshotResponse{
+			Status:  false,
+			Message: result.Message,
+		}, nil
+	}
+
+	timePoint := time.Now()
+	year, mouth, day := timePoint.Date()
+	hour, minute, second := timePoint.Clock()
+	timeString := strconv.Itoa(year) + "-" + mouth.String() + "-" + strconv.Itoa(day-1) + "_" + strconv.Itoa(hour) + ":" + strconv.Itoa(minute) + "-" + strconv.Itoa(second)
+
+	var swcSnapshotMetaInfo dbmodel.SwcSnapshotMetaInfoV1
+	swcSnapshotMetaInfo.Base.Id = primitive.NewObjectID()
+	swcSnapshotMetaInfo.Base.Uuid = uuid.NewString()
+	swcSnapshotMetaInfo.Base.ApiVersion = "V1"
+
+	swcSnapshotMetaInfo.CreateTime = time.Now()
+	swcSnapshotMetaInfo.SwcSnapshotCollectionName = "Snapshot_" + timeString
+
+	swcMetaInfo.SwcSnapshotList = append(swcMetaInfo.SwcSnapshotList, swcSnapshotMetaInfo)
+
+	var swcIncrementOperationMetaInfo dbmodel.SwcIncrementOperationMetaInfoV1
+	swcIncrementOperationMetaInfo.Base.Id = primitive.NewObjectID()
+	swcIncrementOperationMetaInfo.Base.Uuid = uuid.NewString()
+	swcIncrementOperationMetaInfo.Base.ApiVersion = "V1"
+
+	swcIncrementOperationMetaInfo.CreateTime = time.Now()
+	swcIncrementOperationMetaInfo.StartSnapshot = swcSnapshotMetaInfo.SwcSnapshotCollectionName
+	swcIncrementOperationMetaInfo.IncrementOperationCollectionName = "IncrementOperation_" + timeString
+
+	swcMetaInfo.SwcIncrementOperationList = append(swcMetaInfo.SwcIncrementOperationList, swcIncrementOperationMetaInfo)
+
+	swcMetaInfo.CurrentIncrementOperationCollectionName = swcIncrementOperationMetaInfo.IncrementOperationCollectionName
+
+	result = dal.CreateSnapshot(swcMetaInfo.Name, swcSnapshotMetaInfo.SwcSnapshotCollectionName, dal.GetDbInstance())
+	if !result.Status {
+		return &response.CreateSwcSnapshotResponse{
+			Status:  false,
+			Message: result.Message,
+		}, nil
+	}
+
+	result = dal.ModifySwc(swcMetaInfo, dal.GetDbInstance())
+	if result.Status {
+		return &response.CreateSwcSnapshotResponse{
+			Status:  true,
+			Message: "CreateSwcSnapshot Successfully!",
+		}, nil
+	}
+	return &response.CreateSwcSnapshotResponse{
+		Status:  false,
+		Message: result.Message,
+	}, nil
+}
+
+func (D DBMSServerController) DeleteSwcSnapshot(ctx context.Context, request *request.DeleteSwcSnapshotRequest) (*response.DeleteSwcSnapshotResponse, error) {
+	return &response.DeleteSwcSnapshotResponse{
+		Status:  false,
+		Message: "",
+	}, nil
+}
+
+func (D DBMSServerController) GetAllSnapshotMetaInfo(ctx context.Context, request *request.GetAllSnapshotMetaInfoRequest) (*response.GetAllSnapshotMetaInfoResponse, error) {
+	return &response.GetAllSnapshotMetaInfoResponse{
+		Status:          false,
+		Message:         "",
+		SwcSnapshotList: nil,
+	}, nil
+}
+
+func (D DBMSServerController) GetSnapshot(ctx context.Context, request *request.GetSnapshotRequest) (*response.GetSnapshotResponse, error) {
+	return &response.GetSnapshotResponse{
+		Status:      false,
+		Message:     "",
+		SwcNodeData: nil,
+	}, nil
+}
+
+func (D DBMSServerController) GetAllIncrementOperationMetaInfo(ctx context.Context, request *request.GetAllIncrementOperationMetaInfoRequest) (*response.GetAllIncrementOperationMetaInfoResponse, error) {
+	return &response.GetAllIncrementOperationMetaInfoResponse{
+		Status:                    false,
+		Message:                   "",
+		SwcIncrementOperationList: nil,
+	}, nil
+}
+
+func (D DBMSServerController) GetIncrementOperation(ctx context.Context, request *request.GetIncrementOperationRequest) (*response.GetIncrementOperationResponse, error) {
+	return &response.GetIncrementOperationResponse{
+		Status:                    false,
+		Message:                   "",
+		SwcIncrementOperationList: nil,
+	}, nil
 }

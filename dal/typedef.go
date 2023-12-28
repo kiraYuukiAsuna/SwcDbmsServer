@@ -20,8 +20,10 @@ type MongoDbConnectionInfo struct {
 }
 
 type MongoDbDataBaseInfo struct {
-	SwcDb      *mongo.Database
-	MetaInfoDb *mongo.Database
+	SwcDb                *mongo.Database
+	MetaInfoDb           *mongo.Database
+	SnapshotDb           *mongo.Database
+	IncrementOperationDb *mongo.Database
 }
 
 const (

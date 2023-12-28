@@ -198,6 +198,41 @@ func SwcMetaInfoV1ProtobufToDbmodel(protoMessage *message.SwcMetaInfoV1) *dbmode
 		dbmodelMessage.LastModifiedTime = protoMessage.LastModifiedTime.AsTime()
 	}
 
+	if protoMessage.SwcSnapshotMetaInfoList != nil {
+		for _, snapshotProto := range protoMessage.SwcSnapshotMetaInfoList {
+			var snapshotMetaInfo dbmodel.SwcSnapshotMetaInfoV1
+			if snapshotProto.Base != nil {
+				snapshotMetaInfo.Base.Id, _ = primitive.ObjectIDFromHex(snapshotProto.Base.XId)
+				snapshotMetaInfo.Base.Uuid = snapshotProto.Base.Uuid
+				snapshotMetaInfo.Base.ApiVersion = snapshotProto.Base.ApiVersion
+			}
+
+			snapshotMetaInfo.SwcSnapshotCollectionName = snapshotProto.SwcSnapshotCollectionName
+			snapshotMetaInfo.CreateTime = snapshotProto.CreateTime.AsTime()
+
+			dbmodelMessage.SwcSnapshotList = append(dbmodelMessage.SwcSnapshotList, snapshotMetaInfo)
+		}
+	}
+
+	if protoMessage.SwcIncrementOperationMetaInfoList != nil {
+		for _, snapshotProto := range protoMessage.SwcIncrementOperationMetaInfoList {
+			var snapshotMetaInfo dbmodel.SwcIncrementOperationMetaInfoV1
+			if snapshotProto.Base != nil {
+				snapshotMetaInfo.Base.Id, _ = primitive.ObjectIDFromHex(snapshotProto.Base.XId)
+				snapshotMetaInfo.Base.Uuid = snapshotProto.Base.Uuid
+				snapshotMetaInfo.Base.ApiVersion = snapshotProto.Base.ApiVersion
+			}
+
+			snapshotMetaInfo.StartSnapshot = snapshotProto.StartSnapshot
+			snapshotMetaInfo.IncrementOperationCollectionName = snapshotProto.IncrementOperationCollectionName
+			snapshotMetaInfo.CreateTime = snapshotProto.CreateTime.AsTime()
+
+			dbmodelMessage.SwcIncrementOperationList = append(dbmodelMessage.SwcIncrementOperationList, snapshotMetaInfo)
+		}
+	}
+
+	dbmodelMessage.CurrentIncrementOperationCollectionName = protoMessage.CurrentIncrementOperationCollectionName
+
 	return &dbmodelMessage
 }
 
@@ -215,6 +250,29 @@ func SwcMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.SwcMetaInfoV1) *mess
 
 	protoMessage.CreateTime = timestamppb.New(dbmodelMessage.CreateTime)
 	protoMessage.LastModifiedTime = timestamppb.New(dbmodelMessage.LastModifiedTime)
+
+	for _, snapshotMetaInfo := range dbmodelMessage.SwcSnapshotList {
+		var snapshotMetaInfoDbModel message.SwcSnapshotMetaInfoV1
+		snapshotMetaInfoDbModel.Base.XId = snapshotMetaInfo.Base.Id.Hex()
+		snapshotMetaInfoDbModel.Base.Uuid = snapshotMetaInfo.Base.Uuid
+		snapshotMetaInfoDbModel.Base.ApiVersion = snapshotMetaInfo.Base.ApiVersion
+		snapshotMetaInfoDbModel.CreateTime = timestamppb.New(snapshotMetaInfo.CreateTime)
+		snapshotMetaInfoDbModel.SwcSnapshotCollectionName = snapshotMetaInfoDbModel.SwcSnapshotCollectionName
+		protoMessage.SwcSnapshotMetaInfoList = append(protoMessage.SwcSnapshotMetaInfoList, &snapshotMetaInfoDbModel)
+	}
+
+	for _, incrementOperationMetaInfo := range dbmodelMessage.SwcIncrementOperationList {
+		var incrementOpearationMetaInfoDbModel message.SwcIncrementOperationMetaInfoV1
+		incrementOpearationMetaInfoDbModel.Base.XId = incrementOperationMetaInfo.Base.Id.Hex()
+		incrementOpearationMetaInfoDbModel.Base.Uuid = incrementOperationMetaInfo.Base.Uuid
+		incrementOpearationMetaInfoDbModel.Base.ApiVersion = incrementOperationMetaInfo.Base.ApiVersion
+		incrementOpearationMetaInfoDbModel.CreateTime = timestamppb.New(incrementOperationMetaInfo.CreateTime)
+		incrementOpearationMetaInfoDbModel.StartSnapshot = incrementOperationMetaInfo.StartSnapshot
+		incrementOpearationMetaInfoDbModel.IncrementOperationCollectionName = incrementOperationMetaInfo.IncrementOperationCollectionName
+		protoMessage.SwcIncrementOperationMetaInfoList = append(protoMessage.SwcIncrementOperationMetaInfoList, &incrementOpearationMetaInfoDbModel)
+	}
+
+	protoMessage.CurrentIncrementOperationCollectionName = dbmodelMessage.CurrentIncrementOperationCollectionName
 
 	return &protoMessage
 }

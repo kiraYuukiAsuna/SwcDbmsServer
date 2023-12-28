@@ -16,6 +16,7 @@ var DailyStatisticsInfo dbmodel.DailyStatisticsMetaInfoV1
 
 type OnlineUserInfo struct {
 	UserInfo          dbmodel.UserMetaInfoV1
+	Token             string
 	expired           bool
 	LastHeartBeatTime time.Time
 }

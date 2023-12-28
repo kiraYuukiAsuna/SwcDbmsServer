@@ -765,3 +765,44 @@ func QueryAllSwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcData *dbmodel.SwcData
 	}
 	return ReturnWrapper{true, "Query many node Success"}
 }
+
+func CreateSnapshot(swcName string, snapshotName string, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	srcCollection := databaseInfo.SwcDb.Collection(swcName)
+	dstCollection := databaseInfo.IncrementOperationDb.Collection(snapshotName)
+
+	// 创建一个光标，用于读取源集合的文档
+	cursor, err := srcCollection.Find(context.Background(), bson.D{{}})
+	if err != nil {
+		return ReturnWrapper{
+			Status:  false,
+			Message: err.Error(),
+		}
+	}
+
+	// 遍历光标，将文档复制到目标集合中
+	for cursor.Next(context.Background()) {
+		var result bson.D
+		err := cursor.Decode(&result)
+		if err != nil {
+			return ReturnWrapper{
+				Status:  false,
+				Message: err.Error(),
+			}
+		}
+		_, err = dstCollection.InsertOne(context.Background(), result)
+		if err != nil {
+			return ReturnWrapper{
+				Status:  false,
+				Message: err.Error(),
+			}
+		}
+	}
+
+	return ReturnWrapper{true, "Create Snapshot Success!"}
+}
+
+func CreateIncrementOperation(swcName string, snapshotName string, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	_ = databaseInfo.IncrementOperationDb.Collection(swcName)
+
+	return ReturnWrapper{}
+}
