@@ -1,6 +1,7 @@
 {
   "GrpcIP":"127.0.0.1",
   "GrpcPort": 8088,
+  "ReverseProxyPort": 8089,
   "MongodbIP":"127.0.0.1",
   "MongodbPort": 27017,
   "MongodbUser": "defaultuser",

@@ -253,6 +253,7 @@ func SwcMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.SwcMetaInfoV1) *mess
 
 	for _, snapshotMetaInfo := range dbmodelMessage.SwcSnapshotList {
 		var snapshotMetaInfoDbModel message.SwcSnapshotMetaInfoV1
+		snapshotMetaInfoDbModel.Base = &message.MetaInfoBase{}
 		snapshotMetaInfoDbModel.Base.XId = snapshotMetaInfo.Base.Id.Hex()
 		snapshotMetaInfoDbModel.Base.Uuid = snapshotMetaInfo.Base.Uuid
 		snapshotMetaInfoDbModel.Base.ApiVersion = snapshotMetaInfo.Base.ApiVersion
@@ -263,6 +264,7 @@ func SwcMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.SwcMetaInfoV1) *mess
 
 	for _, incrementOperationMetaInfo := range dbmodelMessage.SwcIncrementOperationList {
 		var incrementOpearationMetaInfoDbModel message.SwcIncrementOperationMetaInfoV1
+		incrementOpearationMetaInfoDbModel.Base = &message.MetaInfoBase{}
 		incrementOpearationMetaInfoDbModel.Base.XId = incrementOperationMetaInfo.Base.Id.Hex()
 		incrementOpearationMetaInfoDbModel.Base.Uuid = incrementOperationMetaInfo.Base.Uuid
 		incrementOpearationMetaInfoDbModel.Base.ApiVersion = incrementOperationMetaInfo.Base.ApiVersion

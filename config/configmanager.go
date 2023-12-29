@@ -9,12 +9,13 @@ import (
 )
 
 type Config struct {
-	GrpcIP          string
-	GrpcPort        int32
-	MongodbIP       string
-	MongodbPort     int32
-	MongodbUser     string
-	MongodbPassword string
+	GrpcIP           string
+	GrpcPort         int32
+	ReverseProxyPort int32
+	MongodbIP        string
+	MongodbPort      int32
+	MongodbUser      string
+	MongodbPassword  string
 }
 
 var AppConfig Config
@@ -22,6 +23,7 @@ var AppConfig Config
 func SetDafaultAppConfig() {
 	AppConfig.GrpcIP = "127.0.0.1"
 	AppConfig.GrpcPort = 8088
+	AppConfig.ReverseProxyPort = 8089
 	AppConfig.MongodbIP = "127.0.0.1"
 	AppConfig.MongodbPort = 27017
 	AppConfig.MongodbUser = "defaultuser"
@@ -29,7 +31,7 @@ func SetDafaultAppConfig() {
 }
 
 func ReadConfig() bool {
-	jsonFile, err := os.Open("config.json")
+	jsonFile, err := os.Open("config_dev.json")
 
 	if err != nil {
 		log.Println(err)
@@ -55,8 +57,11 @@ func ReadConfig() bool {
 
 	log.Println("GrpcIP:" + AppConfig.GrpcIP)
 	log.Println("GrpcPort:" + strconv.Itoa(int(AppConfig.GrpcPort)))
+	log.Println("ReverseProxyPort:" + strconv.Itoa(int(AppConfig.ReverseProxyPort)))
 	log.Println("MongodbIP:" + AppConfig.MongodbIP)
 	log.Println("MongodbPort:" + strconv.Itoa(int(AppConfig.MongodbPort)))
+	log.Println("MongodbUser:" + AppConfig.MongodbUser)
+	log.Println("MongodbPassword:" + AppConfig.MongodbPassword)
 
 	return true
 }

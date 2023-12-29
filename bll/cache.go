@@ -21,7 +21,7 @@ type OnlineUserInfo struct {
 	LastHeartBeatTime time.Time
 }
 
-var OnlineUserInfoCache []OnlineUserInfo
+var OnlineUserInfoCache map[string]OnlineUserInfo = map[string]OnlineUserInfo{}
 
 func CronAutoSaveDailyStatistics() {
 	c := cron.New(cron.WithSeconds(), cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)), cron.WithLogger(
@@ -49,10 +49,10 @@ func CronHeartBeatValidationAndRefresh() {
 		cron.VerbosePrintfLogger(log.New(os.Stdout, "cron: ", log.LstdFlags))))
 	EntryID, err := c.AddFunc("*/30 * * * * *", func() {
 		log.Println(time.Now(), "CronHeartBeatValidationAndRefresh...")
-		for idx, onlineUserInfo := range OnlineUserInfoCache {
+		for key, onlineUserInfo := range OnlineUserInfoCache {
 			if time.Now().After(onlineUserInfo.LastHeartBeatTime) || onlineUserInfo.expired {
 				onlineUserInfo.expired = true
-				OnlineUserInfoCache = append(OnlineUserInfoCache[:idx], OnlineUserInfoCache[idx+1:]...)
+				delete(OnlineUserInfoCache, key)
 				log.Println("User " + onlineUserInfo.UserInfo.Name + " HeartBeat expired")
 			}
 		}

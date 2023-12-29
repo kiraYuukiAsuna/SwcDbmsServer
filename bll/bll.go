@@ -168,25 +168,19 @@ func (D DBMSServerController) UserLogin(ctx context.Context, request *request.Us
 	if result.Status == true {
 		if userMetaInfo.Password == request.Password {
 			log.Println("User " + request.UserName + " Login")
-
-			bFind := false
-			var idx int
-			var onlineUserInfo OnlineUserInfo
-			for idx, onlineUserInfo = range OnlineUserInfoCache {
-				if userMetaInfo.Name == onlineUserInfo.UserInfo.Name {
-					bFind = true
-				}
-			}
+			DailyStatisticsInfo.ActiveUserNumber += 1
 
 			userToken := ""
-			if !bFind {
+			if _, ok := OnlineUserInfoCache[userMetaInfo.Name]; !ok {
 				userToken = uuid.NewString()
-				DailyStatisticsInfo.ActiveUserNumber += 1
-				OnlineUserInfoCache = append(OnlineUserInfoCache,
-					OnlineUserInfo{userMetaInfo, userToken, false, time.Now().Add(30 * time.Second)})
+				OnlineUserInfoCache[userMetaInfo.Name] = OnlineUserInfo{userMetaInfo, userToken, false, time.Now().Add(30 * time.Second)}
 				log.Println("User " + userMetaInfo.Name + " HeartBeat Init")
 			} else {
-				userToken = OnlineUserInfoCache[idx].Token
+				userToken = OnlineUserInfoCache[userMetaInfo.Name].Token
+				onlineUserInfo := OnlineUserInfoCache[userMetaInfo.Name]
+				onlineUserInfo.LastHeartBeatTime = time.Now().Add(30 * time.Second)
+				OnlineUserInfoCache[userMetaInfo.Name] = onlineUserInfo
+				log.Println("User " + userMetaInfo.Name + " HeartBeat Restart")
 			}
 
 			return &response.UserLoginResponse{
@@ -232,34 +226,30 @@ func (D DBMSServerController) UserLogout(ctx context.Context, request *request.U
 		}, nil
 	}
 
-	var userMetaInfo dbmodel.UserMetaInfoV1
-	userMetaInfo.Name = request.UserInfo.Name
-
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
-	if result.Status == true {
-		if userMetaInfo.Password == request.UserInfo.Password {
-			log.Println("User " + request.UserInfo.Name + " Logout")
-
-			for idx, onlineUserInfo := range OnlineUserInfoCache {
-				if userMetaInfo.Name == onlineUserInfo.UserInfo.Name {
-					onlineUserInfo.expired = true
-					DailyStatisticsInfo.ActiveUserNumber -= 1
-					OnlineUserInfoCache = append(OnlineUserInfoCache[:idx], OnlineUserInfoCache[idx+1:]...)
-					log.Println("User " + onlineUserInfo.UserInfo.Name + " HeaatBeat Close")
-					break
-				}
-			}
-
-			return &response.UserLogoutResponse{
-				Status:  true,
-				Message: result.Message,
-			}, nil
-		}
+	status, _ := UserTokenVerify(request.UserVerifyInfo.GetUserName(), request.UserVerifyInfo.GetUserToken())
+	if !status {
+		return &response.UserLogoutResponse{
+			Status:  false,
+			Message: "Verify UserToken Failed!",
+		}, nil
 	}
-	userMetaInfo.Password = ""
+
+	if _, ok := OnlineUserInfoCache[request.UserVerifyInfo.GetUserName()]; ok {
+		onlineUserInfo := OnlineUserInfoCache[request.UserVerifyInfo.GetUserName()]
+		onlineUserInfo.expired = true
+		OnlineUserInfoCache[request.UserVerifyInfo.GetUserName()] = onlineUserInfo
+		delete(OnlineUserInfoCache, request.UserVerifyInfo.GetUserName())
+
+		log.Println("User " + onlineUserInfo.UserInfo.Name + " Logout")
+
+		return &response.UserLogoutResponse{
+			Status:  true,
+			Message: "Logout Successfully!",
+		}, nil
+	}
 	return &response.UserLogoutResponse{
 		Status:  false,
-		Message: result.Message,
+		Message: "Logout Failed!",
 	}, nil
 }
 
@@ -279,26 +269,18 @@ func (D DBMSServerController) UserOnlineHeartBeatNotifications(ctx context.Conte
 		if userMetaInfo.Password == notification.UserInfo.Password {
 			log.Println("User " + notification.UserInfo.Name + " OnlineHeartBeatNotifications")
 
-			bFind := false
-			var idx int
-			var onlineUserInfo OnlineUserInfo
-			for idx, onlineUserInfo = range OnlineUserInfoCache {
-				if userMetaInfo.Name == onlineUserInfo.UserInfo.Name {
-					bFind = true
-				}
-			}
-
 			userToken := ""
-			if bFind {
-				userToken = OnlineUserInfoCache[idx].Token
-				OnlineUserInfoCache[idx].LastHeartBeatTime = time.Now().Add(30 * time.Second)
-				log.Println("User " + onlineUserInfo.UserInfo.Name + " HeartBeat Refresh")
-			} else {
-				userToken = uuid.NewString()
+			if _, ok := OnlineUserInfoCache[userMetaInfo.Name]; !ok {
 				DailyStatisticsInfo.ActiveUserNumber += 1
-				OnlineUserInfoCache = append(OnlineUserInfoCache,
-					OnlineUserInfo{userMetaInfo, userToken, false, time.Now().Add(30 * time.Second)})
+				userToken = uuid.NewString()
+				OnlineUserInfoCache[userMetaInfo.Name] = OnlineUserInfo{userMetaInfo, userToken, false, time.Now().Add(30 * time.Second)}
 				log.Println("User " + userMetaInfo.Name + " HeartBeat Init by HeartBeat Notification")
+			} else {
+				userToken = OnlineUserInfoCache[userMetaInfo.Name].Token
+				onlineUserInfo := OnlineUserInfoCache[userMetaInfo.Name]
+				onlineUserInfo.LastHeartBeatTime = time.Now().Add(30 * time.Second)
+				OnlineUserInfoCache[userMetaInfo.Name] = onlineUserInfo
+				log.Println("User " + onlineUserInfo.UserInfo.Name + " HeartBeat Refresh")
 			}
 
 			return &response.UserOnlineHeartBeatResponse{
@@ -1497,6 +1479,7 @@ func (D DBMSServerController) CreateSwcSnapshot(ctx context.Context, request *re
 	}
 
 	var swcMetaInfo dbmodel.SwcMetaInfoV1
+	swcMetaInfo.Name = request.SwcName
 	result := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.CreateSwcSnapshotResponse{

@@ -32,7 +32,8 @@ func startHttpReverseProxyServer() error {
 	}
 
 	// Start HTTP server (and proxy calls to gRPC server endpoint)
-	return http.ListenAndServe(":8089", mux)
+	httpAddress := ":" + strconv.Itoa(int(config.AppConfig.ReverseProxyPort))
+	return http.ListenAndServe(httpAddress, mux)
 }
 
 func main() {

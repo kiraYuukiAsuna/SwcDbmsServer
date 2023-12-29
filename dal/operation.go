@@ -43,7 +43,7 @@ func ConnectToMongoDb(createInfo MongoDbConnectionCreateInfo) MongoDbConnectionI
 	return connectionInfo
 }
 
-func ConnectToDataBase(connectionInfo MongoDbConnectionInfo, metainfoDataBaseName string, swcDataBaseName string) MongoDbDataBaseInfo {
+func ConnectToDataBase(connectionInfo MongoDbConnectionInfo, metaInfoDataBaseName string, swcDataBaseName string, swcSnapshotDataBaseName string, swcIncrementOperationDataBaseName string) MongoDbDataBaseInfo {
 	if connectionInfo.Err != nil {
 		log.Fatal(connectionInfo.Err)
 		return MongoDbDataBaseInfo{}
@@ -51,8 +51,10 @@ func ConnectToDataBase(connectionInfo MongoDbConnectionInfo, metainfoDataBaseNam
 
 	var dbInfo MongoDbDataBaseInfo
 
-	dbInfo.MetaInfoDb = connectionInfo.Client.Database(metainfoDataBaseName)
+	dbInfo.MetaInfoDb = connectionInfo.Client.Database(metaInfoDataBaseName)
 	dbInfo.SwcDb = connectionInfo.Client.Database(swcDataBaseName)
+	dbInfo.SnapshotDb = connectionInfo.Client.Database(swcSnapshotDataBaseName)
+	dbInfo.IncrementOperationDb = connectionInfo.Client.Database(swcIncrementOperationDataBaseName)
 
 	return dbInfo
 }
@@ -770,7 +772,6 @@ func CreateSnapshot(swcName string, snapshotName string, databaseInfo MongoDbDat
 	srcCollection := databaseInfo.SwcDb.Collection(swcName)
 	dstCollection := databaseInfo.IncrementOperationDb.Collection(snapshotName)
 
-	// 创建一个光标，用于读取源集合的文档
 	cursor, err := srcCollection.Find(context.Background(), bson.D{{}})
 	if err != nil {
 		return ReturnWrapper{
@@ -779,7 +780,9 @@ func CreateSnapshot(swcName string, snapshotName string, databaseInfo MongoDbDat
 		}
 	}
 
-	// 遍历光标，将文档复制到目标集合中
+	var results []interface{}
+	batchSize := 10000
+
 	for cursor.Next(context.Background()) {
 		var result bson.D
 		err := cursor.Decode(&result)
@@ -789,7 +792,23 @@ func CreateSnapshot(swcName string, snapshotName string, databaseInfo MongoDbDat
 				Message: err.Error(),
 			}
 		}
-		_, err = dstCollection.InsertOne(context.Background(), result)
+		results = append(results, result)
+
+		if len(results) >= batchSize {
+			_, err = dstCollection.InsertMany(context.Background(), results)
+			if err != nil {
+				return ReturnWrapper{
+					Status:  false,
+					Message: err.Error(),
+				}
+			}
+			results = results[:0] // 清空切片，准备下一批次
+		}
+	}
+
+	// 插入剩余的文档
+	if len(results) > 0 {
+		_, err = dstCollection.InsertMany(context.Background(), results)
 		if err != nil {
 			return ReturnWrapper{
 				Status:  false,
