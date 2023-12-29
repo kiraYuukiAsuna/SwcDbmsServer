@@ -50,7 +50,7 @@ func (D DBMSServerController) CreateUser(ctx context.Context, request *request.C
 }
 
 func (D DBMSServerController) DeleteUser(ctx context.Context, request *request.DeleteUserRequest) (*response.DeleteUserResponse, error) {
-	status, onlineUserInfoCache := UserTokenVerify(request.UserToken)
+	status, onlineUserInfoCache := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
 	if !status {
 		return &response.DeleteUserResponse{
 			Status:  false,
@@ -152,10 +152,13 @@ func (D DBMSServerController) GetAllUser(ctx context.Context, request *request.G
 func (D DBMSServerController) UserLogin(ctx context.Context, request *request.UserLoginRequest) (*response.UserLoginResponse, error) {
 	if request == nil {
 		return &response.UserLoginResponse{
-			Status:    false,
-			Message:   "Request is nil",
-			UserInfo:  nil,
-			UserToken: "",
+			Status:   false,
+			Message:  "Request is nil",
+			UserInfo: nil,
+			UserVerifyInfo: &message.UserVerifyInfoV1{
+				UserName:  request.GetUserName(),
+				UserToken: "",
+			},
 		}, nil
 	}
 	var userMetaInfo dbmodel.UserMetaInfoV1
@@ -187,27 +190,36 @@ func (D DBMSServerController) UserLogin(ctx context.Context, request *request.Us
 			}
 
 			return &response.UserLoginResponse{
-				Status:    true,
-				Message:   result.Message,
-				UserInfo:  UserMetaInfoV1DbmodelToProtobuf(&userMetaInfo),
-				UserToken: userToken,
+				Status:   true,
+				Message:  result.Message,
+				UserInfo: UserMetaInfoV1DbmodelToProtobuf(&userMetaInfo),
+				UserVerifyInfo: &message.UserVerifyInfoV1{
+					UserName:  request.GetUserName(),
+					UserToken: userToken,
+				},
 			}, nil
 		} else {
 			userMetaInfo.Password = ""
 			return &response.UserLoginResponse{
-				Status:    false,
-				Message:   result.Message,
-				UserInfo:  UserMetaInfoV1DbmodelToProtobuf(&userMetaInfo),
-				UserToken: "",
+				Status:   false,
+				Message:  result.Message,
+				UserInfo: UserMetaInfoV1DbmodelToProtobuf(&userMetaInfo),
+				UserVerifyInfo: &message.UserVerifyInfoV1{
+					UserName:  request.GetUserName(),
+					UserToken: "",
+				},
 			}, nil
 		}
 	} else {
 		userMetaInfo.Password = ""
 		return &response.UserLoginResponse{
-			Status:    false,
-			Message:   result.Message,
-			UserInfo:  UserMetaInfoV1DbmodelToProtobuf(&userMetaInfo),
-			UserToken: "",
+			Status:   false,
+			Message:  result.Message,
+			UserInfo: UserMetaInfoV1DbmodelToProtobuf(&userMetaInfo),
+			UserVerifyInfo: &message.UserVerifyInfoV1{
+				UserName:  request.GetUserName(),
+				UserToken: "",
+			},
 		}, nil
 	}
 }
@@ -290,9 +302,12 @@ func (D DBMSServerController) UserOnlineHeartBeatNotifications(ctx context.Conte
 			}
 
 			return &response.UserOnlineHeartBeatResponse{
-				Status:    true,
-				Message:   result.Message,
-				UserToken: userToken,
+				Status:  true,
+				Message: result.Message,
+				UserVerifyInfo: &message.UserVerifyInfoV1{
+					UserName:  notification.UserInfo.GetName(),
+					UserToken: userToken,
+				},
 			}, nil
 		}
 	}
@@ -926,7 +941,7 @@ func (D DBMSServerController) GetAllSwcMetaInfo(ctx context.Context, request *re
 }
 
 func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *request.CreateSwcNodeDataRequest) (*response.CreateSwcNodeDataResponse, error) {
-	status, onlineUserInfoCache := UserTokenVerify(request.UserToken)
+	status, onlineUserInfoCache := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
 	if !status {
 		return &response.CreateSwcNodeDataResponse{
 			Status:  false,
@@ -996,7 +1011,7 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 }
 
 func (D DBMSServerController) DeleteSwcNodeData(ctx context.Context, request *request.DeleteSwcNodeDataRequest) (*response.DeleteSwcNodeDataResponse, error) {
-	status, onlineUserInfoCache := UserTokenVerify(request.UserToken)
+	status, onlineUserInfoCache := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
 	if !status {
 		return &response.DeleteSwcNodeDataResponse{
 			Status:  false,
@@ -1056,7 +1071,7 @@ func (D DBMSServerController) DeleteSwcNodeData(ctx context.Context, request *re
 }
 
 func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *request.UpdateSwcNodeDataRequest) (*response.UpdateSwcNodeDataResponse, error) {
-	status, onlineUserInfoCache := UserTokenVerify(request.UserToken)
+	status, onlineUserInfoCache := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
 	if !status {
 		return &response.UpdateSwcNodeDataResponse{
 			Status:  false,
@@ -1473,7 +1488,7 @@ func (D DBMSServerController) GetAllDailyStatistics(ctx context.Context, request
 }
 
 func (D DBMSServerController) CreateSwcSnapshot(ctx context.Context, request *request.CreateSwcSnapshotRequest) (*response.CreateSwcSnapshotResponse, error) {
-	status, _ := UserTokenVerify(request.UserToken)
+	status, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
 	if !status {
 		return &response.CreateSwcSnapshotResponse{
 			Status:  false,
