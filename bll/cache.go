@@ -47,7 +47,7 @@ func CronAutoSaveDailyStatistics() {
 func CronHeartBeatValidationAndRefresh() {
 	c := cron.New(cron.WithSeconds(), cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)), cron.WithLogger(
 		cron.VerbosePrintfLogger(log.New(os.Stdout, "cron: ", log.LstdFlags))))
-	EntryID, err := c.AddFunc("*/30 * * * * *", func() {
+	EntryID, err := c.AddFunc("*/60 * * * * *", func() {
 		log.Println(time.Now(), "CronHeartBeatValidationAndRefresh...")
 		for key, onlineUserInfo := range OnlineUserInfoCache {
 			if time.Now().After(onlineUserInfo.LastHeartBeatTime) || onlineUserInfo.expired {
