@@ -13,7 +13,7 @@ func UserMetaInfoV1ProtobufToDbmodel(protoMessage *message.UserMetaInfoV1) *dbmo
 	if protoMessage.Base != nil {
 		dbmodelMessage.Base.Id, _ = primitive.ObjectIDFromHex(protoMessage.Base.XId)
 		dbmodelMessage.Base.Uuid = protoMessage.Base.Uuid
-		dbmodelMessage.Base.ApiVersion = protoMessage.Base.ApiVersion
+		dbmodelMessage.Base.DataAccessModelVersion = protoMessage.Base.DataAccessModelVersion
 	}
 
 	dbmodelMessage.Name = protoMessage.Name
@@ -37,7 +37,7 @@ func UserMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.UserMetaInfoV1) *me
 	protoMessage.Base = &message.MetaInfoBase{}
 	protoMessage.Base.XId = dbmodelMessage.Base.Id.Hex()
 	protoMessage.Base.Uuid = dbmodelMessage.Base.Uuid
-	protoMessage.Base.ApiVersion = dbmodelMessage.Base.ApiVersion
+	protoMessage.Base.DataAccessModelVersion = dbmodelMessage.Base.DataAccessModelVersion
 
 	protoMessage.Name = dbmodelMessage.Name
 	protoMessage.Password = dbmodelMessage.Password
@@ -56,7 +56,7 @@ func PermissionGroupMetaInfoV1ProtobufToDbmodel(protoMessage *message.Permission
 	if protoMessage.Base != nil {
 		dbmodelMessage.Base.Id, _ = primitive.ObjectIDFromHex(protoMessage.Base.XId)
 		dbmodelMessage.Base.Uuid = protoMessage.Base.Uuid
-		dbmodelMessage.Base.ApiVersion = protoMessage.Base.ApiVersion
+		dbmodelMessage.Base.DataAccessModelVersion = protoMessage.Base.DataAccessModelVersion
 	}
 
 	dbmodelMessage.Name = protoMessage.Name
@@ -83,7 +83,7 @@ func PermissionGroupMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.Permissi
 	protoMessage.Base = &message.MetaInfoBase{}
 	protoMessage.Base.XId = dbmodelMessage.Base.Id.Hex()
 	protoMessage.Base.Uuid = dbmodelMessage.Base.Uuid
-	protoMessage.Base.ApiVersion = dbmodelMessage.Base.ApiVersion
+	protoMessage.Base.DataAccessModelVersion = dbmodelMessage.Base.DataAccessModelVersion
 
 	protoMessage.Name = dbmodelMessage.Name
 	protoMessage.Description = dbmodelMessage.Description
@@ -109,7 +109,7 @@ func ProjectMetaInfoV1ProtobufToDbmodel(protoMessage *message.ProjectMetaInfoV1)
 	if protoMessage.Base != nil {
 		dbmodelMessage.Base.Id, _ = primitive.ObjectIDFromHex(protoMessage.Base.XId)
 		dbmodelMessage.Base.Uuid = protoMessage.Base.Uuid
-		dbmodelMessage.Base.ApiVersion = protoMessage.Base.ApiVersion
+		dbmodelMessage.Base.DataAccessModelVersion = protoMessage.Base.DataAccessModelVersion
 	}
 
 	dbmodelMessage.Name = protoMessage.Name
@@ -152,7 +152,7 @@ func ProjectMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.ProjectMetaInfoV
 	protoMessage.Base = &message.MetaInfoBase{}
 	protoMessage.Base.XId = dbmodelMessage.Base.Id.Hex()
 	protoMessage.Base.Uuid = dbmodelMessage.Base.Uuid
-	protoMessage.Base.ApiVersion = dbmodelMessage.Base.ApiVersion
+	protoMessage.Base.DataAccessModelVersion = dbmodelMessage.Base.DataAccessModelVersion
 
 	protoMessage.Name = dbmodelMessage.Name
 	protoMessage.Description = dbmodelMessage.Description
@@ -183,7 +183,7 @@ func SwcMetaInfoV1ProtobufToDbmodel(protoMessage *message.SwcMetaInfoV1) *dbmode
 	if protoMessage.Base != nil {
 		dbmodelMessage.Base.Id, _ = primitive.ObjectIDFromHex(protoMessage.Base.XId)
 		dbmodelMessage.Base.Uuid = protoMessage.Base.Uuid
-		dbmodelMessage.Base.ApiVersion = protoMessage.Base.ApiVersion
+		dbmodelMessage.Base.DataAccessModelVersion = protoMessage.Base.DataAccessModelVersion
 	}
 
 	dbmodelMessage.Name = protoMessage.Name
@@ -204,7 +204,7 @@ func SwcMetaInfoV1ProtobufToDbmodel(protoMessage *message.SwcMetaInfoV1) *dbmode
 			if snapshotProto.Base != nil {
 				snapshotMetaInfo.Base.Id, _ = primitive.ObjectIDFromHex(snapshotProto.Base.XId)
 				snapshotMetaInfo.Base.Uuid = snapshotProto.Base.Uuid
-				snapshotMetaInfo.Base.ApiVersion = snapshotProto.Base.ApiVersion
+				snapshotMetaInfo.Base.DataAccessModelVersion = snapshotProto.Base.DataAccessModelVersion
 			}
 
 			snapshotMetaInfo.SwcSnapshotCollectionName = snapshotProto.SwcSnapshotCollectionName
@@ -220,7 +220,7 @@ func SwcMetaInfoV1ProtobufToDbmodel(protoMessage *message.SwcMetaInfoV1) *dbmode
 			if snapshotProto.Base != nil {
 				snapshotMetaInfo.Base.Id, _ = primitive.ObjectIDFromHex(snapshotProto.Base.XId)
 				snapshotMetaInfo.Base.Uuid = snapshotProto.Base.Uuid
-				snapshotMetaInfo.Base.ApiVersion = snapshotProto.Base.ApiVersion
+				snapshotMetaInfo.Base.DataAccessModelVersion = snapshotProto.Base.DataAccessModelVersion
 			}
 
 			snapshotMetaInfo.StartSnapshot = snapshotProto.StartSnapshot
@@ -241,7 +241,7 @@ func SwcMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.SwcMetaInfoV1) *mess
 	protoMessage.Base = &message.MetaInfoBase{}
 	protoMessage.Base.XId = dbmodelMessage.Base.Id.Hex()
 	protoMessage.Base.Uuid = dbmodelMessage.Base.Uuid
-	protoMessage.Base.ApiVersion = dbmodelMessage.Base.ApiVersion
+	protoMessage.Base.DataAccessModelVersion = dbmodelMessage.Base.DataAccessModelVersion
 
 	protoMessage.Name = dbmodelMessage.Name
 	protoMessage.Description = dbmodelMessage.Description
@@ -256,7 +256,7 @@ func SwcMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.SwcMetaInfoV1) *mess
 		snapshotMetaInfoDbModel.Base = &message.MetaInfoBase{}
 		snapshotMetaInfoDbModel.Base.XId = snapshotMetaInfo.Base.Id.Hex()
 		snapshotMetaInfoDbModel.Base.Uuid = snapshotMetaInfo.Base.Uuid
-		snapshotMetaInfoDbModel.Base.ApiVersion = snapshotMetaInfo.Base.ApiVersion
+		snapshotMetaInfoDbModel.Base.DataAccessModelVersion = snapshotMetaInfo.Base.DataAccessModelVersion
 		snapshotMetaInfoDbModel.CreateTime = timestamppb.New(snapshotMetaInfo.CreateTime)
 		snapshotMetaInfoDbModel.SwcSnapshotCollectionName = snapshotMetaInfoDbModel.SwcSnapshotCollectionName
 		protoMessage.SwcSnapshotMetaInfoList = append(protoMessage.SwcSnapshotMetaInfoList, &snapshotMetaInfoDbModel)
@@ -267,7 +267,7 @@ func SwcMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.SwcMetaInfoV1) *mess
 		incrementOpearationMetaInfoDbModel.Base = &message.MetaInfoBase{}
 		incrementOpearationMetaInfoDbModel.Base.XId = incrementOperationMetaInfo.Base.Id.Hex()
 		incrementOpearationMetaInfoDbModel.Base.Uuid = incrementOperationMetaInfo.Base.Uuid
-		incrementOpearationMetaInfoDbModel.Base.ApiVersion = incrementOperationMetaInfo.Base.ApiVersion
+		incrementOpearationMetaInfoDbModel.Base.DataAccessModelVersion = incrementOperationMetaInfo.Base.DataAccessModelVersion
 		incrementOpearationMetaInfoDbModel.CreateTime = timestamppb.New(incrementOperationMetaInfo.CreateTime)
 		incrementOpearationMetaInfoDbModel.StartSnapshot = incrementOperationMetaInfo.StartSnapshot
 		incrementOpearationMetaInfoDbModel.IncrementOperationCollectionName = incrementOperationMetaInfo.IncrementOperationCollectionName
@@ -284,7 +284,7 @@ func SwcNodeDataV1ProtobufToDbmodel(protoMessage *message.SwcNodeDataV1) *dbmode
 	if protoMessage.Base != nil {
 		dbmodelMessage.Base.Id, _ = primitive.ObjectIDFromHex(protoMessage.Base.XId)
 		dbmodelMessage.Base.Uuid = protoMessage.Base.Uuid
-		dbmodelMessage.Base.ApiVersion = protoMessage.Base.ApiVersion
+		dbmodelMessage.Base.DataAccessModelVersion = protoMessage.Base.DataAccessModelVersion
 	}
 	dbmodelMessage.Creator = protoMessage.Creator
 	if protoMessage.CreateTime != nil {
@@ -318,7 +318,7 @@ func SwcNodeDataV1DbmodelToProtobuf(dbmodelMessage *dbmodel.SwcNodeDataV1) *mess
 	protoMessage.Base = &message.MetaInfoBase{}
 	protoMessage.Base.XId = dbmodelMessage.Base.Id.Hex()
 	protoMessage.Base.Uuid = dbmodelMessage.Base.Uuid
-	protoMessage.Base.ApiVersion = dbmodelMessage.Base.ApiVersion
+	protoMessage.Base.DataAccessModelVersion = dbmodelMessage.Base.DataAccessModelVersion
 
 	protoMessage.Creator = dbmodelMessage.Creator
 
@@ -349,7 +349,7 @@ func DailyStatisticsMetaInfoV1ProtobufToDbmodel(protoMessage *message.DailyStati
 	if protoMessage.Base != nil {
 		dbmodelMessage.Base.Id, _ = primitive.ObjectIDFromHex(protoMessage.Base.XId)
 		dbmodelMessage.Base.Uuid = protoMessage.Base.Uuid
-		dbmodelMessage.Base.ApiVersion = protoMessage.Base.ApiVersion
+		dbmodelMessage.Base.DataAccessModelVersion = protoMessage.Base.DataAccessModelVersion
 	}
 
 	dbmodelMessage.Name = protoMessage.Name
@@ -382,7 +382,7 @@ func DailyStatisticsMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.DailySta
 	protoMessage.Base = &message.MetaInfoBase{}
 	protoMessage.Base.XId = dbmodelMessage.Base.Id.Hex()
 	protoMessage.Base.Uuid = dbmodelMessage.Base.Uuid
-	protoMessage.Base.ApiVersion = dbmodelMessage.Base.ApiVersion
+	protoMessage.Base.DataAccessModelVersion = dbmodelMessage.Base.DataAccessModelVersion
 
 	protoMessage.Name = dbmodelMessage.Name
 	protoMessage.Description = dbmodelMessage.Description
@@ -405,6 +405,111 @@ func DailyStatisticsMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.DailySta
 	protoMessage.NodeQueryNumber = dbmodelMessage.NodeQueryNumber
 
 	protoMessage.ActiveUserNumber = dbmodelMessage.ActiveUserNumber
+
+	return &protoMessage
+}
+
+func SwcSnapshotMetaInfoV1MetaInfoV1ProtobufToDbmodel(protoMessage *message.SwcSnapshotMetaInfoV1) *dbmodel.SwcSnapshotMetaInfoV1 {
+	var dbmodelMessage dbmodel.SwcSnapshotMetaInfoV1
+	if protoMessage.Base != nil {
+		dbmodelMessage.Base.Id, _ = primitive.ObjectIDFromHex(protoMessage.Base.XId)
+		dbmodelMessage.Base.Uuid = protoMessage.Base.Uuid
+		dbmodelMessage.Base.DataAccessModelVersion = protoMessage.Base.DataAccessModelVersion
+	}
+
+	dbmodelMessage.SwcSnapshotCollectionName = protoMessage.SwcSnapshotCollectionName
+	dbmodelMessage.Creator = protoMessage.Creator
+
+	if protoMessage.CreateTime != nil {
+		dbmodelMessage.CreateTime = protoMessage.CreateTime.AsTime()
+	}
+
+	return &dbmodelMessage
+}
+
+func SwcSnapshotMetaInfoV1MetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.SwcSnapshotMetaInfoV1) *message.SwcSnapshotMetaInfoV1 {
+	var protoMessage message.SwcSnapshotMetaInfoV1
+	protoMessage.Base = &message.MetaInfoBase{}
+	protoMessage.Base.XId = dbmodelMessage.Base.Id.Hex()
+	protoMessage.Base.Uuid = dbmodelMessage.Base.Uuid
+	protoMessage.Base.DataAccessModelVersion = dbmodelMessage.Base.DataAccessModelVersion
+
+	protoMessage.CreateTime = timestamppb.New(dbmodelMessage.CreateTime)
+	protoMessage.SwcSnapshotCollectionName = dbmodelMessage.SwcSnapshotCollectionName
+	protoMessage.Creator = dbmodelMessage.Creator
+
+	return &protoMessage
+}
+
+func SwcIncrementOperationMetaInfoV1MetaInfoV1ProtobufToDbmodel(protoMessage *message.SwcIncrementOperationMetaInfoV1) *dbmodel.SwcIncrementOperationMetaInfoV1 {
+	var dbmodelMessage dbmodel.SwcIncrementOperationMetaInfoV1
+	if protoMessage.Base != nil {
+		dbmodelMessage.Base.Id, _ = primitive.ObjectIDFromHex(protoMessage.Base.XId)
+		dbmodelMessage.Base.Uuid = protoMessage.Base.Uuid
+		dbmodelMessage.Base.DataAccessModelVersion = protoMessage.Base.DataAccessModelVersion
+	}
+
+	dbmodelMessage.StartSnapshot = protoMessage.StartSnapshot
+	dbmodelMessage.IncrementOperationCollectionName = protoMessage.IncrementOperationCollectionName
+
+	if protoMessage.CreateTime != nil {
+		dbmodelMessage.CreateTime = protoMessage.CreateTime.AsTime()
+	}
+
+	return &dbmodelMessage
+}
+
+func SwcIncrementOperationMetaInfoV1MetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.SwcIncrementOperationMetaInfoV1) *message.SwcIncrementOperationMetaInfoV1 {
+	var protoMessage message.SwcIncrementOperationMetaInfoV1
+	protoMessage.Base = &message.MetaInfoBase{}
+	protoMessage.Base.XId = dbmodelMessage.Base.Id.Hex()
+	protoMessage.Base.Uuid = dbmodelMessage.Base.Uuid
+	protoMessage.Base.DataAccessModelVersion = dbmodelMessage.Base.DataAccessModelVersion
+
+	protoMessage.CreateTime = timestamppb.New(dbmodelMessage.CreateTime)
+	protoMessage.StartSnapshot = dbmodelMessage.StartSnapshot
+	protoMessage.IncrementOperationCollectionName = dbmodelMessage.IncrementOperationCollectionName
+
+	return &protoMessage
+}
+
+func SwcIncrementOperationV1MetaInfoV1ProtobufToDbmodel(protoMessage *message.SwcIncrementOperationV1) *dbmodel.SwcIncrementOperationV1 {
+	var dbmodelMessage dbmodel.SwcIncrementOperationV1
+	if protoMessage.Base != nil {
+		dbmodelMessage.Base.Id, _ = primitive.ObjectIDFromHex(protoMessage.Base.XId)
+		dbmodelMessage.Base.Uuid = protoMessage.Base.Uuid
+		dbmodelMessage.Base.DataAccessModelVersion = protoMessage.Base.DataAccessModelVersion
+	}
+
+	dbmodelMessage.IncrementOperation = protoMessage.IncrementOperation.String()
+
+	var dbSwcData dbmodel.SwcDataV1
+
+	for _, swcNodeData := range protoMessage.GetSwcData().GetSwcData() {
+		dbSwcData = append(dbSwcData, *SwcNodeDataV1ProtobufToDbmodel(swcNodeData))
+	}
+
+	dbmodelMessage.SwcData = dbSwcData
+
+	return &dbmodelMessage
+}
+
+func SwcIncrementOperationListV1DbmodelToProtobuf(dbmodelMessage *dbmodel.SwcIncrementOperationV1) *message.SwcIncrementOperationV1 {
+	var protoMessage message.SwcIncrementOperationV1
+	protoMessage.Base = &message.MetaInfoBase{}
+	protoMessage.Base.XId = dbmodelMessage.Base.Id.Hex()
+	protoMessage.Base.Uuid = dbmodelMessage.Base.Uuid
+	protoMessage.Base.DataAccessModelVersion = dbmodelMessage.Base.DataAccessModelVersion
+
+	protoMessage.IncrementOperation = message.IncrementOperationV1(message.IncrementOperationV1_value[dbmodelMessage.IncrementOperation])
+
+	var pbSwcData message.SwcDataV1
+
+	for _, swcNodeData := range dbmodelMessage.SwcData {
+		pbSwcData.SwcData = append(pbSwcData.SwcData, SwcNodeDataV1DbmodelToProtobuf(&swcNodeData))
+	}
+
+	protoMessage.SwcData = &pbSwcData
 
 	return &protoMessage
 }

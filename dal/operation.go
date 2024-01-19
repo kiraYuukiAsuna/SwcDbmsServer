@@ -647,11 +647,6 @@ func ModifySwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcNodeData dbmodel.SwcNod
 
 func QuerySwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	collection := databaseInfo.SwcDb.Collection(swcMetaInfo.Name)
-	var interfaceSlice []interface{}
-
-	for _, v := range *swcData {
-		interfaceSlice = append(interfaceSlice, v)
-	}
 
 	uuidList := bson.A{}
 
@@ -739,11 +734,6 @@ func QuerySwcDataByUserAndTime(
 
 func QueryAllSwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	collection := databaseInfo.SwcDb.Collection(swcMetaInfo.Name)
-	var interfaceSlice []interface{}
-
-	for _, v := range *swcData {
-		interfaceSlice = append(interfaceSlice, v)
-	}
 
 	cursor, err := collection.Find(context.TODO(), bson.D{})
 	if err != nil {
@@ -781,7 +771,7 @@ func CreateSnapshot(swcName string, snapshotName string, databaseInfo MongoDbDat
 	}
 
 	var results []interface{}
-	batchSize := 10000
+	batchSize := 100000
 
 	for cursor.Next(context.Background()) {
 		var result bson.D
@@ -820,9 +810,8 @@ func CreateSnapshot(swcName string, snapshotName string, databaseInfo MongoDbDat
 	return ReturnWrapper{true, "Create Snapshot Success!"}
 }
 
-func CreateIncrementOperation(swcName string, snapshotName string, operation dbmodel.SwcIncrementOperationV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	fullName := swcName + "_" + snapshotName
-	currentCollection := databaseInfo.IncrementOperationDb.Collection(fullName)
+func CreateIncrementOperation(incrementOperationCollectionName string, operation dbmodel.SwcIncrementOperationV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	currentCollection := databaseInfo.IncrementOperationDb.Collection(incrementOperationCollectionName)
 
 	_, err := currentCollection.InsertOne(context.TODO(), operation)
 	if err != nil {
@@ -830,4 +819,56 @@ func CreateIncrementOperation(swcName string, snapshotName string, operation dbm
 	}
 
 	return ReturnWrapper{true, "Insert Increment operation success!"}
+}
+
+func QuerySwcSnapshot(snapshotName string, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	collection := databaseInfo.SnapshotDb.Collection(snapshotName)
+
+	cursor, err := collection.Find(context.TODO(), bson.D{})
+	if err != nil {
+		return ReturnWrapper{false, "Query many node failed!"}
+	}
+
+	if err = cursor.All(context.TODO(), swcData); err != nil {
+		return ReturnWrapper{false, "Query many node failed!"}
+	}
+
+	for _, result := range *swcData {
+		err := cursor.Decode(&result)
+		if err != nil && err != io.EOF {
+			return ReturnWrapper{false, err.Error()}
+		}
+		_, err = json.MarshalIndent(result, "", "    ")
+		if err != nil {
+			return ReturnWrapper{false, "Query many node failed!"}
+		}
+		//log.Printf("%s\n", output)
+	}
+	return ReturnWrapper{true, "Query many node Success"}
+}
+
+func QuerySwcIncrementOperation(incrementOperationCollectionName string, operations *dbmodel.SwcIncrementOperationListV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	collection := databaseInfo.IncrementOperationDb.Collection(incrementOperationCollectionName)
+
+	cursor, err := collection.Find(context.TODO(), bson.D{})
+	if err != nil {
+		return ReturnWrapper{false, "Query many node failed!"}
+	}
+
+	if err = cursor.All(context.TODO(), operations); err != nil {
+		return ReturnWrapper{false, "Query many node failed!"}
+	}
+
+	for _, result := range *operations {
+		err := cursor.Decode(&result)
+		if err != nil && err != io.EOF {
+			return ReturnWrapper{false, err.Error()}
+		}
+		_, err = json.MarshalIndent(result, "", "    ")
+		if err != nil {
+			return ReturnWrapper{false, "Query many node failed!"}
+		}
+		//log.Printf("%s\n", output)
+	}
+	return ReturnWrapper{true, "Query many node Success"}
 }

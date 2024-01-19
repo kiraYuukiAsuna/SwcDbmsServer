@@ -86,9 +86,9 @@ func InitializeNewDataBaseIfNotExist(metaInfoDataBaseName string, swcDataBaseNam
 
 		var permissionGroupAdmin = dbmodel.PermissionGroupMetaInfoV1{
 			Base: dbmodel.MetaInfoBase{
-				Id:         primitive.NewObjectID(),
-				ApiVersion: "V1",
-				Uuid:       uuid.NewString(),
+				Id:                     primitive.NewObjectID(),
+				DataAccessModelVersion: "V1",
+				Uuid:                   uuid.NewString(),
 			},
 			Name:        PermissionGroupAdmin,
 			Description: "Admin Permission Group",
@@ -109,9 +109,9 @@ func InitializeNewDataBaseIfNotExist(metaInfoDataBaseName string, swcDataBaseNam
 
 		var permissionGroupDefault = dbmodel.PermissionGroupMetaInfoV1{
 			Base: dbmodel.MetaInfoBase{
-				Id:         primitive.NewObjectID(),
-				ApiVersion: "V1",
-				Uuid:       uuid.NewString(),
+				Id:                     primitive.NewObjectID(),
+				DataAccessModelVersion: "V1",
+				Uuid:                   uuid.NewString(),
 			},
 			Name:        PermissionGroupDefault,
 			Description: "Default Permission Group",
@@ -132,9 +132,9 @@ func InitializeNewDataBaseIfNotExist(metaInfoDataBaseName string, swcDataBaseNam
 
 		var permissionGroupGroupLeader = dbmodel.PermissionGroupMetaInfoV1{
 			Base: dbmodel.MetaInfoBase{
-				Id:         primitive.NewObjectID(),
-				ApiVersion: "V1",
-				Uuid:       uuid.NewString(),
+				Id:                     primitive.NewObjectID(),
+				DataAccessModelVersion: "V1",
+				Uuid:                   uuid.NewString(),
 			},
 			Name:        PermissionGroupGroupLeader,
 			Description: "GroupLeader Permission Group",
@@ -155,9 +155,9 @@ func InitializeNewDataBaseIfNotExist(metaInfoDataBaseName string, swcDataBaseNam
 
 		var permissionGroupGroupNormalUser = dbmodel.PermissionGroupMetaInfoV1{
 			Base: dbmodel.MetaInfoBase{
-				Id:         primitive.NewObjectID(),
-				ApiVersion: "V1",
-				Uuid:       uuid.NewString(),
+				Id:                     primitive.NewObjectID(),
+				DataAccessModelVersion: "V1",
+				Uuid:                   uuid.NewString(),
 			},
 			Name:        PermissionGroupNormalUser,
 			Description: "NormalUser Permission Group",
@@ -178,9 +178,9 @@ func InitializeNewDataBaseIfNotExist(metaInfoDataBaseName string, swcDataBaseNam
 
 		var permissionGroupGroupGuest = dbmodel.PermissionGroupMetaInfoV1{
 			Base: dbmodel.MetaInfoBase{
-				Id:         primitive.NewObjectID(),
-				ApiVersion: "V1",
-				Uuid:       uuid.NewString(),
+				Id:                     primitive.NewObjectID(),
+				DataAccessModelVersion: "V1",
+				Uuid:                   uuid.NewString(),
 			},
 			Name:        PermissionGroupGuest,
 			Description: "Guest Permission Group",

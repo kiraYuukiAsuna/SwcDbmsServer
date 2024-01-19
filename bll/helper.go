@@ -33,11 +33,13 @@ func UserTokenVerify(userName string, userToken string) (message.ResponseMetaInf
 
 func RequestApiVersionVerify(requestMetaInfo *message.RequestMetaInfoV1) message.ResponseMetaInfoV1 {
 	currentServerRequestMetaInfo := message.RequestMetaInfoV1{}
+	currentServerRequestMetaInfo.ApiVersion = "2024.01.19"
+
 	if currentServerRequestMetaInfo.GetApiVersion() != requestMetaInfo.GetApiVersion() {
 		return message.ResponseMetaInfoV1{
 			Status:  false,
 			Id:      errcode.Error_ApiVersionNotConsist,
-			Message: "Client ApiVersion is not consist with Server ApiVersion. Please update your client to newest version!",
+			Message: "Client ApiVersion is not consist with Server ApiVersion. Please update your client to the newest version!",
 		}
 	} else {
 		return message.ResponseMetaInfoV1{

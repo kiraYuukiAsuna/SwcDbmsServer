@@ -5,6 +5,8 @@ import (
 	"DBMS/config"
 	"DBMS/dal"
 	"google.golang.org/grpc"
+	_ "google.golang.org/grpc/encoding/gzip" // Install the gzip compressor
+	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
 	"strconv"
@@ -40,6 +42,7 @@ func NewGrpcServer() {
 
 	var instanceDBMSServerController DBMSServerController
 	service.RegisterDBMSServer(s, instanceDBMSServerController)
+	reflection.Register(s)
 
 	err = s.Serve(listener)
 	if err != nil {

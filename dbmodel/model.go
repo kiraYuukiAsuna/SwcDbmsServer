@@ -6,24 +6,24 @@ import (
 )
 
 const (
-	ProjectMetaInfoCollectionString         = "ProjectMetaInfoCollectionString"
-	UserMetaInfoCollectionString            = "UserMetaInfoCollection"
-	PermissionGroupMetaInfoCollectioString  = "PermissionGroupMetaInfoCollection"
-	SwcMetaInfoCollectionString             = "SwcMetaInfoCollection"
-	DailyStatisticsMetaInfoCollectionString = "DailyStatisticsMetaInfoCollection"
+	ProjectMetaInfoCollectionString         string = "ProjectMetaInfoCollectionString"
+	UserMetaInfoCollectionString            string = "UserMetaInfoCollection"
+	PermissionGroupMetaInfoCollectioString  string = "PermissionGroupMetaInfoCollection"
+	SwcMetaInfoCollectionString             string = "SwcMetaInfoCollection"
+	DailyStatisticsMetaInfoCollectionString string = "DailyStatisticsMetaInfoCollection"
 )
 
 const (
-	Unknown = "Unknown"
-	Create  = "Create"
-	Delete  = "Delete"
-	Update  = "Update"
+	IncrementOp_Unknown string = "Unknown"
+	IncrementOp_Create  string = "Create"
+	IncrementOp_Delete  string = "Delete"
+	IncrementOp_Update  string = "Update"
 )
 
 type MetaInfoBase struct {
-	Id         primitive.ObjectID `bson:"_id"`
-	ApiVersion string             `bson:"ApiVersion"`
-	Uuid       string             `bson:"uuid"`
+	Id                     primitive.ObjectID `bson:"_id"`
+	DataAccessModelVersion string             `bson:"DataAccessModelVersion"`
+	Uuid                   string             `bson:"uuid"`
 }
 
 type UserMetaInfoV1 struct {
@@ -84,6 +84,7 @@ type SwcSnapshotMetaInfoV1 struct {
 	Base                      MetaInfoBase `bson:"Base,inline"`
 	SwcSnapshotCollectionName string       `bson:"SwcSnapshotCollectionName"`
 	CreateTime                time.Time    `bson:"CreateTime"`
+	Creator                   string       `bson:"Creator"`
 }
 
 type SwcIncrementOperationMetaInfoV1 struct {
@@ -94,10 +95,12 @@ type SwcIncrementOperationMetaInfoV1 struct {
 }
 
 type SwcIncrementOperationV1 struct {
-	Base               MetaInfoBase  `bson:"Base,inline"`
-	IncrementOperation string        `bson:"IncrementOperation"`
-	SwcNodeData        SwcNodeDataV1 `bson:"SwcNodeData"`
+	Base               MetaInfoBase `bson:"Base,inline"`
+	IncrementOperation string       `bson:"IncrementOperation"`
+	SwcData            SwcDataV1    `bson:"SwcNodeData"`
 }
+
+type SwcIncrementOperationListV1 = []SwcIncrementOperationV1
 
 type SwcMetaInfoV1 struct {
 	Base                                    MetaInfoBase                      `bson:"Base,inline"`

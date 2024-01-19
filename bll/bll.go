@@ -30,7 +30,7 @@ func (D DBMSServerController) CreateUser(ctx context.Context, request *request.C
 	userMetaInfo := UserMetaInfoV1ProtobufToDbmodel(request.UserInfo)
 	userMetaInfo.Base.Id = primitive.NewObjectID()
 	userMetaInfo.Base.Uuid = uuid.NewString()
-	userMetaInfo.Base.ApiVersion = "V1"
+	userMetaInfo.Base.DataAccessModelVersion = "V1"
 
 	userMetaInfo.Name = request.UserInfo.Name
 	userMetaInfo.Password = request.UserInfo.Password
@@ -70,7 +70,7 @@ func (D DBMSServerController) DeleteUser(ctx context.Context, request *request.D
 		}, nil
 	}
 
-	responseMetaInfo, onlineUserInfoCache := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, onlineUserInfoCache := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.DeleteUserResponse{
 			MetaInfo: &responseMetaInfo,
@@ -119,7 +119,7 @@ func (D DBMSServerController) UpdateUser(ctx context.Context, request *request.U
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.UpdateUserResponse{
 			MetaInfo: &responseMetaInfo,
@@ -166,7 +166,7 @@ func (D DBMSServerController) GetUser(ctx context.Context, request *request.GetU
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.GetUserResponse{
 			MetaInfo: &responseMetaInfo,
@@ -207,7 +207,7 @@ func (D DBMSServerController) GetAllUser(ctx context.Context, request *request.G
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.GetAllUserResponse{
 			MetaInfo: &responseMetaInfo,
@@ -351,7 +351,7 @@ func (D DBMSServerController) UserLogout(ctx context.Context, request *request.U
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.UserLogoutResponse{
 			MetaInfo: &responseMetaInfo,
@@ -459,7 +459,7 @@ func (D DBMSServerController) GetUserPermissionGroup(ctx context.Context, reques
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.GetUserPermissionGroupResponse{
 			MetaInfo: &responseMetaInfo,
@@ -506,7 +506,7 @@ func (D DBMSServerController) GetPermissionGroup(ctx context.Context, request *r
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.GetPermissionGroupResponse{
 			MetaInfo: &responseMetaInfo,
@@ -552,7 +552,7 @@ func GetAllPermissionGroup(ctx context.Context, request *request.GetAllPermissio
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.GetAllPermissionGroupResponse{
 			MetaInfo: &responseMetaInfo,
@@ -602,7 +602,7 @@ func (D DBMSServerController) ChangeUserPermissionGroup(ctx context.Context, req
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.ChangeUserPermissionGroupResponse{
 			MetaInfo: &responseMetaInfo,
@@ -673,7 +673,7 @@ func (D DBMSServerController) CreateProject(ctx context.Context, request *reques
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.CreateProjectResponse{
 			MetaInfo: &responseMetaInfo,
@@ -724,7 +724,7 @@ func (D DBMSServerController) CreateProject(ctx context.Context, request *reques
 
 	projectMetaInfo.Base.Id = primitive.NewObjectID()
 	projectMetaInfo.Base.Uuid = uuid.NewString()
-	projectMetaInfo.Base.ApiVersion = "V1"
+	projectMetaInfo.Base.DataAccessModelVersion = "V1"
 
 	projectMetaInfo.Name = request.ProjectInfo.Name
 	projectMetaInfo.Description = request.ProjectInfo.Description
@@ -767,7 +767,7 @@ func (D DBMSServerController) DeleteProject(ctx context.Context, request *reques
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.DeleteProjectResponse{
 			MetaInfo: &responseMetaInfo,
@@ -849,7 +849,7 @@ func (D DBMSServerController) UpdateProject(ctx context.Context, request *reques
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.UpdateProjectResponse{
 			MetaInfo: &responseMetaInfo,
@@ -932,7 +932,7 @@ func (D DBMSServerController) GetProject(ctx context.Context, request *request.G
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.GetProjectResponse{
 			MetaInfo: &responseMetaInfo,
@@ -1014,7 +1014,7 @@ func (D DBMSServerController) GetAllProject(ctx context.Context, request *reques
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.GetAllProjectResponse{
 			MetaInfo: &responseMetaInfo,
@@ -1059,7 +1059,7 @@ func (D DBMSServerController) CreateSwc(ctx context.Context, request *request.Cr
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.CreateSwcResponse{
 			MetaInfo: &responseMetaInfo,
@@ -1110,7 +1110,7 @@ func (D DBMSServerController) CreateSwc(ctx context.Context, request *request.Cr
 
 	swcMetaInfo.Base.Id = primitive.NewObjectID()
 	swcMetaInfo.Base.Uuid = uuid.NewString()
-	swcMetaInfo.Base.ApiVersion = "V1"
+	swcMetaInfo.Base.DataAccessModelVersion = "V1"
 	swcMetaInfo.Creator = userMetaInfo.Name
 	swcMetaInfo.LastModifiedTime = time.Now()
 	swcMetaInfo.CreateTime = time.Now()
@@ -1150,7 +1150,7 @@ func (D DBMSServerController) DeleteSwc(ctx context.Context, request *request.De
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.DeleteSwcResponse{
 			MetaInfo: &responseMetaInfo,
@@ -1252,7 +1252,7 @@ func (D DBMSServerController) UpdateSwc(ctx context.Context, request *request.Up
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.UpdateSwcResponse{
 			MetaInfo: &responseMetaInfo,
@@ -1335,7 +1335,7 @@ func (D DBMSServerController) GetSwcMetaInfo(ctx context.Context, request *reque
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.GetSwcMetaInfoResponse{
 			MetaInfo: &responseMetaInfo,
@@ -1417,7 +1417,7 @@ func (D DBMSServerController) GetAllSwcMetaInfo(ctx context.Context, request *re
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.GetAllSwcMetaInfoResponse{
 			MetaInfo: &responseMetaInfo,
@@ -1461,7 +1461,7 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 		}, nil
 	}
 
-	responseMetaInfo, onlineUserInfoCache := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, onlineUserInfoCache := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.CreateSwcNodeDataResponse{
 			MetaInfo: &responseMetaInfo,
@@ -1514,7 +1514,7 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 		swcData[idx].Creator = userMetaInfo.Name
 		swcData[idx].Base.Id = primitive.NewObjectID()
 		swcData[idx].Base.Uuid = uuid.NewString()
-		swcData[idx].Base.ApiVersion = "V1"
+		swcData[idx].Base.DataAccessModelVersion = "V1"
 		swcData[idx].CreateTime = time.Now()
 		swcData[idx].LastModifiedTime = time.Now()
 		swcData[idx].CheckerUserUuid = ""
@@ -1523,12 +1523,29 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 	swcMetaInfo := dbmodel.SwcMetaInfoV1{}
 	swcMetaInfo.Name = request.SwcName
 
+	result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
+	if !result.Status {
+		return &response.CreateSwcNodeDataResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
 	result = dal.CreateSwcData(swcMetaInfo, swcData, dal.GetDbInstance())
 	if result.Status {
 		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Create Swc node " + swcMetaInfo.Name)
 		DailyStatisticsInfo.CreateSwcNodeNumber += 1
 
-		//dal.CreateIncrementOperation(swcMetaInfo.Name, swcMetaInfo.CurrentIncrementOperationCollectionName)
+		operationRecord := dbmodel.SwcIncrementOperationV1{}
+		operationRecord.Base.Id = primitive.NewObjectID()
+		operationRecord.Base.Uuid = uuid.NewString()
+		operationRecord.Base.DataAccessModelVersion = "V1"
+		operationRecord.IncrementOperation = dbmodel.IncrementOp_Create
+		operationRecord.SwcData = swcData
+		dal.CreateIncrementOperation(swcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
 
 		return &response.CreateSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1556,7 +1573,7 @@ func (D DBMSServerController) DeleteSwcNodeData(ctx context.Context, request *re
 		}, nil
 	}
 
-	responseMetaInfo, onlineUserInfoCache := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, onlineUserInfoCache := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.DeleteSwcNodeDataResponse{
 			MetaInfo: &responseMetaInfo,
@@ -1569,7 +1586,18 @@ func (D DBMSServerController) DeleteSwcNodeData(ctx context.Context, request *re
 	swcMetaInfo := dbmodel.SwcMetaInfoV1{}
 	swcMetaInfo.Name = request.SwcName
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
+	if !result.Status {
+		return &response.DeleteSwcNodeDataResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
+	result = dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
 	if result.Status == false {
 		return &response.DeleteSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1612,6 +1640,15 @@ func (D DBMSServerController) DeleteSwcNodeData(ctx context.Context, request *re
 	if result.Status {
 		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Delete Swc " + swcMetaInfo.Name)
 		DailyStatisticsInfo.DeletedSwcNodeNumber += 1
+
+		operationRecord := dbmodel.SwcIncrementOperationV1{}
+		operationRecord.Base.Id = primitive.NewObjectID()
+		operationRecord.Base.Uuid = uuid.NewString()
+		operationRecord.Base.DataAccessModelVersion = "V1"
+		operationRecord.IncrementOperation = dbmodel.IncrementOp_Delete
+		operationRecord.SwcData = swcData
+		dal.CreateIncrementOperation(swcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
+
 		return &response.DeleteSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  true,
@@ -1638,7 +1675,7 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 		}, nil
 	}
 
-	responseMetaInfo, onlineUserInfoCache := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, onlineUserInfoCache := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.UpdateSwcNodeDataResponse{
 			MetaInfo: &responseMetaInfo,
@@ -1651,7 +1688,18 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 	swcMetaInfo := dbmodel.SwcMetaInfoV1{}
 	swcMetaInfo.Name = request.SwcName
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
+	if !result.Status {
+		return &response.UpdateSwcNodeDataResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
+	result = dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
 	if result.Status == false {
 		return &response.UpdateSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1693,6 +1741,17 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 	if result.Status {
 		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Update Swc " + swcMetaInfo.Name)
 		DailyStatisticsInfo.ModifiedSwcNodeNumber += 1
+
+		operationRecord := dbmodel.SwcIncrementOperationV1{}
+		operationRecord.Base.Id = primitive.NewObjectID()
+		operationRecord.Base.Uuid = uuid.NewString()
+		operationRecord.Base.DataAccessModelVersion = "V1"
+		operationRecord.IncrementOperation = dbmodel.IncrementOp_Update
+		swcData := dbmodel.SwcDataV1{}
+		swcData = append(swcData, *swcNodeData)
+		operationRecord.SwcData = swcData
+		dal.CreateIncrementOperation(swcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
+
 		return &response.UpdateSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  true,
@@ -1719,7 +1778,7 @@ func (D DBMSServerController) GetSwcNodeData(ctx context.Context, request *reque
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.GetSwcNodeDataResponse{
 			MetaInfo: &responseMetaInfo,
@@ -1815,7 +1874,7 @@ func (D DBMSServerController) GetSwcFullNodeData(ctx context.Context, request *r
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.GetSwcFullNodeDataResponse{
 			MetaInfo: &responseMetaInfo,
@@ -1904,7 +1963,7 @@ func (D DBMSServerController) GetSwcNodeDataListByTimeAndUser(ctx context.Contex
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.GetSwcNodeDataListByTimeAndUserResponse{
 			MetaInfo: &responseMetaInfo,
@@ -2008,7 +2067,7 @@ func (D DBMSServerController) BackupFullDatabase(ctx context.Context, request *r
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.BackupFullDatabaseResponse{
 			MetaInfo: &responseMetaInfo,
@@ -2036,7 +2095,7 @@ func (D DBMSServerController) CreateDailyStatistics(ctx context.Context, request
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.CreateDailyStatisticsResponse{
 			MetaInfo: &responseMetaInfo,
@@ -2046,7 +2105,7 @@ func (D DBMSServerController) CreateDailyStatistics(ctx context.Context, request
 	dailyStatisticsInfo := DailyStatisticsMetaInfoV1ProtobufToDbmodel(request.DailyStatisticsInfo)
 	dailyStatisticsInfo.Base.Id = primitive.NewObjectID()
 	dailyStatisticsInfo.Base.Uuid = uuid.NewString()
-	dailyStatisticsInfo.Base.ApiVersion = "V1"
+	dailyStatisticsInfo.Base.DataAccessModelVersion = "V1"
 
 	dailyStatisticsInfo.Name = request.DailyStatisticsInfo.Name
 	dailyStatisticsInfo.Description = request.DailyStatisticsInfo.Description
@@ -2101,7 +2160,7 @@ func (D DBMSServerController) DeleteDailyStatistics(ctx context.Context, request
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.DeleteDailyStatisticsResponse{
 			MetaInfo: &responseMetaInfo,
@@ -2168,7 +2227,7 @@ func (D DBMSServerController) UpdateDailyStatistics(ctx context.Context, request
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.UpdateDailyStatisticsResponse{
 			MetaInfo: &responseMetaInfo,
@@ -2208,7 +2267,7 @@ func (D DBMSServerController) GetDailyStatistics(ctx context.Context, request *r
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.GetDailyStatisticsResponse{
 			MetaInfo: &responseMetaInfo,
@@ -2249,7 +2308,7 @@ func (D DBMSServerController) GetAllDailyStatistics(ctx context.Context, request
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.GetAllDailyStatisticsResponse{
 			MetaInfo: &responseMetaInfo,
@@ -2295,7 +2354,7 @@ func (D DBMSServerController) CreateSwcSnapshot(ctx context.Context, request *re
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.CreateSwcSnapshotResponse{
 			MetaInfo: &responseMetaInfo,
@@ -2318,27 +2377,23 @@ func (D DBMSServerController) CreateSwcSnapshot(ctx context.Context, request *re
 	timePoint := time.Now()
 	year, mouth, day := timePoint.Date()
 	hour, minute, second := timePoint.Clock()
-	timeString := strconv.Itoa(year) + "-" + mouth.String() + "-" + strconv.Itoa(day-1) + "_" + strconv.Itoa(hour) + ":" + strconv.Itoa(minute) + "-" + strconv.Itoa(second)
+	_ = strconv.Itoa(year) + "-" + mouth.String() + "-" + strconv.Itoa(day-1) + "_" + strconv.Itoa(hour) + ":" + strconv.Itoa(minute) + "-" + strconv.Itoa(second)
 
 	var swcSnapshotMetaInfo dbmodel.SwcSnapshotMetaInfoV1
 	swcSnapshotMetaInfo.Base.Id = primitive.NewObjectID()
 	swcSnapshotMetaInfo.Base.Uuid = uuid.NewString()
-	swcSnapshotMetaInfo.Base.ApiVersion = "V1"
-
+	swcSnapshotMetaInfo.Base.DataAccessModelVersion = "V1"
 	swcSnapshotMetaInfo.CreateTime = time.Now()
-	swcSnapshotMetaInfo.SwcSnapshotCollectionName = "Snapshot_" + timeString
-
+	swcSnapshotMetaInfo.SwcSnapshotCollectionName = "Snapshot_" + uuid.NewString()
 	swcMetaInfo.SwcSnapshotList = append(swcMetaInfo.SwcSnapshotList, swcSnapshotMetaInfo)
 
 	var swcIncrementOperationMetaInfo dbmodel.SwcIncrementOperationMetaInfoV1
 	swcIncrementOperationMetaInfo.Base.Id = primitive.NewObjectID()
 	swcIncrementOperationMetaInfo.Base.Uuid = uuid.NewString()
-	swcIncrementOperationMetaInfo.Base.ApiVersion = "V1"
-
+	swcIncrementOperationMetaInfo.Base.DataAccessModelVersion = "V1"
 	swcIncrementOperationMetaInfo.CreateTime = time.Now()
 	swcIncrementOperationMetaInfo.StartSnapshot = swcSnapshotMetaInfo.SwcSnapshotCollectionName
-	swcIncrementOperationMetaInfo.IncrementOperationCollectionName = "IncrementOperation_" + timeString
-
+	swcIncrementOperationMetaInfo.IncrementOperationCollectionName = "IncrementOperation_" + uuid.NewString()
 	swcMetaInfo.SwcIncrementOperationList = append(swcMetaInfo.SwcIncrementOperationList, swcIncrementOperationMetaInfo)
 
 	swcMetaInfo.CurrentIncrementOperationCollectionName = swcIncrementOperationMetaInfo.IncrementOperationCollectionName
@@ -2373,30 +2428,6 @@ func (D DBMSServerController) CreateSwcSnapshot(ctx context.Context, request *re
 	}, nil
 }
 
-func (D DBMSServerController) DeleteSwcSnapshot(ctx context.Context, request *request.DeleteSwcSnapshotRequest) (*response.DeleteSwcSnapshotResponse, error) {
-	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
-	if !apiVersionVerifyResult.Status {
-		return &response.DeleteSwcSnapshotResponse{
-			MetaInfo: &apiVersionVerifyResult,
-		}, nil
-	}
-
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
-	if !responseMetaInfo.Status {
-		return &response.DeleteSwcSnapshotResponse{
-			MetaInfo: &responseMetaInfo,
-		}, nil
-	}
-
-	return &response.DeleteSwcSnapshotResponse{
-		MetaInfo: &message.ResponseMetaInfoV1{
-			Status:  false,
-			Id:      "",
-			Message: "",
-		},
-	}, nil
-}
-
 func (D DBMSServerController) GetAllSnapshotMetaInfo(ctx context.Context, request *request.GetAllSnapshotMetaInfoRequest) (*response.GetAllSnapshotMetaInfoResponse, error) {
 	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
 	if !apiVersionVerifyResult.Status {
@@ -2405,10 +2436,30 @@ func (D DBMSServerController) GetAllSnapshotMetaInfo(ctx context.Context, reques
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.GetAllSnapshotMetaInfoResponse{
 			MetaInfo: &responseMetaInfo,
+		}, nil
+	}
+
+	var dbmodelMessage dbmodel.SwcMetaInfoV1
+	dbmodelMessage.Name = request.SwcName
+
+	var protoMessage []*message.SwcSnapshotMetaInfoV1
+	result := dal.QuerySwc(&dbmodelMessage, dal.GetDbInstance())
+	if result.Status {
+		log.Println("User " + request.UserVerifyInfo.GetUserName() + " Query ")
+		for _, dbMessage := range dbmodelMessage.SwcSnapshotList {
+			protoMessage = append(protoMessage, SwcSnapshotMetaInfoV1MetaInfoV1DbmodelToProtobuf(&dbMessage))
+		}
+		return &response.GetAllSnapshotMetaInfoResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  true,
+				Id:      "",
+				Message: result.Message,
+			},
+			SwcSnapshotList: protoMessage,
 		}, nil
 	}
 
@@ -2416,9 +2467,8 @@ func (D DBMSServerController) GetAllSnapshotMetaInfo(ctx context.Context, reques
 		MetaInfo: &message.ResponseMetaInfoV1{
 			Status:  false,
 			Id:      "",
-			Message: "",
+			Message: result.Message,
 		},
-		SwcSnapshotList: nil,
 	}, nil
 }
 
@@ -2430,10 +2480,28 @@ func (D DBMSServerController) GetSnapshot(ctx context.Context, request *request.
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.GetSnapshotResponse{
 			MetaInfo: &responseMetaInfo,
+		}, nil
+	}
+
+	var dbmodelMessage dbmodel.SwcDataV1
+	var protoMessage message.SwcDataV1
+
+	result := dal.QuerySwcSnapshot(request.GetSwcSnapshotCollectionName(), &dbmodelMessage, dal.GetDbInstance())
+	if result.Status {
+		for _, swcNodeData := range dbmodelMessage {
+			protoMessage.SwcData = append(protoMessage.SwcData, SwcNodeDataV1DbmodelToProtobuf(&swcNodeData))
+		}
+		return &response.GetSnapshotResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  true,
+				Id:      "",
+				Message: result.Message,
+			},
+			SwcNodeData: &protoMessage,
 		}, nil
 	}
 
@@ -2441,9 +2509,8 @@ func (D DBMSServerController) GetSnapshot(ctx context.Context, request *request.
 		MetaInfo: &message.ResponseMetaInfoV1{
 			Status:  false,
 			Id:      "",
-			Message: "",
+			Message: result.Message,
 		},
-		SwcNodeData: nil,
 	}, nil
 }
 
@@ -2455,10 +2522,30 @@ func (D DBMSServerController) GetAllIncrementOperationMetaInfo(ctx context.Conte
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.GetAllIncrementOperationMetaInfoResponse{
 			MetaInfo: &responseMetaInfo,
+		}, nil
+	}
+
+	var dbmodelMessage dbmodel.SwcMetaInfoV1
+	dbmodelMessage.Name = request.SwcName
+
+	var protoMessage []*message.SwcIncrementOperationMetaInfoV1
+	result := dal.QuerySwc(&dbmodelMessage, dal.GetDbInstance())
+	if result.Status {
+		log.Println("User " + request.UserVerifyInfo.GetUserName() + " Query ")
+		for _, dbMessage := range dbmodelMessage.SwcIncrementOperationList {
+			protoMessage = append(protoMessage, SwcIncrementOperationMetaInfoV1MetaInfoV1DbmodelToProtobuf(&dbMessage))
+		}
+		return &response.GetAllIncrementOperationMetaInfoResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  true,
+				Id:      "",
+				Message: result.Message,
+			},
+			SwcIncrementOperationMetaInfo: protoMessage,
 		}, nil
 	}
 
@@ -2466,9 +2553,8 @@ func (D DBMSServerController) GetAllIncrementOperationMetaInfo(ctx context.Conte
 		MetaInfo: &message.ResponseMetaInfoV1{
 			Status:  false,
 			Id:      "",
-			Message: "",
+			Message: result.Message,
 		},
-		SwcIncrementOperationList: nil,
 	}, nil
 }
 
@@ -2480,10 +2566,29 @@ func (D DBMSServerController) GetIncrementOperation(ctx context.Context, request
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.UserVerifyInfo.UserName, request.UserVerifyInfo.UserToken)
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
 	if !responseMetaInfo.Status {
 		return &response.GetIncrementOperationResponse{
 			MetaInfo: &responseMetaInfo,
+		}, nil
+	}
+
+	var dbmodelMessage dbmodel.SwcIncrementOperationListV1
+	var protoMessage message.SwcIncrementOperationListV1
+
+	result := dal.QuerySwcIncrementOperation(request.GetIncrementOperationCollectionName(), &dbmodelMessage, dal.GetDbInstance())
+	if result.Status {
+		for _, swcNodeData := range dbmodelMessage {
+			protoMessage.SwcIncrementOperation = append(protoMessage.SwcIncrementOperation, SwcIncrementOperationListV1DbmodelToProtobuf(&swcNodeData))
+		}
+
+		return &response.GetIncrementOperationResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  true,
+				Id:      "",
+				Message: result.Message,
+			},
+			SwcIncrementOperationList: &protoMessage,
 		}, nil
 	}
 
@@ -2491,8 +2596,7 @@ func (D DBMSServerController) GetIncrementOperation(ctx context.Context, request
 		MetaInfo: &message.ResponseMetaInfoV1{
 			Status:  false,
 			Id:      "",
-			Message: "",
+			Message: result.Message,
 		},
-		SwcIncrementOperationList: nil,
 	}, nil
 }
