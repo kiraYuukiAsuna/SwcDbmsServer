@@ -770,7 +770,7 @@ func QueryAllSwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcData *dbmodel.SwcData
 
 func CreateSnapshot(swcName string, snapshotName string, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	srcCollection := databaseInfo.SwcDb.Collection(swcName)
-	dstCollection := databaseInfo.IncrementOperationDb.Collection(snapshotName)
+	dstCollection := databaseInfo.SnapshotDb.Collection(snapshotName)
 
 	cursor, err := srcCollection.Find(context.Background(), bson.D{{}})
 	if err != nil {
@@ -820,8 +820,14 @@ func CreateSnapshot(swcName string, snapshotName string, databaseInfo MongoDbDat
 	return ReturnWrapper{true, "Create Snapshot Success!"}
 }
 
-func CreateIncrementOperation(swcName string, snapshotName string, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	_ = databaseInfo.IncrementOperationDb.Collection(swcName)
+func CreateIncrementOperation(swcName string, snapshotName string, operation dbmodel.SwcIncrementOperationV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	fullName := swcName + "_" + snapshotName
+	currentCollection := databaseInfo.IncrementOperationDb.Collection(fullName)
 
-	return ReturnWrapper{}
+	_, err := currentCollection.InsertOne(context.TODO(), operation)
+	if err != nil {
+		return ReturnWrapper{false, err.Error()}
+	}
+
+	return ReturnWrapper{true, "Insert Increment operation success!"}
 }
