@@ -21,7 +21,7 @@ type OnlineUserInfo struct {
 	LastHeartBeatTime time.Time
 }
 
-var OnlineUserInfoCache map[string]OnlineUserInfo = map[string]OnlineUserInfo{}
+var OnlineUserInfoCache = map[string]OnlineUserInfo{}
 
 func CronAutoSaveDailyStatistics() {
 	c := cron.New(cron.WithSeconds(), cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)), cron.WithLogger(

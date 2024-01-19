@@ -436,12 +436,11 @@ func (D DBMSServerController) UserOnlineHeartBeatNotifications(ctx context.Conte
 				Message: result.Message,
 			},
 			UserVerifyInfo: &message.UserVerifyInfoV1{
-				UserName:  notification.UserVerifyInfo.UserName,
+				UserName:  notification.UserVerifyInfo.GetUserName(),
 				UserToken: userToken,
 			},
 		}, nil
 	}
-	userMetaInfo.Password = ""
 	return &response.UserOnlineHeartBeatResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
 			Status:  false,
