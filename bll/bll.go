@@ -2383,6 +2383,7 @@ func (D DBMSServerController) CreateSwcSnapshot(ctx context.Context, request *re
 	swcSnapshotMetaInfo.Base.Uuid = uuid.NewString()
 	swcSnapshotMetaInfo.Base.DataAccessModelVersion = "V1"
 	swcSnapshotMetaInfo.CreateTime = time.Now()
+	swcSnapshotMetaInfo.Creator = request.GetUserVerifyInfo().GetUserName()
 	swcSnapshotMetaInfo.SwcSnapshotCollectionName = "Snapshot_" + uuid.NewString()
 	swcMetaInfo.SwcSnapshotList = append(swcMetaInfo.SwcSnapshotList, swcSnapshotMetaInfo)
 
