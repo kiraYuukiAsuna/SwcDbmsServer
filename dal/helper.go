@@ -21,7 +21,7 @@ func GetDbInstance() MongoDbDataBaseInfo {
 	return globalMongodbdatabaseinfo
 }
 
-func InitializeNewDataBaseIfNotExist(metaInfoDataBaseName string, swcDataBaseName string, swcSnapshotDataBaseName string, swcIncrementOperationDataBaseName string) {
+func InitializeNewDataBaseIfNotExist(metaInfoDataBaseName string, swcDataBaseName string, swcSnapshotDataBaseName string, swcIncrementOperationDataBaseName string, swcAttachmentDataBaseName string) {
 	createInfo := MongoDbConnectionCreateInfo{
 		Host:     config.AppConfig.MongodbIP,
 		Port:     config.AppConfig.MongodbPort,
@@ -238,7 +238,7 @@ func InitializeNewDataBaseIfNotExist(metaInfoDataBaseName string, swcDataBaseNam
 		}
 	}
 	if databaseSwcSnapshotExists && !deleteIfExist {
-		log.Printf("Database %s exists! Do not create a new one!\n", swcDataBaseName)
+		log.Printf("Database %s exists! Do not create a new one!\n", swcSnapshotDataBaseName)
 	} else {
 		if databaseSwcSnapshotExists && deleteIfExist {
 			err := dbInfo.SwcDb.Drop(context.TODO())
@@ -246,7 +246,7 @@ func InitializeNewDataBaseIfNotExist(metaInfoDataBaseName string, swcDataBaseNam
 				log.Fatal("Delete exist swc snapshot database failed")
 			}
 		}
-		log.Printf("Database %s does not exist. Will create new one when needed!\n", swcDataBaseName)
+		log.Printf("Database %s does not exist. Will create new one when needed!\n", swcSnapshotDataBaseName)
 	}
 
 	databaseSwcIncrementOperationExists := false
@@ -257,7 +257,7 @@ func InitializeNewDataBaseIfNotExist(metaInfoDataBaseName string, swcDataBaseNam
 		}
 	}
 	if databaseSwcIncrementOperationExists && !deleteIfExist {
-		log.Printf("Database %s exists! Do not create a new one!\n", swcDataBaseName)
+		log.Printf("Database %s exists! Do not create a new one!\n", swcIncrementOperationDataBaseName)
 	} else {
 		if databaseSwcIncrementOperationExists && deleteIfExist {
 			err := dbInfo.SwcDb.Drop(context.TODO())
@@ -265,7 +265,26 @@ func InitializeNewDataBaseIfNotExist(metaInfoDataBaseName string, swcDataBaseNam
 				log.Fatal("Delete exist swc increment operation database failed")
 			}
 		}
-		log.Printf("Database %s does not exist. Will create new one when needed!\n", swcDataBaseName)
+		log.Printf("Database %s does not exist. Will create new one when needed!\n", swcIncrementOperationDataBaseName)
+	}
+
+	databaseSwcAttachmentExists := false
+	for _, dbName := range databaseNames {
+		if dbName == swcAttachmentDataBaseName {
+			databaseSwcAttachmentExists = true
+			break
+		}
+	}
+	if databaseSwcAttachmentExists && !deleteIfExist {
+		log.Printf("Database %s exists! Do not create a new one!\n", swcAttachmentDataBaseName)
+	} else {
+		if databaseSwcAttachmentExists && deleteIfExist {
+			err := dbInfo.SwcDb.Drop(context.TODO())
+			if err != nil {
+				log.Fatal("Delete exist swc increment operation database failed")
+			}
+		}
+		log.Printf("Database %s does not exist. Will create new one when needed!\n", swcAttachmentDataBaseName)
 	}
 
 }

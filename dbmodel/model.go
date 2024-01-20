@@ -113,6 +113,8 @@ type SwcMetaInfoV1 struct {
 	SwcSnapshotList                         []SwcSnapshotMetaInfoV1           `bson:"SwcSnapshotList"`
 	SwcIncrementOperationList               []SwcIncrementOperationMetaInfoV1 `bson:"SwcIncrementOperationList"`
 	CurrentIncrementOperationCollectionName string                            `bson:"CurrentIncrementOperationCollectionName"`
+	SwcAttachmentAno                        SwcAttachmentAnoV1                `bson:"SwcAttachmentAno"`
+	SwcAttachmentApo                        SwcAttachmentApoV1                `bson:"SwcAttachmentApo"`
 }
 
 type SwcNodeInternalDataV1 struct {
@@ -164,4 +166,12 @@ type DailyStatisticsMetaInfoV1 struct {
 	NodeQueryNumber    int32 `bson:"NodeQueryNumber"`
 
 	ActiveUserNumber int32 `bson:"ActiveUserNumber"`
+}
+
+type SwcAttachmentAnoV1 struct {
+	AttachmentUuid string `bson:"AttachmentUuid"`
+}
+
+type SwcAttachmentApoV1 struct {
+	AttachmentUuid string `bson:"AttachmentUuid"`
 }

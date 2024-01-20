@@ -13,7 +13,7 @@ import (
 )
 
 func Initialize() {
-	dal.InitializeNewDataBaseIfNotExist(dal.DefaultMetaInfoDataBaseName, dal.DefaultSwcDataBaseName, dal.DefaultSwcSnapshotDataBaseName, dal.DefaultSwcIncrementOperationDataBaseName)
+	dal.InitializeNewDataBaseIfNotExist(dal.DefaultMetaInfoDataBaseName, dal.DefaultSwcDataBaseName, dal.DefaultSwcSnapshotDataBaseName, dal.DefaultSwcIncrementOperationDataBaseName, dal.DefaultSwcAttachmentDataBaseName)
 
 	var createInfo dal.MongoDbConnectionCreateInfo
 	createInfo.Host = config.AppConfig.MongodbIP
@@ -26,7 +26,7 @@ func Initialize() {
 		log.Fatal(connectionInfo.Err)
 	}
 
-	databaseInstance := dal.ConnectToDataBase(connectionInfo, dal.DefaultMetaInfoDataBaseName, dal.DefaultSwcDataBaseName, dal.DefaultSwcSnapshotDataBaseName, dal.DefaultSwcIncrementOperationDataBaseName)
+	databaseInstance := dal.ConnectToDataBase(connectionInfo, dal.DefaultMetaInfoDataBaseName, dal.DefaultSwcDataBaseName, dal.DefaultSwcSnapshotDataBaseName, dal.DefaultSwcIncrementOperationDataBaseName, dal.DevSwcAttachmentDataBaseName)
 
 	dal.SetDbInstance(databaseInstance)
 }

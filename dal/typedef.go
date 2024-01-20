@@ -24,6 +24,7 @@ type MongoDbDataBaseInfo struct {
 	MetaInfoDb           *mongo.Database
 	SnapshotDb           *mongo.Database
 	IncrementOperationDb *mongo.Database
+	AttachmentDb         *mongo.Database
 }
 
 const (
@@ -38,6 +39,9 @@ const (
 
 	DefaultSwcIncrementOperationDataBaseName string = "DefaultSwcIncrementOperationDataBase"
 	DevSwcIncrementOperationDataBaseName     string = "DevSwcIncrementOperationDataBase"
+
+	DefaultSwcAttachmentDataBaseName string = "DefaultSwcAttachmentDataBaseName"
+	DevSwcAttachmentDataBaseName     string = "DevSwcAttachmentDataBaseName"
 )
 
 const (
