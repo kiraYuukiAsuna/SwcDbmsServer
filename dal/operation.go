@@ -3,12 +3,10 @@ package dal
 import (
 	"DBMS/dbmodel"
 	"context"
-	"encoding/json"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"io"
 	"log"
 	"strconv"
 	"time"
@@ -145,17 +143,6 @@ func QueryAllProject(projectMetaInfoList *[]dbmodel.ProjectMetaInfoV1, databaseI
 		return ReturnWrapper{false, "Query all Project failed!"}
 	}
 
-	for _, result := range *projectMetaInfoList {
-		err := cursor.Decode(&result)
-		if err != nil && err != io.EOF {
-			return ReturnWrapper{false, err.Error()}
-		}
-		_, err = json.MarshalIndent(result, "", "    ")
-		if err != nil {
-			return ReturnWrapper{false, "Query all Project failed!"}
-		}
-		//log.Printf("%s\n", output)
-	}
 	return ReturnWrapper{true, "Query all Project Success"}
 }
 
@@ -247,17 +234,6 @@ func QueryAllUser(userMetaInfoList *[]dbmodel.UserMetaInfoV1, databaseInfo Mongo
 		return ReturnWrapper{false, "Query all user failed!"}
 	}
 
-	for _, result := range *userMetaInfoList {
-		err := cursor.Decode(&result)
-		if err != nil && err != io.EOF {
-			return ReturnWrapper{false, err.Error()}
-		}
-		_, err = json.MarshalIndent(result, "", "    ")
-		if err != nil {
-			return ReturnWrapper{false, "Query all user failed!"}
-		}
-		//log.Printf("%s\n", output)
-	}
 	return ReturnWrapper{true, "Query all user Success"}
 }
 
@@ -349,17 +325,6 @@ func QueryAllPermissionGroup(permissionGroupList *[]dbmodel.PermissionGroupMetaI
 		return ReturnWrapper{false, "Query all PermissionGroup failed!"}
 	}
 
-	for _, result := range *permissionGroupList {
-		err := cursor.Decode(&result)
-		if err != nil && err != io.EOF {
-			return ReturnWrapper{false, err.Error()}
-		}
-		_, err = json.MarshalIndent(result, "", "    ")
-		if err != nil {
-			return ReturnWrapper{false, "Query all PermissionGroup failed!"}
-		}
-		//log.Printf("%s\n", output)
-	}
 	return ReturnWrapper{true, "Query all PermissionGroup Success"}
 }
 
@@ -451,17 +416,6 @@ func QueryAllSwc(swcMetaInfoList *[]dbmodel.SwcMetaInfoV1, databaseInfo MongoDbD
 		return ReturnWrapper{false, "Query all swc failed!"}
 	}
 
-	for _, result := range *swcMetaInfoList {
-		err := cursor.Decode(&result)
-		if err != nil && err != io.EOF {
-			return ReturnWrapper{false, err.Error()}
-		}
-		_, err = json.MarshalIndent(result, "", "    ")
-		if err != nil {
-			return ReturnWrapper{false, "Query all swc failed!"}
-		}
-		//log.Printf("%s\n", output)
-	}
 	return ReturnWrapper{true, "Query all swc Success"}
 }
 
@@ -553,17 +507,6 @@ func QueryAllDailyStatistics(dailyStatisticsList *[]dbmodel.DailyStatisticsMetaI
 		return ReturnWrapper{false, "Query all DailyStatistics failed!"}
 	}
 
-	for _, result := range *dailyStatisticsList {
-		err := cursor.Decode(&result)
-		if err != nil && err != io.EOF {
-			return ReturnWrapper{false, err.Error()}
-		}
-		_, err = json.MarshalIndent(result, "", "    ")
-		if err != nil {
-			return ReturnWrapper{false, "Query all DailyStatistics failed!"}
-		}
-		//log.Printf("%s\n", output)
-	}
 	return ReturnWrapper{true, "Query all DailyStatistics Success"}
 }
 
@@ -611,7 +554,6 @@ func DeleteSwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcData dbmodel.SwcDataV1,
 			uuidList},
 	}
 
-	// 使用这个过滤器来删除所有匹配的文档
 	result, err := collection.DeleteMany(context.TODO(), filterInterface)
 	if err != nil {
 		log.Print(err.Error())
@@ -668,17 +610,6 @@ func QuerySwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcData *dbmodel.SwcDataV1,
 		return ReturnWrapper{false, "Query many node failed!"}
 	}
 
-	for _, result := range *swcData {
-		err := cursor.Decode(&result)
-		if err != nil && err != io.EOF {
-			return ReturnWrapper{false, err.Error()}
-		}
-		_, err = json.MarshalIndent(result, "", "    ")
-		if err != nil {
-			return ReturnWrapper{false, "Query many node failed!"}
-		}
-		//log.Printf("%s\n", output)
-	}
 	return ReturnWrapper{true, "Query many node Success"}
 }
 
@@ -718,17 +649,6 @@ func QuerySwcDataByUserAndTime(
 		return ReturnWrapper{false, "QuerySwcDataByUserAndTime failed!"}
 	}
 
-	for _, result := range *swcData {
-		err := cursor.Decode(&result)
-		if err != nil && err != io.EOF {
-			return ReturnWrapper{false, err.Error()}
-		}
-		_, err = json.MarshalIndent(result, "", "    ")
-		if err != nil {
-			return ReturnWrapper{false, "QuerySwcDataByUserAndTime failed!"}
-		}
-		//log.Printf("%s\n", output)
-	}
 	return ReturnWrapper{true, "QuerySwcDataByUserAndTime Success"}
 }
 
@@ -744,17 +664,6 @@ func QueryAllSwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcData *dbmodel.SwcData
 		return ReturnWrapper{false, "Query many node failed!"}
 	}
 
-	for _, result := range *swcData {
-		err := cursor.Decode(&result)
-		if err != nil && err != io.EOF {
-			return ReturnWrapper{false, err.Error()}
-		}
-		_, err = json.MarshalIndent(result, "", "    ")
-		if err != nil {
-			return ReturnWrapper{false, "Query many node failed!"}
-		}
-		//log.Printf("%s\n", output)
-	}
 	return ReturnWrapper{true, "Query many node Success"}
 }
 
@@ -833,17 +742,6 @@ func QuerySwcSnapshot(snapshotName string, swcData *dbmodel.SwcDataV1, databaseI
 		return ReturnWrapper{false, "Query many node failed!"}
 	}
 
-	for _, result := range *swcData {
-		err := cursor.Decode(&result)
-		if err != nil && err != io.EOF {
-			return ReturnWrapper{false, err.Error()}
-		}
-		_, err = json.MarshalIndent(result, "", "    ")
-		if err != nil {
-			return ReturnWrapper{false, "Query many node failed!"}
-		}
-		//log.Printf("%s\n", output)
-	}
 	return ReturnWrapper{true, "Query many node Success"}
 }
 
@@ -859,16 +757,5 @@ func QuerySwcIncrementOperation(incrementOperationCollectionName string, operati
 		return ReturnWrapper{false, "Query many node failed!"}
 	}
 
-	for _, result := range *operations {
-		err := cursor.Decode(&result)
-		if err != nil && err != io.EOF {
-			return ReturnWrapper{false, err.Error()}
-		}
-		_, err = json.MarshalIndent(result, "", "    ")
-		if err != nil {
-			return ReturnWrapper{false, "Query many node failed!"}
-		}
-		//log.Printf("%s\n", output)
-	}
 	return ReturnWrapper{true, "Query many node Success"}
 }
