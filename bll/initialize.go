@@ -26,7 +26,7 @@ func Initialize() {
 		log.Fatal(connectionInfo.Err)
 	}
 
-	databaseInstance := dal.ConnectToDataBase(connectionInfo, dal.DefaultMetaInfoDataBaseName, dal.DefaultSwcDataBaseName, dal.DefaultSwcSnapshotDataBaseName, dal.DefaultSwcIncrementOperationDataBaseName, dal.DevSwcAttachmentDataBaseName)
+	databaseInstance := dal.ConnectToDataBase(connectionInfo, dal.DefaultMetaInfoDataBaseName, dal.DefaultSwcDataBaseName, dal.DefaultSwcSnapshotDataBaseName, dal.DefaultSwcIncrementOperationDataBaseName, dal.DefaultSwcAttachmentDataBaseName)
 
 	dal.SetDbInstance(databaseInstance)
 }

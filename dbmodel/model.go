@@ -113,8 +113,8 @@ type SwcMetaInfoV1 struct {
 	SwcSnapshotList                         []SwcSnapshotMetaInfoV1           `bson:"SwcSnapshotList"`
 	SwcIncrementOperationList               []SwcIncrementOperationMetaInfoV1 `bson:"SwcIncrementOperationList"`
 	CurrentIncrementOperationCollectionName string                            `bson:"CurrentIncrementOperationCollectionName"`
-	SwcAttachmentAno                        SwcAttachmentAnoV1                `bson:"SwcAttachmentAno"`
-	SwcAttachmentApo                        SwcAttachmentApoV1                `bson:"SwcAttachmentApo"`
+	SwcAttachmentAno                        SwcAttachmentAnoMetaInfoV1        `bson:"SwcAttachmentAno"`
+	SwcAttachmentApo                        SwcAttachmentApoMetaInfoV1        `bson:"SwcAttachmentApo"`
 }
 
 type SwcNodeInternalDataV1 struct {
@@ -168,10 +168,35 @@ type DailyStatisticsMetaInfoV1 struct {
 	ActiveUserNumber int32 `bson:"ActiveUserNumber"`
 }
 
-type SwcAttachmentAnoV1 struct {
+type SwcAttachmentAnoMetaInfoV1 struct {
 	AttachmentUuid string `bson:"AttachmentUuid"`
 }
 
-type SwcAttachmentApoV1 struct {
+type SwcAttachmentApoMetaInfoV1 struct {
 	AttachmentUuid string `bson:"AttachmentUuid"`
+}
+
+type SwcAttachmentAnoV1 struct {
+	Base    MetaInfoBase `bson:"Base,inline"`
+	APOFILE string       `bson:"APOFILE"`
+	SWCFILE string       `bson:"SWCFILE"`
+}
+
+type SwcAttachmentApoV1 struct {
+	Base      MetaInfoBase `bson:"Base,inline"`
+	N         int32        `bson:"n"`
+	Orderinfo string       `bson:"orderinfo"`
+	Name      string       `bson:"name"`
+	Comment   string       `bson:"comment"`
+	Z         float32      `bson:"z"`
+	X         float32      `bson:"x"`
+	Y         float32      `bson:"y"`
+	Pixmax    float32      `bson:"pixmax"`
+	Intensity float32      `bson:"intensity"`
+	Sdev      float32      `bson:"sdev"`
+	Volsize   float32      `bson:"volsize"`
+	Mass      float32      `bson:"mass"`
+	ColorR    int32        `bson:"colorR"`
+	ColorG    int32        `bson:"colorG"`
+	ColorB    int32        `bson:"colorB"`
 }

@@ -760,3 +760,132 @@ func QuerySwcIncrementOperation(incrementOperationCollectionName string, operati
 
 	return ReturnWrapper{true, "Query many node Success"}
 }
+
+func CreateSwcAttachmentAno(swcName string, anoAttachment *dbmodel.SwcAttachmentAnoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	attachmentCollection := "Attachment_Ano_" + swcName
+	collection := databaseInfo.AttachmentDb.Collection(attachmentCollection)
+	_ = collection.Drop(context.TODO())
+	_, err := collection.InsertOne(context.TODO(), anoAttachment)
+	if err != nil {
+		return ReturnWrapper{false, err.Error()}
+	}
+
+	return ReturnWrapper{true, "Create Ano Attachment successfully!"}
+}
+
+func DeleteSwcAttachmentAno(swcName string, attachmentUuid string, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	attachmentCollection := "Attachment_Ano_" + swcName
+	collection := databaseInfo.AttachmentDb.Collection(attachmentCollection)
+
+	result := collection.FindOneAndDelete(context.TODO(), bson.D{
+		{"uuid", attachmentUuid}})
+
+	_ = collection.Drop(context.Background())
+
+	if result.Err() != nil {
+		return ReturnWrapper{false, result.Err().Error()}
+	} else {
+		return ReturnWrapper{true, "Delete Ano Attachment successfully!"}
+	}
+}
+
+func UpdateSwcAttachmentAno(swcName string, attachmentUuid string, anoAttachment *dbmodel.SwcAttachmentAnoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	attachmentCollection := "Attachment_Ano_" + swcName
+	collection := databaseInfo.AttachmentDb.Collection(attachmentCollection)
+
+	result := collection.FindOneAndUpdate(
+		context.TODO(),
+		bson.D{{"uuid", attachmentUuid}},
+		bson.D{{"$set", bson.D{
+			{"APOFILE", anoAttachment.APOFILE},
+			{"SWCFILE", anoAttachment.SWCFILE},
+		}}},
+	)
+	if result.Err() != nil {
+		if result != nil {
+			return ReturnWrapper{false,
+				"Update Ano Attachment failed! Error" + result.Err().Error()}
+		}
+
+	}
+	return ReturnWrapper{true, "Update Ano Attachment Success"}
+}
+
+func QuerySwcAttachmentAno(swcName string, attachmentUuid string, anoAttachment *dbmodel.SwcAttachmentAnoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	attachmentCollection := "Attachment_Ano_" + swcName
+	var collection = databaseInfo.AttachmentDb.Collection(attachmentCollection)
+
+	result := collection.FindOne(
+		context.TODO(),
+		bson.D{{"uuid", attachmentUuid}})
+
+	if result.Err() != nil {
+		return ReturnWrapper{false, result.Err().Error()}
+	} else {
+		err := result.Decode(anoAttachment)
+		if err != nil {
+			return ReturnWrapper{false, err.Error()}
+		} else {
+			return ReturnWrapper{true, ""}
+		}
+	}
+}
+
+func CreateSwcAttachmentApo(swcName string, apoAttachmentCollectionName string, apoAttachment *[]dbmodel.SwcAttachmentApoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	collection := databaseInfo.AttachmentDb.Collection(apoAttachmentCollectionName)
+	var interfaceSlice []interface{}
+	for _, v := range *apoAttachment {
+		interfaceSlice = append(interfaceSlice, v)
+	}
+	_, err := collection.InsertMany(context.TODO(), interfaceSlice)
+	if err != nil {
+		return ReturnWrapper{false, err.Error()}
+	}
+	return ReturnWrapper{true, "Create Apo Attachment successfully!"}
+}
+
+func DeleteSwcAttachmentApo(swcName string, apoAttachmentCollectionName string, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	collection := databaseInfo.AttachmentDb.Collection(apoAttachmentCollectionName)
+	err := collection.Drop(context.Background())
+	if err != nil {
+		return ReturnWrapper{false, err.Error()}
+	}
+	return ReturnWrapper{true, "Delete Apo Attachment successfully!"}
+}
+
+func UpdateSwcAttachmentApo(swcName string, apoAttachmentCollectionName string, apoAttachment *[]dbmodel.SwcAttachmentApoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	collection := databaseInfo.AttachmentDb.Collection(apoAttachmentCollectionName)
+	err := collection.Drop(context.Background())
+	if err != nil {
+		return ReturnWrapper{false, err.Error()}
+	}
+
+	var interfaceSlice []interface{}
+	for _, v := range *apoAttachment {
+		interfaceSlice = append(interfaceSlice, v)
+	}
+	_, err = collection.InsertMany(context.TODO(), interfaceSlice)
+	if err != nil {
+		return ReturnWrapper{false, err.Error()}
+	}
+	return ReturnWrapper{true, "Update Apo Attachment successfully!"}
+}
+
+func QuerySwcAttachmentApo(swcName string, apoAttachmentCollectionName string, apoAttachment *[]dbmodel.SwcAttachmentApoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	collection := databaseInfo.AttachmentDb.Collection(apoAttachmentCollectionName)
+
+	cursor, err := collection.Find(
+		context.TODO(),
+		bson.D{})
+
+	if err != nil {
+		return ReturnWrapper{false, err.Error()}
+	}
+
+	if err = cursor.All(context.TODO(), apoAttachment); err != nil {
+		log.Println(err.Error())
+		return ReturnWrapper{false, err.Error()}
+	}
+
+	return ReturnWrapper{true, "Query Apo Attachment Success"}
+}
