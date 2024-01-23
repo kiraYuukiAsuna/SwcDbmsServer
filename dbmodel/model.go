@@ -96,6 +96,7 @@ type SwcIncrementOperationMetaInfoV1 struct {
 
 type SwcIncrementOperationV1 struct {
 	Base               MetaInfoBase `bson:"Base,inline"`
+	CreateTime         time.Time    `bson:"CreateTime"`
 	IncrementOperation string       `bson:"IncrementOperation"`
 	SwcData            SwcDataV1    `bson:"SwcNodeData"`
 }

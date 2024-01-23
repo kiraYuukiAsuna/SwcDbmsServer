@@ -481,6 +481,10 @@ func SwcIncrementOperationV1MetaInfoV1ProtobufToDbmodel(protoMessage *message.Sw
 		dbmodelMessage.Base.DataAccessModelVersion = protoMessage.Base.DataAccessModelVersion
 	}
 
+	if protoMessage.CreateTime != nil {
+		dbmodelMessage.CreateTime = protoMessage.CreateTime.AsTime()
+	}
+
 	dbmodelMessage.IncrementOperation = protoMessage.IncrementOperation.String()
 
 	var dbSwcData dbmodel.SwcDataV1
@@ -500,7 +504,7 @@ func SwcIncrementOperationListV1DbmodelToProtobuf(dbmodelMessage *dbmodel.SwcInc
 	protoMessage.Base.XId = dbmodelMessage.Base.Id.Hex()
 	protoMessage.Base.Uuid = dbmodelMessage.Base.Uuid
 	protoMessage.Base.DataAccessModelVersion = dbmodelMessage.Base.DataAccessModelVersion
-
+	protoMessage.CreateTime = timestamppb.New(dbmodelMessage.CreateTime)
 	protoMessage.IncrementOperation = message.IncrementOperationV1(message.IncrementOperationV1_value[dbmodelMessage.IncrementOperation])
 
 	var pbSwcData message.SwcDataV1
