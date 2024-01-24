@@ -114,8 +114,8 @@ type SwcMetaInfoV1 struct {
 	SwcSnapshotList                         []SwcSnapshotMetaInfoV1           `bson:"SwcSnapshotList"`
 	SwcIncrementOperationList               []SwcIncrementOperationMetaInfoV1 `bson:"SwcIncrementOperationList"`
 	CurrentIncrementOperationCollectionName string                            `bson:"CurrentIncrementOperationCollectionName"`
-	SwcAttachmentAno                        SwcAttachmentAnoMetaInfoV1        `bson:"SwcAttachmentAno"`
-	SwcAttachmentApo                        SwcAttachmentApoMetaInfoV1        `bson:"SwcAttachmentApo"`
+	SwcAttachmentAnoMetaInfo                SwcAttachmentAnoMetaInfoV1        `bson:"SwcAttachmentAno"`
+	SwcAttachmentApoMetaInfo                SwcAttachmentApoMetaInfoV1        `bson:"SwcAttachmentApo"`
 }
 
 type SwcNodeInternalDataV1 struct {

@@ -2633,7 +2633,7 @@ func (D DBMSServerController) CreateSwcAttachmentAno(ctx context.Context, reques
 
 		res := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 		if res.Status {
-			swcMetaInfo.SwcAttachmentAno.AttachmentUuid = anoAttachmentUuid
+			swcMetaInfo.SwcAttachmentAnoMetaInfo.AttachmentUuid = anoAttachmentUuid
 			res = dal.ModifySwc(swcMetaInfo, dal.GetDbInstance())
 			if res.Status {
 				return &response.CreateSwcAttachmentAnoResponse{
@@ -2695,7 +2695,7 @@ func (D DBMSServerController) DeleteSwcAttachmentAno(ctx context.Context, reques
 
 		res := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 		if res.Status {
-			swcMetaInfo.SwcAttachmentAno.AttachmentUuid = ""
+			swcMetaInfo.SwcAttachmentAnoMetaInfo.AttachmentUuid = ""
 			res = dal.ModifySwc(swcMetaInfo, dal.GetDbInstance())
 			if res.Status {
 				return &response.DeleteSwcAttachmentAnoResponse{
@@ -2766,7 +2766,7 @@ func (D DBMSServerController) UpdateSwcAttachmentAno(ctx context.Context, reques
 
 		res := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 		if res.Status {
-			swcMetaInfo.SwcAttachmentAno.AttachmentUuid = request.GetAnoAttachmentUuid()
+			swcMetaInfo.SwcAttachmentAnoMetaInfo.AttachmentUuid = request.GetAnoAttachmentUuid()
 			res = dal.ModifySwc(swcMetaInfo, dal.GetDbInstance())
 			if res.Status {
 				return &response.UpdateSwcAttachmentAnoResponse{
@@ -2903,7 +2903,7 @@ func (D DBMSServerController) CreateSwcAttachmentApo(ctx context.Context, reques
 
 		res := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 		if res.Status {
-			swcMetaInfo.SwcAttachmentApo.AttachmentUuid = apoAttachmentCollectionName
+			swcMetaInfo.SwcAttachmentApoMetaInfo.AttachmentUuid = apoAttachmentCollectionName
 			res = dal.ModifySwc(swcMetaInfo, dal.GetDbInstance())
 			if res.Status {
 				return &response.CreateSwcAttachmentApoResponse{
@@ -2965,7 +2965,7 @@ func (D DBMSServerController) DeleteSwcAttachmentApo(ctx context.Context, reques
 
 		res := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 		if res.Status {
-			swcMetaInfo.SwcAttachmentApo.AttachmentUuid = ""
+			swcMetaInfo.SwcAttachmentApoMetaInfo.AttachmentUuid = ""
 			res = dal.ModifySwc(swcMetaInfo, dal.GetDbInstance())
 			if res.Status {
 				return &response.DeleteSwcAttachmentApoResponse{
@@ -3053,7 +3053,7 @@ func (D DBMSServerController) UpdateSwcAttachmentApo(ctx context.Context, reques
 
 		res := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 		if res.Status {
-			swcMetaInfo.SwcAttachmentApo.AttachmentUuid = request.GetApoAttachmentUuid()
+			swcMetaInfo.SwcAttachmentApoMetaInfo.AttachmentUuid = request.GetApoAttachmentUuid()
 			res = dal.ModifySwc(swcMetaInfo, dal.GetDbInstance())
 			if res.Status {
 				return &response.UpdateSwcAttachmentApoResponse{

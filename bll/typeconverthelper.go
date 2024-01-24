@@ -233,6 +233,14 @@ func SwcMetaInfoV1ProtobufToDbmodel(protoMessage *message.SwcMetaInfoV1) *dbmode
 
 	dbmodelMessage.CurrentIncrementOperationCollectionName = protoMessage.CurrentIncrementOperationCollectionName
 
+	if protoMessage.SwcAttachmentAnoMetaInfo != nil {
+		dbmodelMessage.SwcAttachmentAnoMetaInfo.AttachmentUuid = protoMessage.SwcAttachmentAnoMetaInfo.GetAttachmentUuid()
+	}
+
+	if protoMessage.SwcAttachmentApoMetaInfo != nil {
+		dbmodelMessage.SwcAttachmentApoMetaInfo.AttachmentUuid = protoMessage.SwcAttachmentApoMetaInfo.GetAttachmentUuid()
+	}
+
 	return &dbmodelMessage
 }
 
@@ -275,6 +283,12 @@ func SwcMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.SwcMetaInfoV1) *mess
 	}
 
 	protoMessage.CurrentIncrementOperationCollectionName = dbmodelMessage.CurrentIncrementOperationCollectionName
+
+	protoMessage.SwcAttachmentAnoMetaInfo = &message.SwcAttachmentAnoMetaInfoV1{}
+	protoMessage.SwcAttachmentAnoMetaInfo.AttachmentUuid = dbmodelMessage.SwcAttachmentAnoMetaInfo.AttachmentUuid
+
+	protoMessage.SwcAttachmentApoMetaInfo = &message.SwcAttachmentApoMetaInfoV1{}
+	protoMessage.SwcAttachmentApoMetaInfo.AttachmentUuid = dbmodelMessage.SwcAttachmentApoMetaInfo.AttachmentUuid
 
 	return &protoMessage
 }
