@@ -166,12 +166,12 @@ func (D DBMSServerController) GetUser(ctx context.Context, request *request.GetU
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
-	if !responseMetaInfo.Status {
-		return &response.GetUserResponse{
-			MetaInfo: &responseMetaInfo,
-		}, nil
-	}
+	//responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
+	//if !responseMetaInfo.Status {
+	//	return &response.GetUserResponse{
+	//		MetaInfo: &responseMetaInfo,
+	//	}, nil
+	//}
 
 	userMetaInfo := dbmodel.UserMetaInfoV1{}
 	userMetaInfo.Name = request.UserName
