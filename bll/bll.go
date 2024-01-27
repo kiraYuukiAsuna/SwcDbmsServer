@@ -39,6 +39,19 @@ func (D DBMSServerController) CreateUser(ctx context.Context, request *request.C
 	userMetaInfo.CreateTime = time.Now()
 	userMetaInfo.HeadPhotoBinData = request.UserInfo.HeadPhotoBinData
 
+	status, newUserId := dal.GetNewUserIdAndIncrease(dal.GetDbInstance())
+	if !status.Status {
+		return &response.CreateUserResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: status.Message,
+			},
+			UserInfo: UserMetaInfoV1DbmodelToProtobuf(userMetaInfo),
+		}, nil
+	}
+	userMetaInfo.UserId = newUserId
+
 	result := dal.CreateUser(*userMetaInfo, dal.GetDbInstance())
 	if result.Status == true {
 		log.Println("User " + request.UserInfo.Name + " Created")
@@ -1538,7 +1551,7 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 		operationRecord.Base.Id = primitive.NewObjectID()
 		operationRecord.Base.Uuid = uuid.NewString()
 		operationRecord.Base.DataAccessModelVersion = "V1"
-		operationRecord.IncrementOperation = dbmodel.IncrementOp_Create
+		operationRecord.IncrementOperation = dal.IncrementOp_Create
 		operationRecord.SwcData = swcData
 		operationRecord.CreateTime = createTime
 		dal.CreateIncrementOperation(swcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
@@ -1644,7 +1657,7 @@ func (D DBMSServerController) DeleteSwcNodeData(ctx context.Context, request *re
 		operationRecord.Base.Id = primitive.NewObjectID()
 		operationRecord.Base.Uuid = uuid.NewString()
 		operationRecord.Base.DataAccessModelVersion = "V1"
-		operationRecord.IncrementOperation = dbmodel.IncrementOp_Delete
+		operationRecord.IncrementOperation = dal.IncrementOp_Delete
 		operationRecord.SwcData = swcData
 		operationRecord.CreateTime = createTime
 		dal.CreateIncrementOperation(swcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
@@ -1757,7 +1770,7 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 		operationRecord.Base.Id = primitive.NewObjectID()
 		operationRecord.Base.Uuid = uuid.NewString()
 		operationRecord.Base.DataAccessModelVersion = "V1"
-		operationRecord.IncrementOperation = dbmodel.IncrementOp_Update
+		operationRecord.IncrementOperation = dal.IncrementOp_Update
 		operationRecord.SwcData = swcData
 		operationRecord.CreateTime = createTime
 		dal.CreateIncrementOperation(swcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())

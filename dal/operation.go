@@ -61,7 +61,7 @@ func ConnectToDataBase(connectionInfo MongoDbConnectionInfo, metaInfoDataBaseNam
 }
 
 func CreateProject(projectMetaInfo dbmodel.ProjectMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var projectCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.ProjectMetaInfoCollectionString)
+	var projectCollection = databaseInfo.MetaInfoDb.Collection(ProjectMetaInfoCollectionString)
 
 	result := projectCollection.FindOne(context.TODO(), bson.D{
 		{"Name", projectMetaInfo.Name}})
@@ -83,7 +83,7 @@ func CreateProject(projectMetaInfo dbmodel.ProjectMetaInfoV1, databaseInfo Mongo
 }
 
 func DeleteProject(projectMetaInfo dbmodel.ProjectMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var projectCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.ProjectMetaInfoCollectionString)
+	var projectCollection = databaseInfo.MetaInfoDb.Collection(ProjectMetaInfoCollectionString)
 
 	result := projectCollection.FindOneAndDelete(context.TODO(), bson.D{
 		{"Name", projectMetaInfo.Name}})
@@ -96,7 +96,7 @@ func DeleteProject(projectMetaInfo dbmodel.ProjectMetaInfoV1, databaseInfo Mongo
 }
 
 func ModifyProject(projectMetaInfo dbmodel.ProjectMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var projectCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.ProjectMetaInfoCollectionString)
+	var projectCollection = databaseInfo.MetaInfoDb.Collection(ProjectMetaInfoCollectionString)
 
 	result := projectCollection.FindOneAndReplace(
 		context.TODO(),
@@ -112,7 +112,7 @@ func ModifyProject(projectMetaInfo dbmodel.ProjectMetaInfoV1, databaseInfo Mongo
 }
 
 func QueryProject(projectMetaInfo *dbmodel.ProjectMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var projectCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.ProjectMetaInfoCollectionString)
+	var projectCollection = databaseInfo.MetaInfoDb.Collection(ProjectMetaInfoCollectionString)
 
 	result := projectCollection.FindOne(
 		context.TODO(),
@@ -131,7 +131,7 @@ func QueryProject(projectMetaInfo *dbmodel.ProjectMetaInfoV1, databaseInfo Mongo
 }
 
 func QueryAllProject(projectMetaInfoList *[]dbmodel.ProjectMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var projectCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.ProjectMetaInfoCollectionString)
+	var projectCollection = databaseInfo.MetaInfoDb.Collection(ProjectMetaInfoCollectionString)
 
 	cursor, err := projectCollection.Find(
 		context.TODO(),
@@ -150,7 +150,7 @@ func QueryAllProject(projectMetaInfoList *[]dbmodel.ProjectMetaInfoV1, databaseI
 }
 
 func CreateUser(userMetaInfo dbmodel.UserMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var userCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.UserMetaInfoCollectionString)
+	var userCollection = databaseInfo.MetaInfoDb.Collection(UserMetaInfoCollectionString)
 
 	result := userCollection.FindOne(context.TODO(), bson.D{
 		{"Name", userMetaInfo.Name},
@@ -173,7 +173,7 @@ func CreateUser(userMetaInfo dbmodel.UserMetaInfoV1, databaseInfo MongoDbDataBas
 }
 
 func DeleteUser(userMetaInfo dbmodel.UserMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var userCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.UserMetaInfoCollectionString)
+	var userCollection = databaseInfo.MetaInfoDb.Collection(UserMetaInfoCollectionString)
 
 	result := userCollection.FindOneAndDelete(context.TODO(), bson.D{
 		{"Name", userMetaInfo.Name},
@@ -187,7 +187,7 @@ func DeleteUser(userMetaInfo dbmodel.UserMetaInfoV1, databaseInfo MongoDbDataBas
 }
 
 func ModifyUser(userMetaInfo dbmodel.UserMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var userCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.UserMetaInfoCollectionString)
+	var userCollection = databaseInfo.MetaInfoDb.Collection(UserMetaInfoCollectionString)
 
 	result := userCollection.FindOneAndReplace(
 		context.TODO(),
@@ -203,7 +203,7 @@ func ModifyUser(userMetaInfo dbmodel.UserMetaInfoV1, databaseInfo MongoDbDataBas
 }
 
 func QueryUser(userMetaInfo *dbmodel.UserMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var userCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.UserMetaInfoCollectionString)
+	var userCollection = databaseInfo.MetaInfoDb.Collection(UserMetaInfoCollectionString)
 
 	result := userCollection.FindOne(
 		context.TODO(),
@@ -222,7 +222,7 @@ func QueryUser(userMetaInfo *dbmodel.UserMetaInfoV1, databaseInfo MongoDbDataBas
 }
 
 func QueryAllUser(userMetaInfoList *[]dbmodel.UserMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var userCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.UserMetaInfoCollectionString)
+	var userCollection = databaseInfo.MetaInfoDb.Collection(UserMetaInfoCollectionString)
 
 	cursor, err := userCollection.Find(
 		context.TODO(),
@@ -241,7 +241,7 @@ func QueryAllUser(userMetaInfoList *[]dbmodel.UserMetaInfoV1, databaseInfo Mongo
 }
 
 func CreatePermissionGroup(permissionGroupMetaInfo dbmodel.PermissionGroupMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var permissionGroupCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.PermissionGroupMetaInfoCollectioString)
+	var permissionGroupCollection = databaseInfo.MetaInfoDb.Collection(PermissionGroupMetaInfoCollectioString)
 
 	result := permissionGroupCollection.FindOne(context.TODO(), bson.D{
 		{"Name", permissionGroupMetaInfo.Name},
@@ -264,7 +264,7 @@ func CreatePermissionGroup(permissionGroupMetaInfo dbmodel.PermissionGroupMetaIn
 }
 
 func DeletePermissionGroup(permissionGroupMetaInfo dbmodel.PermissionGroupMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var permissionGroupCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.PermissionGroupMetaInfoCollectioString)
+	var permissionGroupCollection = databaseInfo.MetaInfoDb.Collection(PermissionGroupMetaInfoCollectioString)
 
 	result := permissionGroupCollection.FindOneAndDelete(context.TODO(), bson.D{
 		{"Name", permissionGroupMetaInfo.Name},
@@ -278,7 +278,7 @@ func DeletePermissionGroup(permissionGroupMetaInfo dbmodel.PermissionGroupMetaIn
 }
 
 func ModifyPermissionGroup(permissionGroupMetaInfo dbmodel.PermissionGroupMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var permissionGroupCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.PermissionGroupMetaInfoCollectioString)
+	var permissionGroupCollection = databaseInfo.MetaInfoDb.Collection(PermissionGroupMetaInfoCollectioString)
 
 	result := permissionGroupCollection.FindOneAndReplace(
 		context.TODO(),
@@ -294,7 +294,7 @@ func ModifyPermissionGroup(permissionGroupMetaInfo dbmodel.PermissionGroupMetaIn
 }
 
 func QueryPermissionGroup(permissionGroupMetaInfo *dbmodel.PermissionGroupMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var permissionGroupCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.PermissionGroupMetaInfoCollectioString)
+	var permissionGroupCollection = databaseInfo.MetaInfoDb.Collection(PermissionGroupMetaInfoCollectioString)
 
 	result := permissionGroupCollection.FindOne(
 		context.TODO(),
@@ -313,7 +313,7 @@ func QueryPermissionGroup(permissionGroupMetaInfo *dbmodel.PermissionGroupMetaIn
 }
 
 func QueryAllPermissionGroup(permissionGroupList *[]dbmodel.PermissionGroupMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var permissionGroupCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.PermissionGroupMetaInfoCollectioString)
+	var permissionGroupCollection = databaseInfo.MetaInfoDb.Collection(PermissionGroupMetaInfoCollectioString)
 
 	cursor, err := permissionGroupCollection.Find(
 		context.TODO(),
@@ -332,7 +332,7 @@ func QueryAllPermissionGroup(permissionGroupList *[]dbmodel.PermissionGroupMetaI
 }
 
 func CreateSwc(swcMetaInfo dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var swcCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.SwcMetaInfoCollectionString)
+	var swcCollection = databaseInfo.MetaInfoDb.Collection(SwcMetaInfoCollectionString)
 
 	result := swcCollection.FindOne(context.TODO(), bson.D{
 		{"Name", swcMetaInfo.Name},
@@ -355,7 +355,7 @@ func CreateSwc(swcMetaInfo dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseIn
 }
 
 func DeleteSwc(swcMetaInfo dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var swcCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.SwcMetaInfoCollectionString)
+	var swcCollection = databaseInfo.MetaInfoDb.Collection(SwcMetaInfoCollectionString)
 
 	result := swcCollection.FindOneAndDelete(context.TODO(), bson.D{
 		{"Name", swcMetaInfo.Name},
@@ -369,7 +369,7 @@ func DeleteSwc(swcMetaInfo dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseIn
 }
 
 func ModifySwc(swcMetaInfo dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var swcCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.SwcMetaInfoCollectionString)
+	var swcCollection = databaseInfo.MetaInfoDb.Collection(SwcMetaInfoCollectionString)
 
 	result := swcCollection.FindOneAndReplace(
 		context.TODO(),
@@ -385,7 +385,7 @@ func ModifySwc(swcMetaInfo dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseIn
 }
 
 func QuerySwc(swcMetaInfo *dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var swcCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.SwcMetaInfoCollectionString)
+	var swcCollection = databaseInfo.MetaInfoDb.Collection(SwcMetaInfoCollectionString)
 
 	result := swcCollection.FindOne(
 		context.TODO(),
@@ -404,7 +404,7 @@ func QuerySwc(swcMetaInfo *dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseIn
 }
 
 func QueryAllSwc(swcMetaInfoList *[]dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var swcCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.SwcMetaInfoCollectionString)
+	var swcCollection = databaseInfo.MetaInfoDb.Collection(SwcMetaInfoCollectionString)
 
 	cursor, err := swcCollection.Find(
 		context.TODO(),
@@ -423,7 +423,7 @@ func QueryAllSwc(swcMetaInfoList *[]dbmodel.SwcMetaInfoV1, databaseInfo MongoDbD
 }
 
 func CreateDailyStatistics(dailyStatisticsMetaInfo dbmodel.DailyStatisticsMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var dailyStatisticsCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.DailyStatisticsMetaInfoCollectionString)
+	var dailyStatisticsCollection = databaseInfo.MetaInfoDb.Collection(DailyStatisticsMetaInfoCollectionString)
 
 	result := dailyStatisticsCollection.FindOne(context.TODO(), bson.D{
 		{"Name", dailyStatisticsMetaInfo.Name},
@@ -446,7 +446,7 @@ func CreateDailyStatistics(dailyStatisticsMetaInfo dbmodel.DailyStatisticsMetaIn
 }
 
 func DeleteDailyStatistics(dailyStatisticsMetaInfo dbmodel.DailyStatisticsMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var dailyStatisticsCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.DailyStatisticsMetaInfoCollectionString)
+	var dailyStatisticsCollection = databaseInfo.MetaInfoDb.Collection(DailyStatisticsMetaInfoCollectionString)
 
 	result := dailyStatisticsCollection.FindOneAndDelete(context.TODO(), bson.D{
 		{"Name", dailyStatisticsMetaInfo.Name},
@@ -460,7 +460,7 @@ func DeleteDailyStatistics(dailyStatisticsMetaInfo dbmodel.DailyStatisticsMetaIn
 }
 
 func ModifyDailyStatistics(dailyStatisticsMetaInfo dbmodel.DailyStatisticsMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var dailyStatisticsCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.DailyStatisticsMetaInfoCollectionString)
+	var dailyStatisticsCollection = databaseInfo.MetaInfoDb.Collection(DailyStatisticsMetaInfoCollectionString)
 
 	result := dailyStatisticsCollection.FindOneAndReplace(
 		context.TODO(),
@@ -476,7 +476,7 @@ func ModifyDailyStatistics(dailyStatisticsMetaInfo dbmodel.DailyStatisticsMetaIn
 }
 
 func QueryDailyStatistics(permissionGroupMetaInfo *dbmodel.DailyStatisticsMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var dailyStatisticsCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.DailyStatisticsMetaInfoCollectionString)
+	var dailyStatisticsCollection = databaseInfo.MetaInfoDb.Collection(DailyStatisticsMetaInfoCollectionString)
 
 	result := dailyStatisticsCollection.FindOne(
 		context.TODO(),
@@ -495,7 +495,7 @@ func QueryDailyStatistics(permissionGroupMetaInfo *dbmodel.DailyStatisticsMetaIn
 }
 
 func QueryAllDailyStatistics(dailyStatisticsList *[]dbmodel.DailyStatisticsMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	var dailyStatisticsCollection = databaseInfo.MetaInfoDb.Collection(dbmodel.DailyStatisticsMetaInfoCollectionString)
+	var dailyStatisticsCollection = databaseInfo.MetaInfoDb.Collection(DailyStatisticsMetaInfoCollectionString)
 
 	cursor, err := dailyStatisticsCollection.Find(
 		context.TODO(),
@@ -983,14 +983,43 @@ func RevertSwcNodeData(swcName string, swcSnapshotCollectionName string, increme
 	QuerySwcIncrementOperation(incrementOperationCollectionName, &operations, GetDbInstance())
 	for _, operation := range operations {
 		switch operation.IncrementOperation {
-		case dbmodel.IncrementOp_Create:
+		case IncrementOp_Create:
 			CreateSwcData(swcName, &operation.SwcData, GetDbInstance())
-		case dbmodel.IncrementOp_Delete:
+		case IncrementOp_Delete:
 			DeleteSwcData(swcName, operation.SwcData, GetDbInstance())
-		case dbmodel.IncrementOp_Update:
+		case IncrementOp_Update:
 			ModifySwcData(swcName, &operation.SwcData, GetDbInstance())
 		}
 	}
 
 	return ReturnWrapper{true, "Delete IncrementOperation after given time successfully!"}
+}
+
+func GetNewUserIdAndIncrease(databaseInfo MongoDbDataBaseInfo) (ReturnWrapper, int32) {
+	collection := databaseInfo.MetaInfoDb.Collection(MetaInfoDbStatusCollectonString)
+
+	var result struct {
+		Seq int32
+	}
+
+	val := "CurrentNewUserId"
+	filter := bson.D{{"AttributeName", val}}
+	update := bson.D{
+		{"$inc", bson.D{{"seq", 1}}},
+		{"$setOnInsert", bson.D{{"AttributeName", val}}},
+	}
+	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
+
+	err := collection.FindOneAndUpdate(context.Background(), filter, update, opts).Decode(&result)
+	if err != nil {
+		return ReturnWrapper{
+			Status:  false,
+			Message: err.Error(),
+		}, -1
+	}
+
+	return ReturnWrapper{
+		Status:  true,
+		Message: "GetNewUserId Successfully!",
+	}, result.Seq
 }

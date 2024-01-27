@@ -20,7 +20,7 @@ func CreateUserHandler(context *gin.Context) {
 	userInfo.Password = "Hanasaka"
 	userInfo.Description = "Test user"
 
-	_, err := dal.GetDbInstance().MetaInfoDb.Collection(dbmodel.UserMetaInfoCollectionString).InsertOne(context2.TODO(), userInfo)
+	_, err := dal.GetDbInstance().MetaInfoDb.Collection(dal.UserMetaInfoCollectionString).InsertOne(context2.TODO(), userInfo)
 	if err != nil {
 		return
 	}

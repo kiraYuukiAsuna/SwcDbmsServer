@@ -45,6 +45,20 @@ const (
 )
 
 const (
+	MetaInfoDbStatusCollectonString         string = "MetaInfoDbStatusCollecton"
+	ProjectMetaInfoCollectionString         string = "ProjectMetaInfoCollection"
+	UserMetaInfoCollectionString            string = "UserMetaInfoCollection"
+	PermissionGroupMetaInfoCollectioString  string = "PermissionGroupMetaInfoCollection"
+	SwcMetaInfoCollectionString             string = "SwcMetaInfoCollection"
+	DailyStatisticsMetaInfoCollectionString string = "DailyStatisticsMetaInfoCollection"
+)
+
+const (
+	DefaultAdminSystemUserName     string = "DefaultAdminSystemUserName"
+	DefaultAdminSystemUserPassword string = "DefaultAdminSystemUserPassword"
+)
+
+const (
 	PermissionGroupAdmin       string = "Admin"
 	PermissionGroupDefault     string = "Default"
 	PermissionGroupGroupLeader string = "GroupLeader"
@@ -53,6 +67,8 @@ const (
 )
 
 const (
-	DefaultAdminSystemUserName     string = "DefaultAdminSystemUserName"
-	DefaultAdminSystemUserPassword string = "DefaultAdminSystemUserPassword"
+	IncrementOp_Unknown string = "Unknown"
+	IncrementOp_Create  string = "Create"
+	IncrementOp_Delete  string = "Delete"
+	IncrementOp_Update  string = "Update"
 )

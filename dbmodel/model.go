@@ -5,21 +5,6 @@ import (
 	"time"
 )
 
-const (
-	ProjectMetaInfoCollectionString         string = "ProjectMetaInfoCollectionString"
-	UserMetaInfoCollectionString            string = "UserMetaInfoCollection"
-	PermissionGroupMetaInfoCollectioString  string = "PermissionGroupMetaInfoCollection"
-	SwcMetaInfoCollectionString             string = "SwcMetaInfoCollection"
-	DailyStatisticsMetaInfoCollectionString string = "DailyStatisticsMetaInfoCollection"
-)
-
-const (
-	IncrementOp_Unknown string = "Unknown"
-	IncrementOp_Create  string = "Create"
-	IncrementOp_Delete  string = "Delete"
-	IncrementOp_Update  string = "Update"
-)
-
 type MetaInfoBase struct {
 	Id                     primitive.ObjectID `bson:"_id"`
 	DataAccessModelVersion string             `bson:"DataAccessModelVersion"`
@@ -34,6 +19,7 @@ type UserMetaInfoV1 struct {
 	CreateTime          time.Time    `bson:"CreateTime"`
 	HeadPhotoBinData    []byte       `bson:"HeadPhotoBinData"`
 	UserPermissionGroup string       `bson:"UserPermissionGroup"`
+	UserId              int32        `bson:"UserId"`
 }
 
 type GlobalPermissionMetaInfoV1 struct {

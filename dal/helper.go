@@ -69,17 +69,23 @@ func InitializeNewDataBaseIfNotExist(metaInfoDataBaseName string, swcDataBaseNam
 		log.Printf("Database %s does not exist. Start to create a new one!\n", metaInfoDataBaseName)
 
 		var err error
-		err = dbInfo.MetaInfoDb.CreateCollection(context.TODO(), dbmodel.ProjectMetaInfoCollectionString)
+
+		err = dbInfo.MetaInfoDb.CreateCollection(context.TODO(), MetaInfoDbStatusCollectonString)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		err = dbInfo.MetaInfoDb.CreateCollection(context.TODO(), dbmodel.UserMetaInfoCollectionString)
+		err = dbInfo.MetaInfoDb.CreateCollection(context.TODO(), ProjectMetaInfoCollectionString)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		err = dbInfo.MetaInfoDb.CreateCollection(context.TODO(), dbmodel.PermissionGroupMetaInfoCollectioString)
+		err = dbInfo.MetaInfoDb.CreateCollection(context.TODO(), UserMetaInfoCollectionString)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = dbInfo.MetaInfoDb.CreateCollection(context.TODO(), PermissionGroupMetaInfoCollectioString)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -199,13 +205,13 @@ func InitializeNewDataBaseIfNotExist(metaInfoDataBaseName string, swcDataBaseNam
 		}
 		CreatePermissionGroup(permissionGroupGroupGuest, dbInfo)
 
-		err = dbInfo.MetaInfoDb.CreateCollection(context.TODO(), dbmodel.SwcMetaInfoCollectionString)
+		err = dbInfo.MetaInfoDb.CreateCollection(context.TODO(), SwcMetaInfoCollectionString)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		opts := options.CreateCollection().SetCapped(true).SetMaxDocuments(1000).SetSizeInBytes(100 * 1024 * 1025)
-		err = dbInfo.MetaInfoDb.CreateCollection(context.TODO(), dbmodel.DailyStatisticsMetaInfoCollectionString, opts)
+		err = dbInfo.MetaInfoDb.CreateCollection(context.TODO(), DailyStatisticsMetaInfoCollectionString, opts)
 		if err != nil {
 			log.Fatal(err)
 		}

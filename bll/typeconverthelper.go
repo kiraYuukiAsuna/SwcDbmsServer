@@ -20,6 +20,7 @@ func UserMetaInfoV1ProtobufToDbmodel(protoMessage *message.UserMetaInfoV1) *dbmo
 	dbmodelMessage.Password = protoMessage.Password
 	dbmodelMessage.Description = protoMessage.Description
 	dbmodelMessage.UserPermissionGroup = protoMessage.UserPermissionGroup
+	dbmodelMessage.UserId = protoMessage.UserId
 
 	if protoMessage.CreateTime != nil {
 		dbmodelMessage.CreateTime = protoMessage.CreateTime.AsTime()
@@ -43,6 +44,8 @@ func UserMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.UserMetaInfoV1) *me
 	protoMessage.Password = dbmodelMessage.Password
 	protoMessage.Description = dbmodelMessage.Description
 	protoMessage.UserPermissionGroup = dbmodelMessage.UserPermissionGroup
+	protoMessage.UserId = dbmodelMessage.UserId
+
 	protoMessage.CreateTime = timestamppb.New(dbmodelMessage.CreateTime)
 	if dbmodelMessage.HeadPhotoBinData != nil {
 		protoMessage.HeadPhotoBinData = dbmodelMessage.HeadPhotoBinData
