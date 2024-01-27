@@ -384,37 +384,37 @@ func TestSwcData() {
 	var swcData2 dbmodel.SwcDataV1
 	swcData2 = append(swcData2, info2)
 
-	if dal.CreateSwcData(swcMetaInfo, &swcData1, dal.GetDbInstance()).Status == false {
+	if dal.CreateSwcData(swcMetaInfo.Name, &swcData1, dal.GetDbInstance()).Status == false {
 		failedNumber++
 		log.Println("Test 1 Failed")
 	}
 
-	if dal.CreateSwcData(swcMetaInfo, &swcData1, dal.GetDbInstance()).Status == true {
+	if dal.CreateSwcData(swcMetaInfo.Name, &swcData1, dal.GetDbInstance()).Status == true {
 		failedNumber++
 		log.Println("Test 2 Failed")
 	}
 
-	if dal.CreateSwcData(swcMetaInfo, &swcData2, dal.GetDbInstance()).Status == false {
+	if dal.CreateSwcData(swcMetaInfo.Name, &swcData2, dal.GetDbInstance()).Status == false {
 		failedNumber++
 		log.Println("Test 3 Failed")
 	}
 
-	if dal.DeleteSwcData(swcMetaInfo, swcData2, dal.GetDbInstance()).Status == false {
+	if dal.DeleteSwcData(swcMetaInfo.Name, swcData2, dal.GetDbInstance()).Status == false {
 		failedNumber++
 		log.Println("Test 4 Failed")
 	}
 
-	if dal.DeleteSwcData(swcMetaInfo, swcData2, dal.GetDbInstance()).Status == false {
+	if dal.DeleteSwcData(swcMetaInfo.Name, swcData2, dal.GetDbInstance()).Status == false {
 		failedNumber++
 		log.Println("Test 5 Failed")
 	}
 	info1.Creator = "Test Modify"
-	if dal.ModifySwcData(swcMetaInfo, &swcData1, dal.GetDbInstance()).Status == false {
+	if dal.ModifySwcData(swcMetaInfo.Name, &swcData1, dal.GetDbInstance()).Status == false {
 		failedNumber++
 		log.Println("Test 6 Failed")
 	}
 	info1.Creator = ""
-	if dal.QuerySwcData(swcMetaInfo, &swcData1, dal.GetDbInstance()).Status == false {
+	if dal.QuerySwcData(swcMetaInfo.Name, &swcData1, dal.GetDbInstance()).Status == false {
 		failedNumber++
 		log.Println("Test 7 Failed")
 	}
@@ -424,13 +424,13 @@ func TestSwcData() {
 		log.Println("Test 8 Failed")
 	}
 
-	if dal.QuerySwcDataByUserAndTime(swcMetaInfo, "", time.Time{}, time.Time{}, &swcData1, dal.GetDbInstance()).Status == false {
+	if dal.QuerySwcDataByUserAndTime(swcMetaInfo.Name, "", time.Time{}, time.Time{}, &swcData1, dal.GetDbInstance()).Status == false {
 		failedNumber++
 		log.Println("Test 9 Failed")
 	}
 
 	var swcDataList dbmodel.SwcDataV1
-	if dal.QueryAllSwcData(swcMetaInfo, &swcDataList, dal.GetDbInstance()).Status == false {
+	if dal.QueryAllSwcData(swcMetaInfo.Name, &swcDataList, dal.GetDbInstance()).Status == false {
 		failedNumber++
 		log.Println("Test 9 Failed")
 	}

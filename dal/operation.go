@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
@@ -512,8 +513,8 @@ func QueryAllDailyStatistics(dailyStatisticsList *[]dbmodel.DailyStatisticsMetaI
 	return ReturnWrapper{true, "Query all DailyStatistics Success"}
 }
 
-func CreateSwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	collection := databaseInfo.SwcDb.Collection(swcMetaInfo.Name)
+func CreateSwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	collection := databaseInfo.SwcDb.Collection(swcName)
 	var interfaceSlice []interface{}
 	for _, v := range *swcData {
 		interfaceSlice = append(interfaceSlice, v)
@@ -532,18 +533,18 @@ func CreateSwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcData *dbmodel.SwcDataV1
 	return ReturnWrapper{true, "Create many node Success"}
 }
 
-func DeleteSwcDataCollection(swcMetaInfo dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	collection := databaseInfo.SwcDb.Collection(swcMetaInfo.Name)
+func DeleteSwcDataCollection(swcName string, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	collection := databaseInfo.SwcDb.Collection(swcName)
 
 	err := collection.Drop(context.TODO())
 	if err != nil {
 		return ReturnWrapper{false, err.Error()}
 	}
-	return ReturnWrapper{true, "Delete swcdata collection " + swcMetaInfo.Name + " successfully!"}
+	return ReturnWrapper{true, "Delete swcdata collection " + swcName + " successfully!"}
 }
 
-func DeleteSwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcData dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	collection := databaseInfo.SwcDb.Collection(swcMetaInfo.Name)
+func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	collection := databaseInfo.SwcDb.Collection(swcName)
 
 	uuidList := bson.A{}
 
@@ -572,8 +573,8 @@ func DeleteSwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcData dbmodel.SwcDataV1,
 	return ReturnWrapper{true, "Delete many node Success"}
 }
 
-func ModifySwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	collection := databaseInfo.SwcDb.Collection(swcMetaInfo.Name)
+func ModifySwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	collection := databaseInfo.SwcDb.Collection(swcName)
 	var wg sync.WaitGroup
 	errorsChan := make(chan error, len(*swcData))
 
@@ -614,8 +615,8 @@ func ModifySwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcData *dbmodel.SwcDataV1
 	return ReturnWrapper{true, "Modify swc node Success"}
 }
 
-func QuerySwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	collection := databaseInfo.SwcDb.Collection(swcMetaInfo.Name)
+func QuerySwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	collection := databaseInfo.SwcDb.Collection(swcName)
 
 	uuidList := bson.A{}
 
@@ -641,14 +642,14 @@ func QuerySwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcData *dbmodel.SwcDataV1,
 }
 
 func QuerySwcDataByUserAndTime(
-	swcMetaInfo dbmodel.SwcMetaInfoV1,
+	swcName string,
 	userName string,
 	startTime time.Time,
 	endTime time.Time,
 	swcData *dbmodel.SwcDataV1,
 	databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 
-	collection := databaseInfo.SwcDb.Collection(swcMetaInfo.Name)
+	collection := databaseInfo.SwcDb.Collection(swcName)
 
 	filterInterface := bson.D{}
 
@@ -679,8 +680,8 @@ func QuerySwcDataByUserAndTime(
 	return ReturnWrapper{true, "QuerySwcDataByUserAndTime Success"}
 }
 
-func QueryAllSwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	collection := databaseInfo.SwcDb.Collection(swcMetaInfo.Name)
+func QueryAllSwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	collection := databaseInfo.SwcDb.Collection(swcName)
 
 	cursor, err := collection.Find(context.TODO(), bson.D{})
 	if err != nil {
@@ -914,4 +915,82 @@ func QuerySwcAttachmentApo(swcName string, apoAttachmentCollectionName string, a
 	}
 
 	return ReturnWrapper{true, "Query Apo Attachment Success"}
+}
+
+func RevertSwcNodeData(swcName string, swcSnapshotCollectionName string, incrementOperationCollectionName string, endTime time.Time, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	collection := databaseInfo.IncrementOperationDb.Collection(incrementOperationCollectionName)
+	delFilter := bson.D{{"CreateTime", bson.D{{"$gt", primitive.NewDateTimeFromTime(endTime)}}}}
+	delres, err := collection.DeleteMany(context.TODO(), delFilter)
+	if err != nil {
+		return ReturnWrapper{false, err.Error()}
+	}
+	println(delres.DeletedCount)
+
+	swcCollection := databaseInfo.SwcDb.Collection(swcName)
+	err = swcCollection.Drop(context.TODO())
+	if err != nil {
+		return ReturnWrapper{false, err.Error()}
+	}
+
+	srcCollection := databaseInfo.SnapshotDb.Collection(swcSnapshotCollectionName)
+	dstCollection := databaseInfo.SwcDb.Collection(swcName)
+
+	cursor, err := srcCollection.Find(context.Background(), bson.D{{}})
+	if err != nil {
+		return ReturnWrapper{
+			Status:  false,
+			Message: err.Error(),
+		}
+	}
+
+	var results []interface{}
+	batchSize := 100000
+
+	for cursor.Next(context.Background()) {
+		var result bson.D
+		err := cursor.Decode(&result)
+		if err != nil {
+			return ReturnWrapper{
+				Status:  false,
+				Message: err.Error(),
+			}
+		}
+		results = append(results, result)
+
+		if len(results) >= batchSize {
+			_, err = dstCollection.InsertMany(context.Background(), results)
+			if err != nil {
+				return ReturnWrapper{
+					Status:  false,
+					Message: err.Error(),
+				}
+			}
+			results = results[:0] // 清空切片，准备下一批次
+		}
+	}
+
+	// 插入剩余的文档
+	if len(results) > 0 {
+		_, err = dstCollection.InsertMany(context.Background(), results)
+		if err != nil {
+			return ReturnWrapper{
+				Status:  false,
+				Message: err.Error(),
+			}
+		}
+	}
+	var operations dbmodel.SwcIncrementOperationListV1
+	QuerySwcIncrementOperation(incrementOperationCollectionName, &operations, GetDbInstance())
+	for _, operation := range operations {
+		switch operation.IncrementOperation {
+		case dbmodel.IncrementOp_Create:
+			CreateSwcData(swcName, &operation.SwcData, GetDbInstance())
+		case dbmodel.IncrementOp_Delete:
+			DeleteSwcData(swcName, operation.SwcData, GetDbInstance())
+		case dbmodel.IncrementOp_Update:
+			ModifySwcData(swcName, &operation.SwcData, GetDbInstance())
+		}
+	}
+
+	return ReturnWrapper{true, "Delete IncrementOperation after given time successfully!"}
 }

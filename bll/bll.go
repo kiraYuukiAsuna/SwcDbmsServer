@@ -1209,7 +1209,7 @@ func (D DBMSServerController) DeleteSwc(ctx context.Context, request *request.De
 	}
 
 	if result.Status {
-		result = dal.DeleteSwcDataCollection(swcMetaInfo, dal.GetDbInstance())
+		result = dal.DeleteSwcDataCollection(swcMetaInfo.Name, dal.GetDbInstance())
 		if result.Status {
 			log.Println("User " + request.UserVerifyInfo.GetUserName() + "Delete Swc " + swcMetaInfo.Name)
 			DailyStatisticsInfo.DeletedSwcNumber += 1
@@ -1529,7 +1529,7 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 		}, nil
 	}
 
-	result = dal.CreateSwcData(swcMetaInfo, &swcData, dal.GetDbInstance())
+	result = dal.CreateSwcData(swcMetaInfo.Name, &swcData, dal.GetDbInstance())
 	if result.Status {
 		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Create Swc node " + swcMetaInfo.Name)
 		DailyStatisticsInfo.CreateSwcNodeNumber += 1
@@ -1635,7 +1635,7 @@ func (D DBMSServerController) DeleteSwcNodeData(ctx context.Context, request *re
 
 	createTime := time.Now()
 
-	result = dal.DeleteSwcData(swcMetaInfo, swcData, dal.GetDbInstance())
+	result = dal.DeleteSwcData(swcMetaInfo.Name, swcData, dal.GetDbInstance())
 	if result.Status {
 		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Delete Swc " + swcMetaInfo.Name)
 		DailyStatisticsInfo.DeletedSwcNodeNumber += 1
@@ -1748,7 +1748,7 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 
 	swcMetaInfo.LastModifiedTime = createTime
 
-	result = dal.ModifySwcData(swcMetaInfo, &swcData, dal.GetDbInstance())
+	result = dal.ModifySwcData(swcMetaInfo.Name, &swcData, dal.GetDbInstance())
 	if result.Status {
 		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Update Swc " + swcMetaInfo.Name)
 		DailyStatisticsInfo.ModifiedSwcNodeNumber += 1
@@ -1846,7 +1846,7 @@ func (D DBMSServerController) GetSwcNodeData(ctx context.Context, request *reque
 		dbmodelMessage = append(dbmodelMessage, *SwcNodeDataV1ProtobufToDbmodel(swcNodeData))
 	}
 
-	result = dal.QuerySwcData(swcMetaInfo, &dbmodelMessage, dal.GetDbInstance())
+	result = dal.QuerySwcData(swcMetaInfo.Name, &dbmodelMessage, dal.GetDbInstance())
 	if result.Status {
 		log.Println("User " + request.UserVerifyInfo.GetUserName() + " Get SwcData " + swcMetaInfo.Name)
 
@@ -1937,7 +1937,7 @@ func (D DBMSServerController) GetSwcFullNodeData(ctx context.Context, request *r
 		}, nil
 	}
 
-	result = dal.QueryAllSwcData(swcMetaInfo, &dbmodelMessage, dal.GetDbInstance())
+	result = dal.QueryAllSwcData(swcMetaInfo.Name, &dbmodelMessage, dal.GetDbInstance())
 	if result.Status {
 		log.Println("User " + request.UserVerifyInfo.GetUserName() + " Get SwcFullNodeData " + swcMetaInfo.Name)
 		DailyStatisticsInfo.NodeQueryNumber += 1
@@ -2040,7 +2040,7 @@ func (D DBMSServerController) GetSwcNodeDataListByTimeAndUser(ctx context.Contex
 		startTime = time.Now()
 	}
 
-	result = dal.QuerySwcDataByUserAndTime(swcMetaInfo, request.UserName, startTime, endTime, &dbmodelMessage, dal.GetDbInstance())
+	result = dal.QuerySwcDataByUserAndTime(swcMetaInfo.Name, request.UserName, startTime, endTime, &dbmodelMessage, dal.GetDbInstance())
 	if result.Status {
 		log.Println("User " + request.UserVerifyInfo.UserName + " Get SwcDataByUserAndTime " + swcMetaInfo.Name)
 		DailyStatisticsInfo.NodeQueryNumber += 1
@@ -2389,11 +2389,12 @@ func (D DBMSServerController) CreateSwcSnapshot(ctx context.Context, request *re
 	hour, minute, second := timePoint.Clock()
 	_ = strconv.Itoa(year) + "-" + mouth.String() + "-" + strconv.Itoa(day-1) + "_" + strconv.Itoa(hour) + ":" + strconv.Itoa(minute) + "-" + strconv.Itoa(second)
 
+	createTime := time.Now()
 	var swcSnapshotMetaInfo dbmodel.SwcSnapshotMetaInfoV1
 	swcSnapshotMetaInfo.Base.Id = primitive.NewObjectID()
 	swcSnapshotMetaInfo.Base.Uuid = uuid.NewString()
 	swcSnapshotMetaInfo.Base.DataAccessModelVersion = "V1"
-	swcSnapshotMetaInfo.CreateTime = time.Now()
+	swcSnapshotMetaInfo.CreateTime = createTime
 	swcSnapshotMetaInfo.Creator = request.GetUserVerifyInfo().GetUserName()
 	swcSnapshotMetaInfo.SwcSnapshotCollectionName = "Snapshot_" + uuid.NewString()
 	swcMetaInfo.SwcSnapshotList = append(swcMetaInfo.SwcSnapshotList, swcSnapshotMetaInfo)
@@ -2402,7 +2403,7 @@ func (D DBMSServerController) CreateSwcSnapshot(ctx context.Context, request *re
 	swcIncrementOperationMetaInfo.Base.Id = primitive.NewObjectID()
 	swcIncrementOperationMetaInfo.Base.Uuid = uuid.NewString()
 	swcIncrementOperationMetaInfo.Base.DataAccessModelVersion = "V1"
-	swcIncrementOperationMetaInfo.CreateTime = time.Now()
+	swcIncrementOperationMetaInfo.CreateTime = createTime
 	swcIncrementOperationMetaInfo.StartSnapshot = swcSnapshotMetaInfo.SwcSnapshotCollectionName
 	swcIncrementOperationMetaInfo.IncrementOperationCollectionName = "IncrementOperation_" + uuid.NewString()
 	swcMetaInfo.SwcIncrementOperationList = append(swcMetaInfo.SwcIncrementOperationList, swcIncrementOperationMetaInfo)
@@ -3165,6 +3166,96 @@ func (D DBMSServerController) GetSwcAttachmentApo(ctx context.Context, request *
 			Status:  false,
 			Id:      "",
 			Message: result.Message,
+		},
+	}, nil
+}
+
+func (D DBMSServerController) RevertSwcVersion(context context.Context, request *request.RevertSwcVersionRequest) (*response.RevertSwcVersionResponse, error) {
+	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
+	if !apiVersionVerifyResult.Status {
+		return &response.RevertSwcVersionResponse{
+			MetaInfo: &apiVersionVerifyResult,
+		}, nil
+	}
+
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
+	if !responseMetaInfo.Status {
+		return &response.RevertSwcVersionResponse{
+			MetaInfo: &responseMetaInfo,
+		}, nil
+	}
+
+	swcMetaInfo := dbmodel.SwcMetaInfoV1{}
+	swcMetaInfo.Name = request.GetSwcName()
+
+	endTime := request.GetVersionEndTime().AsTime()
+
+	status := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
+	if status.Status {
+		// Process SwcSnapshotMetaInfoV1 items
+		var latestSnapshot *dbmodel.SwcSnapshotMetaInfoV1
+		var newSnapshotList []dbmodel.SwcSnapshotMetaInfoV1
+		for _, snapshot := range swcMetaInfo.SwcSnapshotList {
+			if snapshot.CreateTime.Before(endTime) || snapshot.CreateTime.Equal(endTime) {
+				newSnapshotList = append(newSnapshotList, snapshot)
+				if latestSnapshot == nil || snapshot.CreateTime.After(latestSnapshot.CreateTime) {
+					latestSnapshot = &snapshot
+				}
+			}
+		}
+
+		// Process SwcIncrementOperationMetaInfoV1 items
+		var latestIncrementOperation *dbmodel.SwcIncrementOperationMetaInfoV1
+		var newIncrementOperationList []dbmodel.SwcIncrementOperationMetaInfoV1
+		for _, incrementOperation := range swcMetaInfo.SwcIncrementOperationList {
+			if incrementOperation.CreateTime.Before(endTime) || incrementOperation.CreateTime.Equal(endTime) {
+				newIncrementOperationList = append(newIncrementOperationList, incrementOperation)
+				if latestIncrementOperation == nil || incrementOperation.CreateTime.After(latestIncrementOperation.CreateTime) {
+					latestIncrementOperation = &incrementOperation
+				}
+			}
+		}
+
+		if latestIncrementOperation.StartSnapshot == latestSnapshot.SwcSnapshotCollectionName {
+
+			status = dal.RevertSwcNodeData(request.GetSwcName(), latestSnapshot.SwcSnapshotCollectionName, latestIncrementOperation.IncrementOperationCollectionName, endTime, dal.GetDbInstance())
+			if status.Status {
+
+				swcMetaInfo.SwcSnapshotList = newSnapshotList
+				swcMetaInfo.SwcIncrementOperationList = newIncrementOperationList
+				swcMetaInfo.CurrentIncrementOperationCollectionName = latestIncrementOperation.IncrementOperationCollectionName
+
+				return &response.RevertSwcVersionResponse{
+					MetaInfo: &message.ResponseMetaInfoV1{
+						Status:  true,
+						Id:      "",
+						Message: "Revert Successfully!",
+					},
+				}, nil
+			} else {
+				return &response.RevertSwcVersionResponse{
+					MetaInfo: &message.ResponseMetaInfoV1{
+						Status:  false,
+						Id:      "",
+						Message: status.Message,
+					},
+				}, nil
+			}
+		} else {
+			return &response.RevertSwcVersionResponse{
+				MetaInfo: &message.ResponseMetaInfoV1{
+					Status:  false,
+					Id:      "",
+					Message: "Critical! Dbms cannot decided which increment operation list can be used to revert swc version to " + endTime.String() + "!",
+				},
+			}, nil
+		}
+	}
+	return &response.RevertSwcVersionResponse{
+		MetaInfo: &message.ResponseMetaInfoV1{
+			Status:  false,
+			Id:      "",
+			Message: status.Message,
 		},
 	}, nil
 }
