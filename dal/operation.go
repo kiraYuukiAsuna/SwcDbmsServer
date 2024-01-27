@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -511,10 +512,10 @@ func QueryAllDailyStatistics(dailyStatisticsList *[]dbmodel.DailyStatisticsMetaI
 	return ReturnWrapper{true, "Query all DailyStatistics Success"}
 }
 
-func CreateSwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcData dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+func CreateSwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	collection := databaseInfo.SwcDb.Collection(swcMetaInfo.Name)
 	var interfaceSlice []interface{}
-	for _, v := range swcData {
+	for _, v := range *swcData {
 		interfaceSlice = append(interfaceSlice, v)
 	}
 	result, err := collection.InsertMany(context.TODO(), interfaceSlice)
@@ -571,20 +572,45 @@ func DeleteSwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcData dbmodel.SwcDataV1,
 	return ReturnWrapper{true, "Delete many node Success"}
 }
 
-func ModifySwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcNodeData dbmodel.SwcNodeDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+func ModifySwcData(swcMetaInfo dbmodel.SwcMetaInfoV1, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	collection := databaseInfo.SwcDb.Collection(swcMetaInfo.Name)
+	var wg sync.WaitGroup
+	errorsChan := make(chan error, len(*swcData))
 
-	result, err := collection.UpdateOne(context.TODO(),
-		bson.D{{"uuid", swcNodeData.Base.Uuid}},
-		bson.D{{"$set", swcNodeData}},
-	)
-	if err != nil {
-		if result != nil {
-			return ReturnWrapper{false,
-				"Modify swc node failed! Error" + err.Error()}
-		}
-
+	for _, v := range *swcData {
+		wg.Add(1)
+		go func(val dbmodel.SwcNodeDataV1) {
+			defer wg.Done()
+			_, err := collection.UpdateOne(context.TODO(),
+				bson.D{{"uuid", val.Base.Uuid}},
+				bson.D{{"$set", bson.D{
+					{"SwcData", val.SwcNodeInternalData},
+					{"Creator", val.Creator},
+					{"CreateTime", val.CreateTime},
+					{"LastModifiedTime", val.LastModifiedTime},
+					{"CheckerUserUuid", val.CheckerUserUuid},
+				}}},
+			)
+			if err != nil {
+				errorsChan <- err
+			}
+		}(v)
 	}
+
+	wg.Wait()
+	close(errorsChan)
+
+	errorNum := 0
+	for err := range errorsChan {
+		log.Println(err) // replace with your preferred logging method
+		errorNum++
+	}
+
+	if errorNum != 0 {
+		return ReturnWrapper{false,
+			"Modify swc node failed! Error! Number=" + strconv.Itoa(errorNum) + " update failed!"}
+	}
+
 	return ReturnWrapper{true, "Modify swc node Success"}
 }
 

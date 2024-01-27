@@ -1501,10 +1501,14 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 
 	createTime := time.Now()
 
+	var nodesUuid []string
+
 	for idx := range swcData {
 		swcData[idx].Creator = userMetaInfo.Name
 		swcData[idx].Base.Id = primitive.NewObjectID()
-		swcData[idx].Base.Uuid = uuid.NewString()
+		newUuid := uuid.NewString()
+		nodesUuid = append(nodesUuid, newUuid)
+		swcData[idx].Base.Uuid = newUuid
 		swcData[idx].Base.DataAccessModelVersion = "V1"
 		swcData[idx].CreateTime = createTime
 		swcData[idx].LastModifiedTime = createTime
@@ -1525,7 +1529,7 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 		}, nil
 	}
 
-	result = dal.CreateSwcData(swcMetaInfo, swcData, dal.GetDbInstance())
+	result = dal.CreateSwcData(swcMetaInfo, &swcData, dal.GetDbInstance())
 	if result.Status {
 		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Create Swc node " + swcMetaInfo.Name)
 		DailyStatisticsInfo.CreateSwcNodeNumber += 1
@@ -1545,6 +1549,7 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 				Id:      "",
 				Message: result.Message,
 			},
+			CreatedNodesUuid: nodesUuid,
 		}, nil
 	} else {
 		return &response.CreateSwcNodeDataResponse{
@@ -1730,11 +1735,20 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 
 	createTime := time.Now()
 
-	swcNodeData := SwcNodeDataV1ProtobufToDbmodel(request.SwcNodeData)
-	swcMetaInfo.LastModifiedTime = createTime
-	swcNodeData.LastModifiedTime = createTime
+	var swcData dbmodel.SwcDataV1
 
-	result = dal.ModifySwcData(swcMetaInfo, *swcNodeData, dal.GetDbInstance())
+	for _, swcNodeData := range request.SwcData.SwcData {
+		var data = *SwcNodeDataV1ProtobufToDbmodel(swcNodeData)
+		data.CreateTime = createTime
+		data.LastModifiedTime = createTime
+		data.Base.Id = primitive.NewObjectID()
+		data.Creator = request.GetUserVerifyInfo().GetUserName()
+		swcData = append(swcData, data)
+	}
+
+	swcMetaInfo.LastModifiedTime = createTime
+
+	result = dal.ModifySwcData(swcMetaInfo, &swcData, dal.GetDbInstance())
 	if result.Status {
 		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Update Swc " + swcMetaInfo.Name)
 		DailyStatisticsInfo.ModifiedSwcNodeNumber += 1
@@ -1744,8 +1758,6 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 		operationRecord.Base.Uuid = uuid.NewString()
 		operationRecord.Base.DataAccessModelVersion = "V1"
 		operationRecord.IncrementOperation = dbmodel.IncrementOp_Update
-		swcData := dbmodel.SwcDataV1{}
-		swcData = append(swcData, *swcNodeData)
 		operationRecord.SwcData = swcData
 		operationRecord.CreateTime = createTime
 		dal.CreateIncrementOperation(swcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())

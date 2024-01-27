@@ -384,17 +384,17 @@ func TestSwcData() {
 	var swcData2 dbmodel.SwcDataV1
 	swcData2 = append(swcData2, info2)
 
-	if dal.CreateSwcData(swcMetaInfo, swcData1, dal.GetDbInstance()).Status == false {
+	if dal.CreateSwcData(swcMetaInfo, &swcData1, dal.GetDbInstance()).Status == false {
 		failedNumber++
 		log.Println("Test 1 Failed")
 	}
 
-	if dal.CreateSwcData(swcMetaInfo, swcData1, dal.GetDbInstance()).Status == true {
+	if dal.CreateSwcData(swcMetaInfo, &swcData1, dal.GetDbInstance()).Status == true {
 		failedNumber++
 		log.Println("Test 2 Failed")
 	}
 
-	if dal.CreateSwcData(swcMetaInfo, swcData2, dal.GetDbInstance()).Status == false {
+	if dal.CreateSwcData(swcMetaInfo, &swcData2, dal.GetDbInstance()).Status == false {
 		failedNumber++
 		log.Println("Test 3 Failed")
 	}
@@ -409,7 +409,7 @@ func TestSwcData() {
 		log.Println("Test 5 Failed")
 	}
 	info1.Creator = "Test Modify"
-	if dal.ModifySwcData(swcMetaInfo, info1, dal.GetDbInstance()).Status == false {
+	if dal.ModifySwcData(swcMetaInfo, &swcData1, dal.GetDbInstance()).Status == false {
 		failedNumber++
 		log.Println("Test 6 Failed")
 	}
