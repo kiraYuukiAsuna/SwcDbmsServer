@@ -1406,12 +1406,12 @@ func (D DBMSServerController) GetAllSwcMetaInfo(ctx context.Context, request *re
 		}, nil
 	}
 
-	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
-	if !responseMetaInfo.Status {
-		return &response.GetAllSwcMetaInfoResponse{
-			MetaInfo: &responseMetaInfo,
-		}, nil
-	}
+	//responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
+	//if !responseMetaInfo.Status {
+	//	return &response.GetAllSwcMetaInfoResponse{
+	//		MetaInfo: &responseMetaInfo,
+	//	}, nil
+	//}
 
 	var dbmodelMessage []dbmodel.SwcMetaInfoV1
 
