@@ -605,13 +605,15 @@ func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 
 		// Update the last node's parent to the current node's n
 		if lastNode != nil {
-			update := bson.D{
-				{"$set", bson.D{
-					{"SwcData.parent", node.SwcNodeInternalData.N},
-				}},
+			if lastNode.SwcNodeInternalData.Parent != -1 {
+				update := bson.D{
+					{"$set", bson.D{
+						{"SwcData.parent", node.SwcNodeInternalData.N},
+					}},
+				}
+				model := mongo.NewUpdateOneModel().SetFilter(bson.M{"_id": lastNode.Base.Id}).SetUpdate(update)
+				writes = append(writes, model)
 			}
-			model := mongo.NewUpdateOneModel().SetFilter(bson.M{"_id": lastNode.Base.Id}).SetUpdate(update)
-			writes = append(writes, model)
 		}
 
 		// Save the current node for the next iteration
