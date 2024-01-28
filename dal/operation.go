@@ -568,8 +568,17 @@ func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 		} else {
 			return ReturnWrapper{false, "Delete many node failed!"}
 		}
-
 	}
+
+	// adjust remaining node's n parent
+	for _, v := range swcData {
+		_, _ = collection.UpdateMany(context.TODO(), bson.D{
+			{"SwcData.parent", v.SwcNodeInternalData.N},
+		}, bson.D{{"$set", bson.D{
+			{"SwcData.parent", v.SwcNodeInternalData.Parent}}},
+		})
+	}
+
 	return ReturnWrapper{true, "Delete many node Success"}
 }
 
@@ -582,15 +591,34 @@ func ModifySwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo Mong
 		wg.Add(1)
 		go func(val dbmodel.SwcNodeDataV1) {
 			defer wg.Done()
+			updateData := bson.D{
+				{"SwcData.type", val.SwcNodeInternalData.Type},
+				{"SwcData.x", val.SwcNodeInternalData.X},
+				{"SwcData.y", val.SwcNodeInternalData.Y},
+				{"SwcData.z", val.SwcNodeInternalData.Z},
+				{"SwcData.radius", val.SwcNodeInternalData.Radius},
+				{"SwcData.seg_id", val.SwcNodeInternalData.Seg_id},
+				{"SwcData.level", val.SwcNodeInternalData.Level},
+				{"SwcData.mode", val.SwcNodeInternalData.Mode},
+				{"SwcData.timestamp", val.SwcNodeInternalData.Timestamp},
+				{"SwcData.feature_value", val.SwcNodeInternalData.Feature_value},
+				{"Creator", val.Creator},
+				{"CreateTime", val.CreateTime},
+				{"LastModifiedTime", val.LastModifiedTime},
+				{"CheckerUserUuid", val.CheckerUserUuid},
+			}
+
+			if val.SwcNodeInternalData.N != 0 {
+				updateData = append(updateData, bson.E{Key: "SwcData.N", Value: val.SwcNodeInternalData.N})
+			}
+
+			if val.SwcNodeInternalData.Parent != 0 {
+				updateData = append(updateData, bson.E{Key: "SwcData.Parent", Value: val.SwcNodeInternalData.Parent})
+			}
+
 			_, err := collection.UpdateOne(context.TODO(),
 				bson.D{{"uuid", val.Base.Uuid}},
-				bson.D{{"$set", bson.D{
-					{"SwcData", val.SwcNodeInternalData},
-					{"Creator", val.Creator},
-					{"CreateTime", val.CreateTime},
-					{"LastModifiedTime", val.LastModifiedTime},
-					{"CheckerUserUuid", val.CheckerUserUuid},
-				}}},
+				bson.D{{"$set", updateData}},
 			)
 			if err != nil {
 				errorsChan <- err
