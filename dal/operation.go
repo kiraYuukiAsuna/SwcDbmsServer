@@ -606,13 +606,13 @@ func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 		// Update the last node's parent to the current node's n
 		if lastNode != nil {
 			if lastNode.SwcNodeInternalData.Parent != -1 {
-				update := bson.D{
+				update1 := bson.D{
 					{"$set", bson.D{
 						{"SwcData.parent", node.SwcNodeInternalData.N},
 					}},
 				}
-				model := mongo.NewUpdateOneModel().SetFilter(bson.M{"_id": lastNode.Base.Id}).SetUpdate(update)
-				writes = append(writes, model)
+				model1 := mongo.NewUpdateOneModel().SetFilter(bson.M{"_id": lastNode.Base.Id}).SetUpdate(update1)
+				writes = append(writes, model1)
 			}
 		}
 
@@ -670,11 +670,11 @@ func ModifySwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo Mong
 			}
 
 			if val.SwcNodeInternalData.N != 0 {
-				updateData = append(updateData, bson.E{Key: "SwcData.N", Value: val.SwcNodeInternalData.N})
+				updateData = append(updateData, bson.E{Key: "SwcData.n", Value: val.SwcNodeInternalData.N})
 			}
 
 			if val.SwcNodeInternalData.Parent != 0 {
-				updateData = append(updateData, bson.E{Key: "SwcData.Parent", Value: val.SwcNodeInternalData.Parent})
+				updateData = append(updateData, bson.E{Key: "SwcData.parent", Value: val.SwcNodeInternalData.Parent})
 			}
 
 			_, err := collection.UpdateOne(context.TODO(),
