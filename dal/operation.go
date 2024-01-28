@@ -571,13 +571,60 @@ func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 	}
 
 	// adjust remaining node's n parent
-	for _, v := range swcData {
-		_, _ = collection.UpdateMany(context.TODO(), bson.D{
-			{"SwcData.parent", v.SwcNodeInternalData.N},
-		}, bson.D{{"$set", bson.D{
-			{"SwcData.parent", v.SwcNodeInternalData.Parent}}},
-		})
+	cur, err := collection.Find(context.TODO(), bson.D{{}})
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	var lastNode *dbmodel.SwcNodeDataV1
+	counter := 1
+
+	// Iterate over the cursor and update the documents
+	for cur.Next(context.TODO()) {
+		var node dbmodel.SwcNodeDataV1
+		err := cur.Decode(&node)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Update the node
+		node.SwcNodeInternalData.N = int32(counter)
+		counter++
+
+		// Update the current node's n
+		update := bson.M{
+			"$set": bson.M{
+				"SwcData.n": node.SwcNodeInternalData.N,
+			},
+		}
+		_, _ = collection.UpdateOne(context.TODO(), bson.M{"_id": node.Base.Id}, update)
+
+		// Update the last node's parent to the current node's n
+		if lastNode != nil {
+			update := bson.M{
+				"$set": bson.M{
+					"SwcData.parent": node.SwcNodeInternalData.N,
+				},
+			}
+			_, _ = collection.UpdateOne(context.TODO(), bson.M{"_id": lastNode.Base.Id}, update)
+		}
+
+		// Save the current node for the next iteration
+		lastNode = &node
+	}
+
+	// Update the last node's parent to -1
+	if lastNode != nil {
+		update := bson.M{
+			"$set": bson.M{
+				"SwcData.parent": -1,
+			},
+		}
+		_, _ = collection.UpdateOne(context.TODO(), bson.M{"_id": lastNode.Base.Id}, update)
+	}
+
+	// Close the cursor
+	_ = cur.Close(context.TODO())
 
 	return ReturnWrapper{true, "Delete many node Success"}
 }
