@@ -579,6 +579,9 @@ func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 	var lastNode *dbmodel.SwcNodeDataV1
 	counter := 1
 
+	// Prepare a slice to hold the write models for the bulk operation
+	var writes []mongo.WriteModel
+
 	// Iterate over the cursor and update the documents
 	for cur.Next(context.TODO()) {
 		var node dbmodel.SwcNodeDataV1
@@ -592,21 +595,23 @@ func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 		counter++
 
 		// Update the current node's n
-		update := bson.M{
-			"$set": bson.M{
-				"SwcData.n": node.SwcNodeInternalData.N,
-			},
+		update := bson.D{
+			{"$set", bson.D{
+				{"SwcData.n", node.SwcNodeInternalData.N},
+			}},
 		}
-		_, _ = collection.UpdateOne(context.TODO(), bson.M{"_id": node.Base.Id}, update)
+		model := mongo.NewUpdateOneModel().SetFilter(bson.M{"_id": node.Base.Id}).SetUpdate(update)
+		writes = append(writes, model)
 
 		// Update the last node's parent to the current node's n
 		if lastNode != nil {
-			update := bson.M{
-				"$set": bson.M{
-					"SwcData.parent": node.SwcNodeInternalData.N,
-				},
+			update := bson.D{
+				{"$set", bson.D{
+					{"SwcData.parent", node.SwcNodeInternalData.N},
+				}},
 			}
-			_, _ = collection.UpdateOne(context.TODO(), bson.M{"_id": lastNode.Base.Id}, update)
+			model := mongo.NewUpdateOneModel().SetFilter(bson.M{"_id": lastNode.Base.Id}).SetUpdate(update)
+			writes = append(writes, model)
 		}
 
 		// Save the current node for the next iteration
@@ -615,12 +620,19 @@ func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 
 	// Update the last node's parent to -1
 	if lastNode != nil {
-		update := bson.M{
-			"$set": bson.M{
-				"SwcData.parent": -1,
-			},
+		update := bson.D{
+			{"$set", bson.D{
+				{"SwcData.parent", -1},
+			}},
 		}
-		_, _ = collection.UpdateOne(context.TODO(), bson.M{"_id": lastNode.Base.Id}, update)
+		model := mongo.NewUpdateOneModel().SetFilter(bson.M{"_id": lastNode.Base.Id}).SetUpdate(update)
+		writes = append(writes, model)
+	}
+
+	// Execute the bulk operation
+	_, err = collection.BulkWrite(context.TODO(), writes)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// Close the cursor
