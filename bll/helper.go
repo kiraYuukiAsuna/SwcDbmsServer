@@ -19,7 +19,7 @@ func UserTokenVerify(userName string, userToken string) (message.ResponseMetaInf
 	if !bFind {
 		return message.ResponseMetaInfoV1{
 			Status:  bFind,
-			Id:      errcode.Error_UserTokenVerifyFailed,
+			Id:      errcode.ErrorUsertokenverifyfailed,
 			Message: "UserToken verify Failed! Please login again!",
 		}, cachedOnlineUserInfo
 	} else {
@@ -38,7 +38,7 @@ func RequestApiVersionVerify(requestMetaInfo *message.RequestMetaInfoV1) message
 	if currentServerRequestMetaInfo.GetApiVersion() != requestMetaInfo.GetApiVersion() {
 		return message.ResponseMetaInfoV1{
 			Status:  false,
-			Id:      errcode.Error_ApiVersionNotConsist,
+			Id:      errcode.ErrorApiversionnotconsist,
 			Message: "Client ApiVersion is not consist with Server ApiVersion. Please update your client to the newest version!",
 		}
 	} else {
