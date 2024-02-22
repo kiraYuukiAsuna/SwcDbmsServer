@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
+	"time"
 )
 
 var globalMongodbdatabaseinfo MongoDbDataBaseInfo
@@ -84,6 +85,23 @@ func InitializeNewDataBaseIfNotExist(metaInfoDataBaseName string, swcDataBaseNam
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		_, userId := GetNewUserIdAndIncrease(dbInfo)
+		var serverUser = dbmodel.UserMetaInfoV1{
+			Base: dbmodel.MetaInfoBase{
+				Id:                     primitive.NewObjectID(),
+				DataAccessModelVersion: "V1",
+				Uuid:                   uuid.NewString(),
+			},
+			Name:                "server",
+			Password:            "123456",
+			Description:         "",
+			CreateTime:          time.Now(),
+			HeadPhotoBinData:    nil,
+			UserPermissionGroup: "PermissionGroupAdmin",
+			UserId:              userId,
+		}
+		CreateUser(serverUser, dbInfo)
 
 		err = dbInfo.MetaInfoDb.CreateCollection(context.TODO(), PermissionGroupMetaInfoCollectioString)
 		if err != nil {
