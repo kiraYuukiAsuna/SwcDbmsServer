@@ -949,13 +949,16 @@ func QuerySwcAttachmentAno(swcName string, attachmentUuid string, anoAttachment 
 
 func CreateSwcAttachmentApo(swcName string, apoAttachmentCollectionName string, apoAttachment *[]dbmodel.SwcAttachmentApoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	collection := databaseInfo.AttachmentDb.Collection(apoAttachmentCollectionName)
-	var interfaceSlice []interface{}
-	for _, v := range *apoAttachment {
-		interfaceSlice = append(interfaceSlice, v)
-	}
-	_, err := collection.InsertMany(context.TODO(), interfaceSlice)
-	if err != nil {
-		return ReturnWrapper{false, err.Error()}
+
+	if len(*apoAttachment) != 0 {
+		var interfaceSlice []interface{}
+		for _, v := range *apoAttachment {
+			interfaceSlice = append(interfaceSlice, v)
+		}
+		_, err := collection.InsertMany(context.TODO(), interfaceSlice)
+		if err != nil {
+			return ReturnWrapper{false, err.Error()}
+		}
 	}
 	return ReturnWrapper{true, "Create Apo Attachment successfully!"}
 }
