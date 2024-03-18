@@ -2082,34 +2082,6 @@ func (D DBMSServerController) GetSwcNodeDataListByTimeAndUser(ctx context.Contex
 	}
 }
 
-func (D DBMSServerController) BackupFullDatabase(ctx context.Context, request *request.BackupFullDatabaseRequest) (*response.BackupFullDatabaseResponse, error) {
-	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
-	if !apiVersionVerifyResult.Status {
-		return &response.BackupFullDatabaseResponse{
-			MetaInfo: &apiVersionVerifyResult,
-		}, nil
-	}
-
-	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo().GetUserName(), request.GetUserVerifyInfo().GetUserToken())
-	if !responseMetaInfo.Status {
-		return &response.BackupFullDatabaseResponse{
-			MetaInfo: &responseMetaInfo,
-		}, nil
-	}
-
-	log.Println("Unimplemented")
-
-	return &response.BackupFullDatabaseResponse{
-		MetaInfo: &message.ResponseMetaInfoV1{
-			Status:  false,
-			Id:      "",
-			Message: "Unimplemented",
-		},
-		InstantBackup:   false,
-		DelayBackupTime: nil,
-	}, nil
-}
-
 func (D DBMSServerController) CreateDailyStatistics(ctx context.Context, request *request.CreateDailyStatisticsRequest) (*response.CreateDailyStatisticsResponse, error) {
 	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
 	if !apiVersionVerifyResult.Status {
