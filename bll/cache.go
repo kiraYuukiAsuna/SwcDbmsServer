@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/robfig/cron/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"gopkg.in/gomail.v2"
 	"log"
 	"os"
 	"strconv"
@@ -39,6 +40,27 @@ func CronAutoSaveDailyStatistics() {
 		log.Println("TimerEvent: Time - " + timePoint.String() + " , Event - CronAutoSaveDailyStatistics performed.")
 
 		dal.CreateDailyStatistics(DailyStatisticsInfo, dal.GetDbInstance())
+
+		client := gomail.NewDialer("smtp.qq.com", 25, "1175445708@qq.com", "xxxx")
+
+		fromEmail := "1175445708@qq.com"
+		toEmail := "1756649008@qq.com"
+
+		// 创建邮件消息
+		message := gomail.NewMessage()
+		message.SetHeader("From", fromEmail)
+		message.SetHeader("To", toEmail)
+		message.SetHeader("Subject", "Swc DailyStatistics")
+		message.SetBody("text/plain", "test email content.")
+
+		// 发送邮件消息,开携程发生邮件
+		go func() {
+			err := client.DialAndSend(message)
+			if err != nil {
+				log.Println(err.Error())
+			}
+		}()
+
 	})
 	log.Println(time.Now(), EntryID, err)
 	c.Start()
