@@ -11,15 +11,24 @@ type MetaInfoBase struct {
 	Uuid                   string             `bson:"uuid"`
 }
 
+type BrainTellServerMysqlDBCompatibleData struct {
+	Email     string `bson:"email"`
+	NickName  string `bson:"nickname"`
+	Score     int    `bson:"score"`
+	Appkey    string `bson:"appkey"`
+	Isdeleted int    `bson:"isdeleted"`
+}
+
 type UserMetaInfoV1 struct {
-	Base                MetaInfoBase `bson:"Base,inline"`
-	Name                string       `bson:"Name"`
-	Password            string       `bson:"Password"`
-	Description         string       `bson:"Description"`
-	CreateTime          time.Time    `bson:"CreateTime"`
-	HeadPhotoBinData    []byte       `bson:"HeadPhotoBinData"`
-	UserPermissionGroup string       `bson:"UserPermissionGroup"`
-	UserId              int32        `bson:"UserId"`
+	Base                MetaInfoBase                         `bson:"Base,inline"`
+	Name                string                               `bson:"Name"`
+	Password            string                               `bson:"Password"`
+	Description         string                               `bson:"Description"`
+	CreateTime          time.Time                            `bson:"CreateTime"`
+	HeadPhotoBinData    []byte                               `bson:"HeadPhotoBinData"`
+	UserPermissionGroup string                               `bson:"UserPermissionGroup"`
+	UserId              int32                                `bson:"UserId"`
+	CompatibleData      BrainTellServerMysqlDBCompatibleData `bson:"CompatibleData"`
 }
 
 type GlobalPermissionMetaInfoV1 struct {
