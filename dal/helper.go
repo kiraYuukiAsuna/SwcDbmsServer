@@ -98,7 +98,7 @@ func InitializeNewDataBaseIfNotExist(metaInfoDataBaseName string, swcDataBaseNam
 			Description:         "",
 			CreateTime:          time.Now(),
 			HeadPhotoBinData:    nil,
-			UserPermissionGroup: "PermissionGroupAdmin",
+			UserPermissionGroup: PermissionGroupAdmin,
 			UserId:              userId,
 		}
 		CreateUser(serverUser, dbInfo)
