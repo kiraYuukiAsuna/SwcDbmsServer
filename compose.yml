@@ -5,6 +5,7 @@ services:
     restart: always
     networks:
       - swcdbmsnet
+      - braintell
     environment:
       MONGO_INITDB_ROOT_USERNAME: defaultuser
       MONGO_INITDB_ROOT_PASSWORD: defaultpassword
@@ -38,3 +39,5 @@ services:
 networks:
     swcdbmsnet:
         name: swcdbmsnet
+    braintell:
+        name: braintell
