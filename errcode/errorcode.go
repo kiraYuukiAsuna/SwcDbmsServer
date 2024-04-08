@@ -1,6 +1,8 @@
 package errcode
 
 const (
-	ErrorApiversionnotconsist  = "ErrorApiVersionNotConsist"
-	ErrorUsertokenverifyfailed = "ErrorUserTokenVerifyFailed"
+	ErrorApiVersionNotConsist  = "ErrorApiVersionNotConsist"
+	ErrorUserTokenVerifyFailed = "ErrorUserTokenVerifyFailed"
+	ErrorCannotFindUser        = "ErrorCannotFindUser"
+	ErrorUserPasswordIncorrect = "ErrorUserPasswordIncorrect"
 )
