@@ -50,18 +50,19 @@ func UserTokenVerify(userVerifyInfo *message.UserVerifyInfoV1) (message.Response
 				return message.ResponseMetaInfoV1{
 					Status:  bFind,
 					Id:      errcode.ErrorCannotFindUser,
-					Message: "Query User Info Failed!",
+					Message: "Query User Info Failed! UserName[" + userName + "]",
 				}, cachedOnlineUserInfo
 			}
 
 			if userMetaInfo.Password == userPassword {
 				log.Println("User " + userName + " Login Through implicit user token verify using password")
-				_, _ = UserLoginTokenGeneration(userMetaInfo)
+
+				_, onlineUserInfoUPAuth := UserLoginTokenGeneration(userMetaInfo)
 				return message.ResponseMetaInfoV1{
 					Status:  true,
 					Id:      "",
 					Message: "",
-				}, cachedOnlineUserInfo
+				}, onlineUserInfoUPAuth
 			} else {
 				return message.ResponseMetaInfoV1{
 					Status:  bFind,

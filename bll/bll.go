@@ -1524,6 +1524,17 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 		}, nil
 	}
 
+	if len(swcData) == 0 {
+		return &response.CreateSwcNodeDataResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  true,
+				Id:      "",
+				Message: "Empty Swc Data",
+			},
+			CreatedNodesUuid: nodesUuid,
+		}, nil
+	}
+
 	result = dal.CreateSwcData(swcMetaInfo.Name, &swcData, dal.GetDbInstance())
 	if result.Status {
 		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Create Swc node " + swcMetaInfo.Name)
@@ -1629,6 +1640,16 @@ func (D DBMSServerController) DeleteSwcNodeData(ctx context.Context, request *re
 	}
 
 	createTime := time.Now()
+
+	if len(swcData) == 0 {
+		return &response.DeleteSwcNodeDataResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  true,
+				Id:      "",
+				Message: "Empty Swc Data",
+			},
+		}, nil
+	}
 
 	result = dal.DeleteSwcData(swcMetaInfo.Name, swcData, dal.GetDbInstance())
 	if result.Status {
@@ -1742,6 +1763,16 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 	}
 
 	swcMetaInfo.LastModifiedTime = createTime
+
+	if len(swcData) == 0 {
+		return &response.UpdateSwcNodeDataResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  true,
+				Id:      "",
+				Message: "Empty Swc Data",
+			},
+		}, nil
+	}
 
 	result = dal.ModifySwcData(swcMetaInfo.Name, &swcData, dal.GetDbInstance())
 	if result.Status {

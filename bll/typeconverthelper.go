@@ -210,6 +210,7 @@ func SwcMetaInfoV1ProtobufToDbmodel(protoMessage *message.SwcMetaInfoV1) *dbmode
 				snapshotMetaInfo.Base.DataAccessModelVersion = snapshotProto.Base.DataAccessModelVersion
 			}
 
+			snapshotMetaInfo.Creator = snapshotProto.Creator
 			snapshotMetaInfo.SwcSnapshotCollectionName = snapshotProto.SwcSnapshotCollectionName
 			snapshotMetaInfo.CreateTime = snapshotProto.CreateTime.AsTime()
 
@@ -269,7 +270,8 @@ func SwcMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.SwcMetaInfoV1) *mess
 		snapshotMetaInfoDbModel.Base.Uuid = snapshotMetaInfo.Base.Uuid
 		snapshotMetaInfoDbModel.Base.DataAccessModelVersion = snapshotMetaInfo.Base.DataAccessModelVersion
 		snapshotMetaInfoDbModel.CreateTime = timestamppb.New(snapshotMetaInfo.CreateTime)
-		snapshotMetaInfoDbModel.SwcSnapshotCollectionName = snapshotMetaInfoDbModel.SwcSnapshotCollectionName
+		snapshotMetaInfoDbModel.SwcSnapshotCollectionName = snapshotMetaInfo.SwcSnapshotCollectionName
+		snapshotMetaInfoDbModel.Creator = snapshotMetaInfo.Creator
 		protoMessage.SwcSnapshotMetaInfoList = append(protoMessage.SwcSnapshotMetaInfoList, &snapshotMetaInfoDbModel)
 	}
 
