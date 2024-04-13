@@ -12,6 +12,8 @@ services:
     volumes:
       - ./mongodbdata/db:/data/db
       - ./mongodbdata/configdb:/data/configdb
+    ports:
+      - "14253:27017"
 
   swcdbms:
     image: swcdbms:v1
@@ -19,8 +21,8 @@ services:
     depends_on: 
       - mongo
     ports:
-      - 8088:8088
-      - 8089:8089
+      - "8088:8088"
+      - "8089:8089"
     networks:
       - swcdbmsnet
       - braintell
@@ -29,8 +31,8 @@ services:
     image: nginx:1.24
     restart: always
     ports:
-      - 14251:8088
-      - 14252:8089
+      - "14251:8088"
+      - "14252:8089"
     networks:
       - swcdbmsnet
     volumes:
