@@ -1653,7 +1653,7 @@ func (D DBMSServerController) DeleteSwcNodeData(ctx context.Context, request *re
 
 	result = dal.DeleteSwcData(swcMetaInfo.Name, swcData, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Delete Swc " + swcMetaInfo.Name)
+		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Delete SwcData" + swcMetaInfo.Name)
 		DailyStatisticsInfo.DeletedSwcNodeNumber += 1
 
 		operationRecord := dbmodel.SwcIncrementOperationV1{}

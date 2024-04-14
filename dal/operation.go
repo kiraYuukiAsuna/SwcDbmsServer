@@ -642,6 +642,10 @@ func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 
 	log.Println("Execute the bulk operation")
 
+	if len(writes) == 0 {
+		return ReturnWrapper{true, "Delete many node Success! BulkWrite is empty."}
+	}
+
 	// Execute the bulk operation
 	_, err = collection.BulkWrite(context.TODO(), writes)
 	if err != nil {
@@ -656,7 +660,7 @@ func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 
 	log.Println("Close the cursor And Return")
 
-	return ReturnWrapper{true, "Delete many node Success"}
+	return ReturnWrapper{true, "Delete many node Success! BulkWrite is not empty."}
 }
 
 func ModifySwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
