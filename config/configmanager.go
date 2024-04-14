@@ -8,6 +8,10 @@ import (
 	"strconv"
 )
 
+const ApiVersion = "2024.01.19"
+
+const ServerAppVersion = "2024.01.19"
+
 type Config struct {
 	GrpcIP           string
 	GrpcPort         int32
@@ -62,6 +66,8 @@ func ReadConfig() bool {
 	log.Println("MongodbPort:" + strconv.Itoa(int(AppConfig.MongodbPort)))
 	log.Println("MongodbUser:" + AppConfig.MongodbUser)
 	log.Println("MongodbPassword:" + AppConfig.MongodbPassword)
+	log.Println("ApiVersion:" + ApiVersion)
+	log.Println("ServerAppVersion:" + ServerAppVersion)
 
 	return true
 }

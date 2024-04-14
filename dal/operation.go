@@ -519,6 +519,7 @@ func CreateSwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo Mong
 	for _, v := range *swcData {
 		interfaceSlice = append(interfaceSlice, v)
 	}
+	log.Println("Inserting ", len(interfaceSlice), " nodes into ", swcName)
 	result, err := collection.InsertMany(context.TODO(), interfaceSlice)
 	if err != nil {
 		if result != nil {
@@ -556,7 +557,7 @@ func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 		{"$or",
 			uuidList},
 	}
-
+	log.Println("Delete ", len(filterInterface), " nodes at ", swcName)
 	result, err := collection.DeleteMany(context.TODO(), filterInterface)
 	if err != nil {
 		log.Print(err.Error())
@@ -570,6 +571,8 @@ func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 		}
 	}
 
+	log.Println("Start adjuest n and parent")
+
 	// adjust remaining node's n parent
 	cur, err := collection.Find(context.TODO(), bson.D{{}})
 	if err != nil {
@@ -582,8 +585,11 @@ func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 	// Prepare a slice to hold the write models for the bulk operation
 	var writes []mongo.WriteModel
 
+	log.Println("For loop start")
+
 	// Iterate over the cursor and update the documents
 	for cur.Next(context.TODO()) {
+		log.Println("loop at next node")
 		var node dbmodel.SwcNodeDataV1
 		err := cur.Decode(&node)
 		if err != nil {
@@ -620,8 +626,11 @@ func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 		lastNode = &node
 	}
 
+	log.Println("For loop end")
+
 	// Update the last node's parent to -1
 	if lastNode != nil {
+		log.Println("lastNode != nil")
 		update := bson.D{
 			{"$set", bson.D{
 				{"SwcData.parent", -1},
@@ -631,14 +640,21 @@ func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 		writes = append(writes, model)
 	}
 
+	log.Println("Execute the bulk operation")
+
 	// Execute the bulk operation
 	_, err = collection.BulkWrite(context.TODO(), writes)
 	if err != nil {
+		log.Println("Execute the bulk operation Failed")
 		log.Fatal(err)
 	}
 
+	log.Println("Execute the bulk operation Success")
+
 	// Close the cursor
 	_ = cur.Close(context.TODO())
+
+	log.Println("Close the cursor And Return")
 
 	return ReturnWrapper{true, "Delete many node Success"}
 }
@@ -647,7 +663,7 @@ func ModifySwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo Mong
 	collection := databaseInfo.SwcDb.Collection(swcName)
 	var wg sync.WaitGroup
 	errorsChan := make(chan error, len(*swcData))
-
+	log.Println("Modify ", len(*swcData), " nodes at ", swcName)
 	for _, v := range *swcData {
 		wg.Add(1)
 		go func(val dbmodel.SwcNodeDataV1) {
@@ -727,6 +743,8 @@ func QuerySwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo Mongo
 		return ReturnWrapper{false, "Query many node failed!"}
 	}
 
+	log.Println("Query ", len(*swcData), " node at ", swcName)
+
 	return ReturnWrapper{true, "Query many node Success"}
 }
 
@@ -766,6 +784,8 @@ func QuerySwcDataByUserAndTime(
 		return ReturnWrapper{false, "QuerySwcDataByUserAndTime failed!"}
 	}
 
+	log.Println("QueryByCondition ", len(*swcData), " nodes at ", swcName)
+
 	return ReturnWrapper{true, "QuerySwcDataByUserAndTime Success"}
 }
 
@@ -780,6 +800,8 @@ func QueryAllSwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo Mo
 	if err = cursor.All(context.TODO(), swcData); err != nil {
 		return ReturnWrapper{false, "Query many node failed!"}
 	}
+
+	log.Println("QueryAll ", len(*swcData), " nodes at ", swcName)
 
 	return ReturnWrapper{true, "Query many node Success"}
 }

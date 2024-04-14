@@ -2,6 +2,7 @@ package bll
 
 import (
 	"DBMS/SwcDbmsCommon/Generated/go/proto/message"
+	"DBMS/config"
 	"DBMS/dal"
 	"DBMS/dbmodel"
 	"DBMS/errcode"
@@ -88,7 +89,7 @@ func UserTokenVerify(userVerifyInfo *message.UserVerifyInfoV1) (message.Response
 
 func RequestApiVersionVerify(requestMetaInfo *message.RequestMetaInfoV1) message.ResponseMetaInfoV1 {
 	currentServerRequestMetaInfo := message.RequestMetaInfoV1{}
-	currentServerRequestMetaInfo.ApiVersion = "2024.01.19"
+	currentServerRequestMetaInfo.ApiVersion = config.ApiVersion
 
 	if currentServerRequestMetaInfo.GetApiVersion() != requestMetaInfo.GetApiVersion() {
 		return message.ResponseMetaInfoV1{
