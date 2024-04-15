@@ -656,7 +656,9 @@ func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 	log.Println("Execute the bulk operation Success")
 
 	// Close the cursor
-	_ = cur.Close(context.TODO())
+	if cur != nil {
+		_ = cur.Close(context.TODO())
+	}
 
 	log.Println("Close the cursor And Return")
 
