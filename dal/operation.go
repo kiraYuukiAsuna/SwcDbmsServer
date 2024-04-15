@@ -2,16 +2,18 @@ package dal
 
 import (
 	"DBMS/dbmodel"
+	"DBMS/logger"
 	"context"
 	"errors"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"strconv"
 	"sync"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func ConnectToMongoDb(createInfo MongoDbConnectionCreateInfo) MongoDbConnectionInfo {
@@ -531,6 +533,9 @@ func CreateSwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo Mong
 			return ReturnWrapper{false, "Insert many node failed!"}
 		}
 	}
+
+	logger.GetLogger().Println("Real Craete nodes in DB: " + strconv.Itoa(len(result.InsertedIDs)))
+
 	return ReturnWrapper{true, "Create many node Success"}
 }
 
@@ -567,9 +572,11 @@ func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 					" , Error:" + strconv.Itoa(len(filterInterface)-int(result.DeletedCount)) +
 					" Total:" + strconv.Itoa(len(filterInterface))}
 		} else {
-			return ReturnWrapper{false, "Delete many node failed!"}
+			return ReturnWrapper{false, "Delete many node failed with error " + err.Error()}
 		}
 	}
+
+	logger.GetLogger().Println("Real Delete nodes in DB: " + strconv.Itoa(int(result.DeletedCount)))
 
 	log.Println("Start adjuest n and parent")
 
@@ -589,7 +596,6 @@ func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 
 	// Iterate over the cursor and update the documents
 	for cur.Next(context.TODO()) {
-		log.Println("loop at next node")
 		var node dbmodel.SwcNodeDataV1
 		err := cur.Decode(&node)
 		if err != nil {
@@ -722,6 +728,8 @@ func ModifySwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo Mong
 		return ReturnWrapper{false,
 			"Modify swc node failed! Error! Number=" + strconv.Itoa(errorNum) + " update failed!"}
 	}
+
+	logger.GetLogger().Println("Real Update nodes in DB: " + strconv.Itoa(len(*swcData)-errorNum))
 
 	return ReturnWrapper{true, "Modify swc node Success"}
 }

@@ -6,14 +6,16 @@ import (
 	"DBMS/apihandler"
 	"DBMS/bll"
 	"DBMS/config"
+	"DBMS/logger"
 	"context"
+	"net/http"
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/grpclog"
-	"net/http"
-	"strconv"
 )
 
 func startHttpReverseProxyServer() error {
@@ -38,6 +40,7 @@ func startHttpReverseProxyServer() error {
 }
 
 func main() {
+	logger.InitializeLogger()
 	config.SetDafaultAppConfig()
 	config.ReadConfig()
 
