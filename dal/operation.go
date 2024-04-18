@@ -562,6 +562,17 @@ func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 		{"$or",
 			uuidList},
 	}
+
+	//// Check if all nodes exist
+	//count, err := collection.CountDocuments(context.TODO(), filterInterface)
+	//if err != nil {
+	//	return ReturnWrapper{false, "Failed to count nodes: " + err.Error()}
+	//}
+	//
+	//if int(count) != len(swcData) {
+	//	return ReturnWrapper{false, "Not all nodes exist in the database"}
+	//}
+
 	log.Println("Delete ", len(filterInterface), " nodes at ", swcName)
 	result, err := collection.DeleteMany(context.TODO(), filterInterface)
 	if err != nil {
