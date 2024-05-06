@@ -11,8 +11,16 @@ import (
 )
 
 func InitializeDb() {
+	dataBaseNameInfo := dal.DataBaseNameInfo{
+		MetaInfoDataBaseName:              dal.DefaultMetaInfoDataBaseName,
+		SwcDataBaseName:                   dal.DefaultSwcDataBaseName,
+		SwcSnapshotDataBaseName:           dal.DefaultSwcSnapshotDataBaseName,
+		SwcIncrementOperationDataBaseName: dal.DefaultSwcIncrementOperationDataBaseName,
+		SwcAttachmentDataBaseName:         dal.DefaultSwcAttachmentDataBaseName,
+	}
+
 	// create db
-	dal.InitializeNewDataBaseIfNotExist(dal.DefaultMetaInfoDataBaseName, dal.DefaultSwcDataBaseName, dal.DefaultSwcSnapshotDataBaseName, dal.DefaultSwcIncrementOperationDataBaseName, dal.DefaultSwcAttachmentDataBaseName)
+	dal.InitializeNewDataBaseIfNotExist(dataBaseNameInfo)
 
 	// init db
 	var createInfo dal.MongoDbConnectionCreateInfo
@@ -26,7 +34,7 @@ func InitializeDb() {
 		log.Fatal(connectionInfo.Err)
 	}
 
-	databaseInstance := dal.ConnectToDataBase(connectionInfo, dal.DefaultMetaInfoDataBaseName, dal.DefaultSwcDataBaseName, dal.DefaultSwcSnapshotDataBaseName, dal.DefaultSwcIncrementOperationDataBaseName, dal.DefaultSwcAttachmentDataBaseName)
+	databaseInstance := dal.ConnectToDataBase(connectionInfo, dataBaseNameInfo)
 
 	dal.SetDbInstance(databaseInstance)
 

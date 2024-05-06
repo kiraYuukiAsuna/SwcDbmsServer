@@ -3,7 +3,6 @@ package main
 import (
 	"DBMS/SwcDbmsCommon/Generated/go/proto/service"
 	"DBMS/UnitTest"
-	"DBMS/apihandler"
 	"DBMS/bll"
 	"DBMS/config"
 	"DBMS/logger"
@@ -83,8 +82,8 @@ func main() {
 		})
 	})
 
-	r.GET("/InitializeNewDataBaseIfNotExist", apihandler.InitializeNewDataBaseIfNotExistHandler)
-	r.GET("/CreateUser", apihandler.CreateUserHandler)
+	//r.GET("/InitializeNewDataBaseIfNotExist", apihandler.InitializeNewDataBaseIfNotExistHandler)
+	//r.GET("/CreateUser", apihandler.CreateUserHandler)
 
 	err := r.Run("0.0.0.0:8088")
 	if err != nil {

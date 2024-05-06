@@ -45,7 +45,7 @@ func ConnectToMongoDb(createInfo MongoDbConnectionCreateInfo) MongoDbConnectionI
 	return connectionInfo
 }
 
-func ConnectToDataBase(connectionInfo MongoDbConnectionInfo, metaInfoDataBaseName string, swcDataBaseName string, swcSnapshotDataBaseName string, swcIncrementOperationDataBaseName string, swcAttachmentDataBaseName string) MongoDbDataBaseInfo {
+func ConnectToDataBase(connectionInfo MongoDbConnectionInfo, dataBaseNameInfo DataBaseNameInfo) MongoDbDataBaseInfo {
 	if connectionInfo.Err != nil {
 		log.Fatal(connectionInfo.Err)
 		return MongoDbDataBaseInfo{}
@@ -53,11 +53,11 @@ func ConnectToDataBase(connectionInfo MongoDbConnectionInfo, metaInfoDataBaseNam
 
 	var dbInfo MongoDbDataBaseInfo
 
-	dbInfo.MetaInfoDb = connectionInfo.Client.Database(metaInfoDataBaseName)
-	dbInfo.SwcDb = connectionInfo.Client.Database(swcDataBaseName)
-	dbInfo.SnapshotDb = connectionInfo.Client.Database(swcSnapshotDataBaseName)
-	dbInfo.IncrementOperationDb = connectionInfo.Client.Database(swcIncrementOperationDataBaseName)
-	dbInfo.AttachmentDb = connectionInfo.Client.Database(swcAttachmentDataBaseName)
+	dbInfo.MetaInfoDb = connectionInfo.Client.Database(dataBaseNameInfo.MetaInfoDataBaseName)
+	dbInfo.SwcDb = connectionInfo.Client.Database(dataBaseNameInfo.SwcDataBaseName)
+	dbInfo.SnapshotDb = connectionInfo.Client.Database(dataBaseNameInfo.SwcSnapshotDataBaseName)
+	dbInfo.IncrementOperationDb = connectionInfo.Client.Database(dataBaseNameInfo.SwcIncrementOperationDataBaseName)
+	dbInfo.AttachmentDb = connectionInfo.Client.Database(dataBaseNameInfo.SwcAttachmentDataBaseName)
 
 	return dbInfo
 }

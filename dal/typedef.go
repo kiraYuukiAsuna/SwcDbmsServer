@@ -27,6 +27,14 @@ type MongoDbDataBaseInfo struct {
 	AttachmentDb         *mongo.Database
 }
 
+type DataBaseNameInfo struct {
+	MetaInfoDataBaseName              string
+	SwcDataBaseName                   string
+	SwcSnapshotDataBaseName           string
+	SwcIncrementOperationDataBaseName string
+	SwcAttachmentDataBaseName         string
+}
+
 const (
 	DefaultMetaInfoDataBaseName string = "MetaInfoDataBase"
 	DevMetaInfoDataBaseName     string = "DevMetaInfoDataBase"
