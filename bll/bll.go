@@ -10,7 +10,6 @@ import (
 	"DBMS/logger"
 	"context"
 	"log"
-	"reflect"
 	"strconv"
 	"time"
 
@@ -121,8 +120,7 @@ func (D DBMSServerController) DeleteUser(ctx context.Context, request *request.D
 		}, nil
 	}
 
-	reflVar := dbmodel.PermissionGroupAceV1{}
-	if !PermissionGroupVerify(&userMetaInfo, reflect.TypeOf(reflVar.AllUserManagementPermission).Name()) {
+	if !PermissionGroupVerify(&userMetaInfo, "AllUserManagementPermission") {
 		return &response.DeleteUserResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  false,
@@ -312,6 +310,16 @@ func (D DBMSServerController) UserLogin(ctx context.Context, request *request.Us
 			DailyStatisticsInfo.ActiveUserNumber += 1
 
 			userToken, _ := UserLoginTokenGeneration(userMetaInfo)
+
+			if userMetaInfo.PermissionGroupUuid == "" {
+				defaultPermissionGroup := dbmodel.PermissionGroupMetaInfoV1{
+					Name: dal.PermissionGroupDefault,
+				}
+				_ = dal.QueryPermissionGroupUuidByName(&defaultPermissionGroup, dal.GetDbInstance())
+				userMetaInfo.PermissionGroupUuid = defaultPermissionGroup.Base.Uuid
+			}
+
+			_ = dal.ModifyUser(userMetaInfo, dal.GetDbInstance())
 
 			return &response.UserLoginResponse{
 				MetaInfo: &message.ResponseMetaInfoV1{
@@ -630,8 +638,7 @@ func (D DBMSServerController) ChangeUserPermissionGroup(ctx context.Context, req
 
 	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
 	if result.Status {
-		reflVar := dbmodel.PermissionGroupAceV1{}
-		if !PermissionGroupVerify(&userMetaInfo, reflect.TypeOf(reflVar.AllPermissionGroupManagementPermission).Name()) {
+		if !PermissionGroupVerify(&userMetaInfo, "AllPermissionGroupManagementPermission") {
 			return &response.ChangeUserPermissionGroupResponse{
 				MetaInfo: &message.ResponseMetaInfoV1{
 					Status:  false,
@@ -1076,6 +1083,15 @@ func (D DBMSServerController) CreateSwc(ctx context.Context, request *request.Cr
 	swcMetaInfo.Name = request.SwcInfo.Name
 	swcMetaInfo.Description = request.SwcInfo.Description
 	swcMetaInfo.SwcType = request.SwcInfo.SwcType
+	swcMetaInfo.Permission.Owner.UserUuid = userMetaInfo.Base.Uuid
+	swcMetaInfo.Permission.Owner.Ace.WritePermissionCreateProject = true
+	swcMetaInfo.Permission.Owner.Ace.WritePermissionDeleteProject = true
+	swcMetaInfo.Permission.Owner.Ace.WritePermissionModifyProject = true
+	swcMetaInfo.Permission.Owner.Ace.ReadPerimissionQueryProject = true
+	swcMetaInfo.Permission.Owner.Ace.WritePermissionAddSwcData = true
+	swcMetaInfo.Permission.Owner.Ace.WritePermissionDeleteSwcData = true
+	swcMetaInfo.Permission.Owner.Ace.WritePermissionModifySwcData = true
+	swcMetaInfo.Permission.Owner.Ace.ReadPerimissionQuerySwcData = true
 
 	result = dal.CreateSwc(*swcMetaInfo, dal.GetDbInstance())
 	if result.Status {
@@ -1134,9 +1150,7 @@ func (D DBMSServerController) DeleteSwc(ctx context.Context, request *request.De
 		}, nil
 	}
 
-	var permissionGroup dbmodel.PermissionGroupMetaInfoV1
-	permissionGroup.Base.Uuid = userMetaInfo.PermissionGroupUuid
-	result = dal.QueryPermissionGroup(&permissionGroup, dal.GetDbInstance())
+	result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.DeleteSwcResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1148,8 +1162,7 @@ func (D DBMSServerController) DeleteSwc(ctx context.Context, request *request.De
 		}, nil
 	}
 
-	reflVar := dbmodel.PermissionAceV1{}
-	if !PermissionVerify(&userMetaInfo, &swcMetaInfo.Permission, reflect.TypeOf(reflVar.WritePermissionDeleteSwcData).Name()) {
+	if !PermissionVerify(&userMetaInfo, &swcMetaInfo.Permission, "WritePermissionDeleteSwcData") {
 		return &response.DeleteSwcResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  false,
@@ -1250,8 +1263,19 @@ func (D DBMSServerController) UpdateSwc(ctx context.Context, request *request.Up
 		}, nil
 	}
 
-	reflVar := dbmodel.PermissionAceV1{}
-	if !PermissionVerify(&userMetaInfo, &swcMetaInfo.Permission, reflect.TypeOf(reflVar.WritePermissionModifySwcData).Name()) {
+	result = dal.QuerySwc(swcMetaInfo, dal.GetDbInstance())
+	if !result.Status {
+		return &response.UpdateSwcResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+			SwcInfo: SwcMetaInfoV1DbmodelToProtobuf(swcMetaInfo),
+		}, nil
+	}
+
+	if !PermissionVerify(&userMetaInfo, &swcMetaInfo.Permission, "WritePermissionModifySwcData") {
 		return &response.UpdateSwcResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  false,
@@ -1335,20 +1359,19 @@ func (D DBMSServerController) GetSwcMetaInfo(ctx context.Context, request *reque
 		}, nil
 	}
 
-	reflVar := dbmodel.PermissionAceV1{}
-	if !PermissionVerify(&userMetaInfo, &swcMetaInfo.Permission, reflect.TypeOf(reflVar.ReadPerimissionQuerySwcData).Name()) {
-		return &response.GetSwcMetaInfoResponse{
-			MetaInfo: &message.ResponseMetaInfoV1{
-				Status:  false,
-				Id:      "",
-				Message: "You don't have permission to access this swc",
-			},
-			SwcInfo: SwcMetaInfoV1DbmodelToProtobuf(&swcMetaInfo),
-		}, nil
-	}
-
 	result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 	if result.Status {
+		if !PermissionVerify(&userMetaInfo, &swcMetaInfo.Permission, "ReadPerimissionQuerySwcData") {
+			return &response.GetSwcMetaInfoResponse{
+				MetaInfo: &message.ResponseMetaInfoV1{
+					Status:  false,
+					Id:      "",
+					Message: "You don't have permission to access this swc",
+				},
+				SwcInfo: SwcMetaInfoV1DbmodelToProtobuf(&swcMetaInfo),
+			}, nil
+		}
+
 		log.Println("User " + request.UserVerifyInfo.GetUserName() + " Query SwcMetaInfo " + swcMetaInfo.Name)
 		DailyStatisticsInfo.SwcQueryNumber += 1
 		return &response.GetSwcMetaInfoResponse{
@@ -1379,21 +1402,36 @@ func (D DBMSServerController) GetAllSwcMetaInfo(ctx context.Context, request *re
 		}, nil
 	}
 
-	//responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo())
-	//if !responseMetaInfo.Status {
-	//	return &response.GetAllSwcMetaInfoResponse{
-	//		MetaInfo: &responseMetaInfo,
-	//	}, nil
-	//}
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo())
+	if !responseMetaInfo.Status {
+		return &response.GetAllSwcMetaInfoResponse{
+			MetaInfo: &responseMetaInfo,
+		}, nil
+	}
+
+	var userMetaInfo dbmodel.UserMetaInfoV1
+	userMetaInfo.Name = request.UserVerifyInfo.GetUserName()
+	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	if !result.Status {
+		return &response.GetAllSwcMetaInfoResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
 
 	var dbmodelMessage []dbmodel.SwcMetaInfoV1
 
 	var protoMessage []*message.SwcMetaInfoV1
-	result := dal.QueryAllSwc(&dbmodelMessage, dal.GetDbInstance())
+	result = dal.QueryAllSwc(&dbmodelMessage, dal.GetDbInstance())
 	if result.Status {
 		log.Println("User " + request.UserVerifyInfo.GetUserName() + " Query All SwcMetaInfo ")
 		for _, dbMessage := range dbmodelMessage {
-			protoMessage = append(protoMessage, SwcMetaInfoV1DbmodelToProtobuf(&dbMessage))
+			if PermissionVerify(&userMetaInfo, &dbMessage.Permission, "ReadPerimissionQuerySwcData") {
+				protoMessage = append(protoMessage, SwcMetaInfoV1DbmodelToProtobuf(&dbMessage))
+			}
 		}
 		return &response.GetAllSwcMetaInfoResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1471,8 +1509,7 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 		}, nil
 	}
 
-	reflVar := dbmodel.PermissionAceV1{}
-	if !PermissionVerify(&userMetaInfo, &swcMetaInfo.Permission, reflect.TypeOf(reflVar.WritePermissionAddSwcData).Name()) {
+	if !PermissionVerify(&userMetaInfo, &swcMetaInfo.Permission, "WritePermissionAddSwcData") {
 		return &response.CreateSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  false,
@@ -1605,8 +1642,7 @@ func (D DBMSServerController) DeleteSwcNodeData(ctx context.Context, request *re
 		}, nil
 	}
 
-	reflVar := dbmodel.PermissionAceV1{}
-	if !PermissionVerify(&userMetaInfo, &swcMetaInfo.Permission, reflect.TypeOf(reflVar.WritePermissionDeleteSwcData).Name()) {
+	if !PermissionVerify(&userMetaInfo, &swcMetaInfo.Permission, "WritePermissionDeleteSwcData") {
 		return &response.DeleteSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  false,
@@ -1723,8 +1759,7 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 		}, nil
 	}
 
-	reflVar := dbmodel.PermissionAceV1{}
-	if !PermissionVerify(&userMetaInfo, &swcMetaInfo.Permission, reflect.TypeOf(reflVar.WritePermissionModifySwcData).Name()) {
+	if !PermissionVerify(&userMetaInfo, &swcMetaInfo.Permission, "WritePermissionModifySwcData") {
 		return &response.UpdateSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  false,
@@ -1840,8 +1875,19 @@ func (D DBMSServerController) GetSwcNodeData(ctx context.Context, request *reque
 		}, nil
 	}
 
-	reflVar := dbmodel.PermissionAceV1{}
-	if !PermissionVerify(&userMetaInfo, &swcMetaInfo.Permission, reflect.TypeOf(reflVar.ReadPerimissionQuerySwcData).Name()) {
+	result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
+	if !result.Status {
+		return &response.GetSwcNodeDataResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+			SwcNodeData: request.SwcNodeData,
+		}, nil
+	}
+
+	if !PermissionVerify(&userMetaInfo, &swcMetaInfo.Permission, "ReadPerimissionQuerySwcData") {
 		return &response.GetSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  false,
@@ -1940,8 +1986,19 @@ func (D DBMSServerController) GetSwcFullNodeData(ctx context.Context, request *r
 		}, nil
 	}
 
-	reflVar := dbmodel.PermissionAceV1{}
-	if !PermissionVerify(&userMetaInfo, &swcMetaInfo.Permission, reflect.TypeOf(reflVar.ReadPerimissionQuerySwcData).Name()) {
+	result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
+	if !result.Status {
+		return &response.GetSwcFullNodeDataResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+			SwcNodeData: &protoMessage,
+		}, nil
+	}
+
+	if !PermissionVerify(&userMetaInfo, &swcMetaInfo.Permission, "ReadPerimissionQuerySwcData") {
 		return &response.GetSwcFullNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  false,
@@ -2029,8 +2086,19 @@ func (D DBMSServerController) GetSwcNodeDataListByTimeAndUser(ctx context.Contex
 		}, nil
 	}
 
-	reflVar := dbmodel.PermissionAceV1{}
-	if !PermissionVerify(&userMetaInfo, &swcMetaInfo.Permission, reflect.TypeOf(reflVar.ReadPerimissionQuerySwcData).Name()) {
+	result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
+	if !result.Status {
+		return &response.GetSwcNodeDataListByTimeAndUserResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+			SwcNodeData: &protoMessage,
+		}, nil
+	}
+
+	if !PermissionVerify(&userMetaInfo, &swcMetaInfo.Permission, "ReadPerimissionQuerySwcData") {
 		return &response.GetSwcNodeDataListByTimeAndUserResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  false,
@@ -2183,8 +2251,7 @@ func (D DBMSServerController) DeleteDailyStatistics(ctx context.Context, request
 		}, nil
 	}
 
-	reflVar := dbmodel.PermissionGroupAceV1{}
-	if !PermissionGroupVerify(&userMetaInfo, reflect.TypeOf(reflVar.AllDailyStatisticsManagementPermission).Name()) {
+	if !PermissionGroupVerify(&userMetaInfo, "AllDailyStatisticsManagementPermission") {
 		return &response.DeleteDailyStatisticsResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  false,

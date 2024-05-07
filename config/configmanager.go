@@ -8,9 +8,9 @@ import (
 	"strconv"
 )
 
-const ApiVersion = "2024.01.19"
+const ApiVersion = "2024.05.06"
 
-const ServerAppVersion = "2024.01.19"
+const ServerAppVersion = "2024.05.06"
 
 type Config struct {
 	GrpcIP           string
@@ -35,7 +35,7 @@ func SetDafaultAppConfig() {
 }
 
 func ReadConfig() bool {
-	jsonFile, err := os.Open("config.json")
+	jsonFile, err := os.Open("config_dev.json")
 
 	if err != nil {
 		log.Println(err)
