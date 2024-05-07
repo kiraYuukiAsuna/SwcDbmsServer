@@ -2970,11 +2970,11 @@ func (D DBMSServerController) CreateSwcAttachmentApo(ctx context.Context, reques
 		swcMetaInfo := dbmodel.SwcMetaInfoV1{}
 		swcMetaInfo.Name = request.GetSwcName()
 
-		res := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
-		if res.Status {
+		result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
+		if result.Status {
 			swcMetaInfo.SwcAttachmentApoMetaInfo.AttachmentUuid = apoAttachmentCollectionName
-			res = dal.ModifySwc(swcMetaInfo, dal.GetDbInstance())
-			if res.Status {
+			result = dal.ModifySwc(swcMetaInfo, dal.GetDbInstance())
+			if result.Status {
 				return &response.CreateSwcAttachmentApoResponse{
 					MetaInfo: &message.ResponseMetaInfoV1{
 						Status:  true,
@@ -2983,23 +2983,7 @@ func (D DBMSServerController) CreateSwcAttachmentApo(ctx context.Context, reques
 					},
 					ApoAttachmentUuid: apoAttachmentCollectionName,
 				}, nil
-			} else {
-				return &response.CreateSwcAttachmentApoResponse{
-					MetaInfo: &message.ResponseMetaInfoV1{
-						Status:  false,
-						Id:      "",
-						Message: result.Message,
-					},
-				}, nil
 			}
-		} else {
-			return &response.CreateSwcAttachmentApoResponse{
-				MetaInfo: &message.ResponseMetaInfoV1{
-					Status:  false,
-					Id:      "",
-					Message: result.Message,
-				},
-			}, nil
 		}
 	}
 
@@ -3032,11 +3016,11 @@ func (D DBMSServerController) DeleteSwcAttachmentApo(ctx context.Context, reques
 		swcMetaInfo := dbmodel.SwcMetaInfoV1{}
 		swcMetaInfo.Name = request.GetSwcName()
 
-		res := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
-		if res.Status {
+		result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
+		if result.Status {
 			swcMetaInfo.SwcAttachmentApoMetaInfo.AttachmentUuid = ""
-			res = dal.ModifySwc(swcMetaInfo, dal.GetDbInstance())
-			if res.Status {
+			result = dal.ModifySwc(swcMetaInfo, dal.GetDbInstance())
+			if result.Status {
 				return &response.DeleteSwcAttachmentApoResponse{
 					MetaInfo: &message.ResponseMetaInfoV1{
 						Status:  true,
@@ -3044,23 +3028,7 @@ func (D DBMSServerController) DeleteSwcAttachmentApo(ctx context.Context, reques
 						Message: result.Message,
 					},
 				}, nil
-			} else {
-				return &response.DeleteSwcAttachmentApoResponse{
-					MetaInfo: &message.ResponseMetaInfoV1{
-						Status:  false,
-						Id:      "",
-						Message: result.Message,
-					},
-				}, nil
 			}
-		} else {
-			return &response.DeleteSwcAttachmentApoResponse{
-				MetaInfo: &message.ResponseMetaInfoV1{
-					Status:  false,
-					Id:      "",
-					Message: result.Message,
-				},
-			}, nil
 		}
 	}
 
@@ -3130,11 +3098,11 @@ func (D DBMSServerController) UpdateSwcAttachmentApo(ctx context.Context, reques
 		swcMetaInfo := dbmodel.SwcMetaInfoV1{}
 		swcMetaInfo.Name = request.GetSwcName()
 
-		res := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
-		if res.Status {
+		result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
+		if result.Status {
 			swcMetaInfo.SwcAttachmentApoMetaInfo.AttachmentUuid = request.GetApoAttachmentUuid()
-			res = dal.ModifySwc(swcMetaInfo, dal.GetDbInstance())
-			if res.Status {
+			result = dal.ModifySwc(swcMetaInfo, dal.GetDbInstance())
+			if result.Status {
 				return &response.UpdateSwcAttachmentApoResponse{
 					MetaInfo: &message.ResponseMetaInfoV1{
 						Status:  true,
@@ -3142,23 +3110,7 @@ func (D DBMSServerController) UpdateSwcAttachmentApo(ctx context.Context, reques
 						Message: result.Message,
 					},
 				}, nil
-			} else {
-				return &response.UpdateSwcAttachmentApoResponse{
-					MetaInfo: &message.ResponseMetaInfoV1{
-						Status:  false,
-						Id:      "",
-						Message: result.Message,
-					},
-				}, nil
 			}
-		} else {
-			return &response.UpdateSwcAttachmentApoResponse{
-				MetaInfo: &message.ResponseMetaInfoV1{
-					Status:  false,
-					Id:      "",
-					Message: result.Message,
-				},
-			}, nil
 		}
 	}
 
@@ -3327,16 +3279,216 @@ func (D DBMSServerController) RevertSwcVersion(context context.Context, request 
 }
 
 func (D DBMSServerController) CreateSwcAttachmentSwc(context context.Context, request *request.CreateSwcAttachmentSwcRequest) (*response.CreateSwcAttachmentSwcResponse, error) {
-	return &response.CreateSwcAttachmentSwcResponse{}, nil
+	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
+	if !apiVersionVerifyResult.Status {
+		return &response.CreateSwcAttachmentSwcResponse{
+			MetaInfo: &apiVersionVerifyResult,
+		}, nil
+	}
+
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo())
+	if !responseMetaInfo.Status {
+		return &response.CreateSwcAttachmentSwcResponse{
+			MetaInfo: &responseMetaInfo,
+		}, nil
+	}
+
+	var swcData dbmodel.SwcDataV1
+	for _, swcNodeData := range request.SwcData {
+		swcData = append(swcData, *SwcNodeDataV1ProtobufToDbmodel(swcNodeData))
+	}
+
+	createTime := time.Now()
+
+	for idx := range swcData {
+		swcData[idx].Creator = request.GetUserVerifyInfo().GetUserName()
+		swcData[idx].Base.Id = primitive.NewObjectID()
+		newUuid := uuid.NewString()
+		swcData[idx].Base.Uuid = newUuid
+		swcData[idx].Base.DataAccessModelVersion = "V1"
+		swcData[idx].CreateTime = createTime
+		swcData[idx].LastModifiedTime = createTime
+		swcData[idx].CheckerUserUuid = ""
+	}
+
+	swcAttachmentCollectionName := "Attachment_Swc_" + uuid.NewString()
+
+	result := dal.CreateAttachmentSwcData(swcAttachmentCollectionName, &swcData, dal.GetDbInstance())
+	if result.Status {
+		swcMetaInfo := dbmodel.SwcMetaInfoV1{}
+		swcMetaInfo.Name = request.GetSwcName()
+
+		result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
+		if result.Status {
+			swcMetaInfo.SwcAttachmentSwcUuid = swcAttachmentCollectionName
+			result = dal.ModifySwc(swcMetaInfo, dal.GetDbInstance())
+			if result.Status {
+				return &response.CreateSwcAttachmentSwcResponse{
+					MetaInfo: &message.ResponseMetaInfoV1{
+						Status:  true,
+						Id:      "",
+						Message: result.Message,
+					},
+				}, nil
+			}
+		}
+	}
+
+	return &response.CreateSwcAttachmentSwcResponse{
+		MetaInfo: &message.ResponseMetaInfoV1{
+			Status:  false,
+			Id:      "",
+			Message: result.Message,
+		},
+	}, nil
 }
 func (D DBMSServerController) DeleteSwcAttachmentSwc(context context.Context, request *request.DeleteSwcAttachmentSwcRequest) (*response.DeleteSwcAttachmentSwcResponse, error) {
-	return &response.DeleteSwcAttachmentSwcResponse{}, nil
+	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
+	if !apiVersionVerifyResult.Status {
+		return &response.DeleteSwcAttachmentSwcResponse{
+			MetaInfo: &apiVersionVerifyResult,
+		}, nil
+	}
+
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo())
+	if !responseMetaInfo.Status {
+		return &response.DeleteSwcAttachmentSwcResponse{
+			MetaInfo: &responseMetaInfo,
+		}, nil
+	}
+
+	result := dal.DeleteAttachmentSwcData(request.GetSwcAttachmentUuid(), dal.GetDbInstance())
+	if result.Status {
+		swcMetaInfo := dbmodel.SwcMetaInfoV1{}
+		swcMetaInfo.Name = request.GetSwcName()
+
+		result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
+		if result.Status {
+			swcMetaInfo.SwcAttachmentSwcUuid = ""
+			result = dal.ModifySwc(swcMetaInfo, dal.GetDbInstance())
+			if result.Status {
+				return &response.DeleteSwcAttachmentSwcResponse{
+					MetaInfo: &message.ResponseMetaInfoV1{
+						Status:  true,
+						Id:      "",
+						Message: result.Message,
+					},
+				}, nil
+			}
+		}
+	}
+
+	return &response.DeleteSwcAttachmentSwcResponse{
+		MetaInfo: &message.ResponseMetaInfoV1{
+			Status:  false,
+			Id:      "",
+			Message: result.Message,
+		},
+	}, nil
 
 }
 func (D DBMSServerController) UpdateSwcAttachmentSwc(context context.Context, request *request.UpdateSwcAttachmentSwcRequest) (*response.UpdateSwcAttachmentSwcResponse, error) {
-	return &response.UpdateSwcAttachmentSwcResponse{}, nil
+	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
+	if !apiVersionVerifyResult.Status {
+		return &response.UpdateSwcAttachmentSwcResponse{
+			MetaInfo: &apiVersionVerifyResult,
+		}, nil
+	}
+
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo())
+	if !responseMetaInfo.Status {
+		return &response.UpdateSwcAttachmentSwcResponse{
+			MetaInfo: &responseMetaInfo,
+		}, nil
+	}
+
+	var swcData dbmodel.SwcDataV1
+	for _, swcNodeData := range request.NewSwcData {
+		swcData = append(swcData, *SwcNodeDataV1ProtobufToDbmodel(swcNodeData))
+	}
+
+	createTime := time.Now()
+
+	for idx := range swcData {
+		swcData[idx].Creator = request.GetUserVerifyInfo().GetUserName()
+		swcData[idx].Base.Id = primitive.NewObjectID()
+		newUuid := uuid.NewString()
+		swcData[idx].Base.Uuid = newUuid
+		swcData[idx].Base.DataAccessModelVersion = "V1"
+		swcData[idx].CreateTime = createTime
+		swcData[idx].LastModifiedTime = createTime
+		swcData[idx].CheckerUserUuid = ""
+	}
+
+	result := dal.UpdateAttachmentSwcData(request.GetSwcAttachmentUuid(), &swcData, dal.GetDbInstance())
+	if result.Status {
+		swcMetaInfo := dbmodel.SwcMetaInfoV1{}
+		swcMetaInfo.Name = request.GetSwcName()
+
+		result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
+		if result.Status {
+			swcMetaInfo.SwcAttachmentSwcUuid = request.GetSwcAttachmentUuid()
+			result = dal.ModifySwc(swcMetaInfo, dal.GetDbInstance())
+			if result.Status {
+				return &response.UpdateSwcAttachmentSwcResponse{
+					MetaInfo: &message.ResponseMetaInfoV1{
+						Status:  true,
+						Id:      "",
+						Message: result.Message,
+					},
+				}, nil
+			}
+		}
+	}
+
+	return &response.UpdateSwcAttachmentSwcResponse{
+		MetaInfo: &message.ResponseMetaInfoV1{
+			Status:  false,
+			Id:      "",
+			Message: result.Message,
+		},
+	}, nil
 
 }
 func (D DBMSServerController) GetSwcAttachmentSwc(context context.Context, request *request.GetSwcAttachmentSwcRequest) (*response.GetSwcAttachmentSwcResponse, error) {
-	return &response.GetSwcAttachmentSwcResponse{}, nil
+	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
+	if !apiVersionVerifyResult.Status {
+		return &response.GetSwcAttachmentSwcResponse{
+			MetaInfo: &apiVersionVerifyResult,
+		}, nil
+	}
+
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo())
+	if !responseMetaInfo.Status {
+		return &response.GetSwcAttachmentSwcResponse{
+			MetaInfo: &responseMetaInfo,
+		}, nil
+	}
+
+	var attachmentDb dbmodel.SwcDataV1
+	var attachmentPb []*message.SwcNodeDataV1
+
+	result := dal.QueryAttachmentSwcData(request.GetSwcAttachmentUuid(), &attachmentDb, dal.GetDbInstance())
+	if result.Status {
+		for _, swcNodeData := range attachmentDb {
+			attachmentPb = append(attachmentPb, SwcNodeDataV1DbmodelToProtobuf(&swcNodeData))
+		}
+
+		return &response.GetSwcAttachmentSwcResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  true,
+				Id:      "",
+				Message: result.Message,
+			},
+			SwcData: attachmentPb,
+		}, nil
+	}
+
+	return &response.GetSwcAttachmentSwcResponse{
+		MetaInfo: &message.ResponseMetaInfoV1{
+			Status:  false,
+			Id:      "",
+			Message: result.Message,
+		},
+	}, nil
 }
