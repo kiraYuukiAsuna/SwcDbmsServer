@@ -19,7 +19,7 @@ func UserMetaInfoV1ProtobufToDbmodel(protoMessage *message.UserMetaInfoV1) *dbmo
 	dbmodelMessage.Name = protoMessage.Name
 	dbmodelMessage.Password = protoMessage.Password
 	dbmodelMessage.Description = protoMessage.Description
-	dbmodelMessage.UserPermissionGroup = protoMessage.UserPermissionGroup
+	dbmodelMessage.PermissionGroupUuid = protoMessage.PermissionGroupUuid
 	dbmodelMessage.UserId = protoMessage.UserId
 
 	if protoMessage.CreateTime != nil {
@@ -43,7 +43,7 @@ func UserMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.UserMetaInfoV1) *me
 	protoMessage.Name = dbmodelMessage.Name
 	protoMessage.Password = dbmodelMessage.Password
 	protoMessage.Description = dbmodelMessage.Description
-	protoMessage.UserPermissionGroup = dbmodelMessage.UserPermissionGroup
+	protoMessage.PermissionGroupUuid = dbmodelMessage.PermissionGroupUuid
 	protoMessage.UserId = dbmodelMessage.UserId
 
 	protoMessage.CreateTime = timestamppb.New(dbmodelMessage.CreateTime)
@@ -64,17 +64,13 @@ func PermissionGroupMetaInfoV1ProtobufToDbmodel(protoMessage *message.Permission
 
 	dbmodelMessage.Name = protoMessage.Name
 	dbmodelMessage.Description = protoMessage.Description
-	if protoMessage.GlobalPermission != nil {
-		dbmodelMessage.Global.ReadPerimissionQuery = protoMessage.GlobalPermission.ReadPerimissionQuery
-		dbmodelMessage.Global.WritePermissionCreateProject = protoMessage.GlobalPermission.WritePermissionCreateProject
-		dbmodelMessage.Global.WritePermissionModifyProject = protoMessage.GlobalPermission.WritePermissionModifyProject
-		dbmodelMessage.Global.WritePermissionCreateProject = protoMessage.GlobalPermission.WritePermissionCreateProject
-	}
-	if protoMessage.ProjectPermission != nil {
-		dbmodelMessage.Project.ReadPerimissionQuery = protoMessage.ProjectPermission.ReadPerimissionQuery
-		dbmodelMessage.Project.WritePermissionAddData = protoMessage.ProjectPermission.WritePermissionAddData
-		dbmodelMessage.Project.WritePermissionModifyData = protoMessage.ProjectPermission.WritePermissionModifyData
-		dbmodelMessage.Project.WritePermissionDeleteData = protoMessage.ProjectPermission.WritePermissionDeleteData
+
+	if protoMessage.Ace != nil {
+		dbmodelMessage.Ace.AllUserManagementPermission = protoMessage.Ace.AllUserManagementPermission
+		dbmodelMessage.Ace.AllPermissionGroupManagementPermission = protoMessage.Ace.AllPermissionGroupManagementPermission
+		dbmodelMessage.Ace.AllProjectManagementPermission = protoMessage.Ace.AllProjectManagementPermission
+		dbmodelMessage.Ace.AllSwcManagementPermission = protoMessage.Ace.AllSwcManagementPermission
+		dbmodelMessage.Ace.AllDailyStatisticsManagementPermission = protoMessage.Ace.AllDailyStatisticsManagementPermission
 	}
 
 	return &dbmodelMessage
@@ -91,17 +87,11 @@ func PermissionGroupMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.Permissi
 	protoMessage.Name = dbmodelMessage.Name
 	protoMessage.Description = dbmodelMessage.Description
 
-	protoMessage.GlobalPermission = &message.GlobalPermissionMetaInfoV1{}
-	protoMessage.GlobalPermission.ReadPerimissionQuery = dbmodelMessage.Global.ReadPerimissionQuery
-	protoMessage.GlobalPermission.WritePermissionCreateProject = dbmodelMessage.Global.WritePermissionCreateProject
-	protoMessage.GlobalPermission.WritePermissionModifyProject = dbmodelMessage.Global.WritePermissionModifyProject
-	protoMessage.GlobalPermission.WritePermissionDeleteProject = dbmodelMessage.Global.WritePermissionDeleteProject
-
-	protoMessage.ProjectPermission = &message.ProjectPermissionMetaInfoV1{}
-	protoMessage.ProjectPermission.ReadPerimissionQuery = dbmodelMessage.Project.ReadPerimissionQuery
-	protoMessage.ProjectPermission.WritePermissionAddData = dbmodelMessage.Project.WritePermissionAddData
-	protoMessage.ProjectPermission.WritePermissionModifyData = dbmodelMessage.Project.WritePermissionModifyData
-	protoMessage.ProjectPermission.WritePermissionDeleteData = dbmodelMessage.Project.WritePermissionDeleteData
+	protoMessage.Ace.AllUserManagementPermission = dbmodelMessage.Ace.AllUserManagementPermission
+	protoMessage.Ace.AllPermissionGroupManagementPermission = dbmodelMessage.Ace.AllPermissionGroupManagementPermission
+	protoMessage.Ace.AllProjectManagementPermission = dbmodelMessage.Ace.AllProjectManagementPermission
+	protoMessage.Ace.AllSwcManagementPermission = dbmodelMessage.Ace.AllSwcManagementPermission
+	protoMessage.Ace.AllDailyStatisticsManagementPermission = dbmodelMessage.Ace.AllDailyStatisticsManagementPermission
 
 	return &protoMessage
 }
@@ -133,17 +123,56 @@ func ProjectMetaInfoV1ProtobufToDbmodel(protoMessage *message.ProjectMetaInfoV1)
 
 	dbmodelMessage.WorkMode = protoMessage.WorkMode
 
-	if protoMessage.UserPermissionOverride != nil {
-		for _, protoPermissionOverride := range protoMessage.UserPermissionOverride {
-			var projectPermissionOverride dbmodel.UserPermissionOverrideMetaInfoV1
-			projectPermissionOverride.Project = dbmodel.ProjectPermissionMetaInfoV1{}
-			projectPermissionOverride.Project.ReadPerimissionQuery = protoPermissionOverride.ProjectPermission.ReadPerimissionQuery
-			projectPermissionOverride.Project.WritePermissionAddData = protoPermissionOverride.ProjectPermission.WritePermissionAddData
-			projectPermissionOverride.Project.WritePermissionModifyData = protoPermissionOverride.ProjectPermission.WritePermissionModifyData
-			projectPermissionOverride.Project.WritePermissionDeleteData = protoPermissionOverride.ProjectPermission.WritePermissionDeleteData
-			projectPermissionOverride.UserName = protoPermissionOverride.UserName
+	if protoMessage.Permission != nil {
+		if protoMessage.Permission.Owner != nil {
+			dbmodelMessage.Permission.Owner.UserUuid = protoMessage.Permission.Owner.UserUuid
+			if protoMessage.Permission.Owner.Ace != nil {
+				dbmodelMessage.Permission.Owner.Ace.WritePermissionAddSwcData = protoMessage.Permission.Owner.Ace.WritePermissionAddSwcData
+				dbmodelMessage.Permission.Owner.Ace.WritePermissionDeleteSwcData = protoMessage.Permission.Owner.Ace.WritePermissionDeleteSwcData
+				dbmodelMessage.Permission.Owner.Ace.WritePermissionModifySwcData = protoMessage.Permission.Owner.Ace.WritePermissionModifySwcData
+				dbmodelMessage.Permission.Owner.Ace.ReadPerimissionQuerySwcData = protoMessage.Permission.Owner.Ace.ReadPerimissionQuerySwcData
 
-			dbmodelMessage.UserPermissionOverride = append(dbmodelMessage.UserPermissionOverride, projectPermissionOverride)
+				dbmodelMessage.Permission.Owner.Ace.WritePermissionCreateProject = protoMessage.Permission.Owner.Ace.WritePermissionCreateProject
+				dbmodelMessage.Permission.Owner.Ace.WritePermissionDeleteProject = protoMessage.Permission.Owner.Ace.WritePermissionDeleteProject
+				dbmodelMessage.Permission.Owner.Ace.WritePermissionModifyProject = protoMessage.Permission.Owner.Ace.WritePermissionModifyProject
+				dbmodelMessage.Permission.Owner.Ace.ReadPerimissionQueryProject = protoMessage.Permission.Owner.Ace.ReadPerimissionQueryProject
+			}
+		}
+		if protoMessage.Permission.Users != nil {
+			for _, protoUserPermission := range protoMessage.Permission.Users {
+				var acl dbmodel.UserPermissionAclV1
+				acl.UserUuid = protoUserPermission.UserUuid
+
+				acl.Ace.WritePermissionAddSwcData = protoUserPermission.Ace.WritePermissionAddSwcData
+				acl.Ace.WritePermissionDeleteSwcData = protoUserPermission.Ace.WritePermissionDeleteSwcData
+				acl.Ace.WritePermissionModifySwcData = protoUserPermission.Ace.WritePermissionModifySwcData
+				acl.Ace.ReadPerimissionQuerySwcData = protoUserPermission.Ace.ReadPerimissionQuerySwcData
+
+				acl.Ace.WritePermissionCreateProject = protoUserPermission.Ace.WritePermissionCreateProject
+				acl.Ace.WritePermissionDeleteProject = protoUserPermission.Ace.WritePermissionDeleteProject
+				acl.Ace.WritePermissionModifyProject = protoUserPermission.Ace.WritePermissionModifyProject
+				acl.Ace.ReadPerimissionQueryProject = protoUserPermission.Ace.ReadPerimissionQueryProject
+
+				dbmodelMessage.Permission.Users = append(dbmodelMessage.Permission.Users, acl)
+			}
+		}
+		if protoMessage.Permission.Groups != nil {
+			for _, protoGroupPermission := range protoMessage.Permission.Groups {
+				var acl dbmodel.GroupPermissionAclV1
+				acl.GroupUuid = protoGroupPermission.GroupUuid
+
+				acl.Ace.WritePermissionAddSwcData = protoGroupPermission.Ace.WritePermissionAddSwcData
+				acl.Ace.WritePermissionDeleteSwcData = protoGroupPermission.Ace.WritePermissionDeleteSwcData
+				acl.Ace.WritePermissionModifySwcData = protoGroupPermission.Ace.WritePermissionModifySwcData
+				acl.Ace.ReadPerimissionQuerySwcData = protoGroupPermission.Ace.ReadPerimissionQuerySwcData
+
+				acl.Ace.WritePermissionCreateProject = protoGroupPermission.Ace.WritePermissionCreateProject
+				acl.Ace.WritePermissionDeleteProject = protoGroupPermission.Ace.WritePermissionDeleteProject
+				acl.Ace.WritePermissionModifyProject = protoGroupPermission.Ace.WritePermissionModifyProject
+				acl.Ace.ReadPerimissionQueryProject = protoGroupPermission.Ace.ReadPerimissionQueryProject
+
+				dbmodelMessage.Permission.Groups = append(dbmodelMessage.Permission.Groups, acl)
+			}
 		}
 	}
 
@@ -166,16 +195,52 @@ func ProjectMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.ProjectMetaInfoV
 	protoMessage.SwcList = dbmodelMessage.SwcList
 	protoMessage.WorkMode = dbmodelMessage.WorkMode
 
-	for _, dbmodelPermissionOverride := range dbmodelMessage.UserPermissionOverride {
-		var protoPermissionOverride message.UserPermissionOverrideMetaInfoV1
-		protoPermissionOverride.ProjectPermission = &message.ProjectPermissionMetaInfoV1{}
-		protoPermissionOverride.ProjectPermission.ReadPerimissionQuery = dbmodelPermissionOverride.Project.ReadPerimissionQuery
-		protoPermissionOverride.ProjectPermission.WritePermissionAddData = dbmodelPermissionOverride.Project.WritePermissionAddData
-		protoPermissionOverride.ProjectPermission.WritePermissionModifyData = dbmodelPermissionOverride.Project.WritePermissionModifyData
-		protoPermissionOverride.ProjectPermission.WritePermissionDeleteData = dbmodelPermissionOverride.Project.WritePermissionDeleteData
-		protoPermissionOverride.UserName = dbmodelPermissionOverride.UserName
+	protoMessage.Permission.Owner = &message.UserPermissionAclV1{}
+	protoMessage.Permission.Owner.UserUuid = dbmodelMessage.Permission.Owner.UserUuid
+	protoMessage.Permission.Owner.Ace = &message.PermissionAceV1{}
 
-		protoMessage.UserPermissionOverride = append(protoMessage.UserPermissionOverride, &protoPermissionOverride)
+	protoMessage.Permission.Owner.Ace.WritePermissionAddSwcData = dbmodelMessage.Permission.Owner.Ace.WritePermissionAddSwcData
+	protoMessage.Permission.Owner.Ace.WritePermissionDeleteSwcData = dbmodelMessage.Permission.Owner.Ace.WritePermissionDeleteSwcData
+	protoMessage.Permission.Owner.Ace.WritePermissionModifySwcData = dbmodelMessage.Permission.Owner.Ace.WritePermissionModifySwcData
+	protoMessage.Permission.Owner.Ace.ReadPerimissionQuerySwcData = dbmodelMessage.Permission.Owner.Ace.ReadPerimissionQuerySwcData
+
+	protoMessage.Permission.Owner.Ace.WritePermissionCreateProject = dbmodelMessage.Permission.Owner.Ace.WritePermissionCreateProject
+	protoMessage.Permission.Owner.Ace.WritePermissionDeleteProject = dbmodelMessage.Permission.Owner.Ace.WritePermissionDeleteProject
+	protoMessage.Permission.Owner.Ace.WritePermissionModifyProject = dbmodelMessage.Permission.Owner.Ace.WritePermissionModifyProject
+	protoMessage.Permission.Owner.Ace.ReadPerimissionQueryProject = dbmodelMessage.Permission.Owner.Ace.ReadPerimissionQueryProject
+
+	for _, dbUserPermission := range dbmodelMessage.Permission.Users {
+		var userPermission message.UserPermissionAclV1
+		userPermission.UserUuid = dbUserPermission.UserUuid
+		userPermission.Ace = &message.PermissionAceV1{}
+		userPermission.Ace.WritePermissionAddSwcData = dbUserPermission.Ace.WritePermissionAddSwcData
+		userPermission.Ace.WritePermissionDeleteSwcData = dbUserPermission.Ace.WritePermissionDeleteSwcData
+		userPermission.Ace.WritePermissionModifySwcData = dbUserPermission.Ace.WritePermissionModifySwcData
+		userPermission.Ace.ReadPerimissionQuerySwcData = dbUserPermission.Ace.ReadPerimissionQuerySwcData
+
+		userPermission.Ace.WritePermissionCreateProject = dbUserPermission.Ace.WritePermissionCreateProject
+		userPermission.Ace.WritePermissionDeleteProject = dbUserPermission.Ace.WritePermissionDeleteProject
+		userPermission.Ace.WritePermissionModifyProject = dbUserPermission.Ace.WritePermissionModifyProject
+		userPermission.Ace.ReadPerimissionQueryProject = dbUserPermission.Ace.ReadPerimissionQueryProject
+
+		protoMessage.Permission.Users = append(protoMessage.Permission.Users, &userPermission)
+	}
+
+	for _, dbGroupPermission := range dbmodelMessage.Permission.Groups {
+		var groupPermission message.GroupPermissionAclV1
+		groupPermission.GroupUuid = dbGroupPermission.GroupUuid
+		groupPermission.Ace = &message.PermissionAceV1{}
+		groupPermission.Ace.WritePermissionAddSwcData = dbGroupPermission.Ace.WritePermissionAddSwcData
+		groupPermission.Ace.WritePermissionDeleteSwcData = dbGroupPermission.Ace.WritePermissionDeleteSwcData
+		groupPermission.Ace.WritePermissionModifySwcData = dbGroupPermission.Ace.WritePermissionModifySwcData
+		groupPermission.Ace.ReadPerimissionQuerySwcData = dbGroupPermission.Ace.ReadPerimissionQuerySwcData
+
+		groupPermission.Ace.WritePermissionCreateProject = dbGroupPermission.Ace.WritePermissionCreateProject
+		groupPermission.Ace.WritePermissionDeleteProject = dbGroupPermission.Ace.WritePermissionDeleteProject
+		groupPermission.Ace.WritePermissionModifyProject = dbGroupPermission.Ace.WritePermissionModifyProject
+		groupPermission.Ace.ReadPerimissionQueryProject = dbGroupPermission.Ace.ReadPerimissionQueryProject
+
+		protoMessage.Permission.Groups = append(protoMessage.Permission.Groups, &groupPermission)
 	}
 
 	return &protoMessage

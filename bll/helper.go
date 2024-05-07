@@ -8,6 +8,7 @@ import (
 	"DBMS/errcode"
 	"github.com/google/uuid"
 	"log"
+	"reflect"
 	"time"
 )
 
@@ -104,4 +105,65 @@ func RequestApiVersionVerify(requestMetaInfo *message.RequestMetaInfoV1) message
 			Message: "",
 		}
 	}
+}
+
+func AclContainsUser(userUuid string, userPermission []dbmodel.UserPermissionAclV1) (bool, dbmodel.UserPermissionAclV1) {
+	for _, userPermissionAcl := range userPermission {
+		if userPermissionAcl.UserUuid == userUuid {
+			return true, userPermissionAcl
+		}
+	}
+
+	return false, dbmodel.UserPermissionAclV1{}
+}
+
+func AclContainsGroup(userPermissionGroupUuid string, groupPermission []dbmodel.GroupPermissionAclV1) (bool, dbmodel.GroupPermissionAclV1) {
+	for _, groupPermissionAcl := range groupPermission {
+		if groupPermissionAcl.GroupUuid == userPermissionGroupUuid {
+			return true, groupPermissionAcl
+		}
+	}
+
+	return false, dbmodel.GroupPermissionAclV1{}
+}
+
+func PermissionGroupVerify(userMetaInfo *dbmodel.UserMetaInfoV1, requestPermissionName string) bool {
+	var authorityStatus = false
+
+	permissionGroupMetaInfo := dbmodel.PermissionGroupMetaInfoV1{}
+	permissionGroupMetaInfo.Base.Uuid = userMetaInfo.PermissionGroupUuid
+	if result := dal.QueryPermissionGroup(&permissionGroupMetaInfo, dal.GetDbInstance()); !result.Status {
+		return false
+	}
+
+	reflectionMemberVariables := reflect.ValueOf(permissionGroupMetaInfo.Ace)
+	value := reflectionMemberVariables.FieldByName(requestPermissionName)
+	if value.Kind() == reflect.Bool {
+		authorityStatus = value.Bool()
+	}
+
+	return authorityStatus
+}
+
+func PermissionVerify(userMetaInfo *dbmodel.UserMetaInfoV1, permissionMetaInfo *dbmodel.PermissionMetaInfoV1, requestPermissionName string) bool {
+	var authorityStatus = false
+
+	if permissionMetaInfo.Owner.UserUuid == userMetaInfo.Base.Uuid {
+		authorityStatus = true
+	} else if status, userPermissionAcl := AclContainsUser(userMetaInfo.Base.Uuid, permissionMetaInfo.Users); status {
+		reflectionMemberVariables := reflect.ValueOf(userPermissionAcl.Ace)
+		value := reflectionMemberVariables.FieldByName(requestPermissionName)
+		if value.Kind() == reflect.Bool {
+			authorityStatus = value.Bool()
+		}
+
+	} else if status, groupPermisionAcl := AclContainsGroup(userMetaInfo.PermissionGroupUuid, permissionMetaInfo.Groups); status {
+		reflectionMemberVariables := reflect.ValueOf(groupPermisionAcl.Ace)
+		value := reflectionMemberVariables.FieldByName(requestPermissionName)
+		if value.Kind() == reflect.Bool {
+			authorityStatus = value.Bool()
+		}
+	}
+
+	return authorityStatus
 }

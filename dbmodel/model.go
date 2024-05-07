@@ -26,25 +26,50 @@ type UserMetaInfoV1 struct {
 	Description         string                               `bson:"Description"`
 	CreateTime          time.Time                            `bson:"CreateTime"`
 	HeadPhotoBinData    []byte                               `bson:"HeadPhotoBinData"`
-	UserPermissionGroup string                               `bson:"UserPermissionGroup"`
+	PermissionGroupUuid string                               `bson:"PermissionGroupUuid"`
 	UserId              int32                                `bson:"UserId"`
 	CompatibleData      BrainTellServerMysqlDBCompatibleData `bson:"CompatibleData"`
 }
 
-type GlobalPermissionMetaInfoV1 struct {
+type PermissionGroupAceV1 struct {
+	AllPermissionGroupManagementPermission bool `bson:"AllPermissionGroupManagementPermission"`
+	AllUserManagementPermission            bool `bson:"AllUserManagementPermission"`
+	AllProjectManagementPermission         bool `bson:"AllProjectManagementPermission"`
+	AllSwcManagementPermission             bool `bson:"AllSwcManagementPermission"`
+	AllDailyStatisticsManagementPermission bool `bson:"AllDailyStatisticsManagementPermission"`
+}
+
+type PermissionGroupAclV1 struct {
+	PermissionGroupUuid string               `bson:"PermissionGroupUuid"`
+	PermissionGroupAce  PermissionGroupAceV1 `bson:"PermissionGroupAce"`
+}
+
+type PermissionAceV1 struct {
 	WritePermissionCreateProject bool `bson:"WritePermissionCreateProject"`
 	WritePermissionModifyProject bool `bson:"WritePermissionModifyProject"`
 	WritePermissionDeleteProject bool `bson:"WritePermissionDeleteProject"`
+	ReadPerimissionQueryProject  bool `bson:"ReadPerimissionQueryProject"`
 
-	ReadPerimissionQuery bool `bson:"ReadPerimissionQuery"`
+	WritePermissionAddSwcData    bool `bson:"WritePermissionAddSwcData"`
+	WritePermissionModifySwcData bool `bson:"WritePermissionModifySwcData"`
+	WritePermissionDeleteSwcData bool `bson:"WritePermissionDeleteSwcData"`
+	ReadPerimissionQuerySwcData  bool `bson:"ReadPerimissionQuerySwcData"`
 }
 
-type ProjectPermissionMetaInfoV1 struct {
-	WritePermissionAddData    bool `bson:"WritePermissionAddData"`
-	WritePermissionModifyData bool `bson:"WritePermissionModifyData"`
-	WritePermissionDeleteData bool `bson:"WritePermissionDeleteData"`
+type UserPermissionAclV1 struct {
+	UserUuid string          `bson:"UserUuid"`
+	Ace      PermissionAceV1 `bson:"Ace"`
+}
 
-	ReadPerimissionQuery bool `bson:"ReadPerimissionQuery"`
+type GroupPermissionAclV1 struct {
+	GroupUuid string          `bson:"GroupUuid"`
+	Ace       PermissionAceV1 `bson:"Ace"`
+}
+
+type PermissionMetaInfoV1 struct {
+	Owner  UserPermissionAclV1    `bson:"Owner"`
+	Users  []UserPermissionAclV1  `bson:"Users"`
+	Groups []GroupPermissionAclV1 `bson:"Groups"`
 }
 
 type PermissionGroupMetaInfoV1 struct {
@@ -53,26 +78,20 @@ type PermissionGroupMetaInfoV1 struct {
 	Name        string `bson:"Name"`
 	Description string `bson:"Description"`
 
-	Global  GlobalPermissionMetaInfoV1  `bson:"Global"`
-	Project ProjectPermissionMetaInfoV1 `bson:"Project"`
-}
-
-type UserPermissionOverrideMetaInfoV1 struct {
-	Project  ProjectPermissionMetaInfoV1 `bson:"Project"`
-	UserName string                      `bson:"UserName"`
+	Ace PermissionGroupAceV1 `bson:"Ace"`
 }
 
 type ProjectMetaInfoV1 struct {
 	Base MetaInfoBase `bson:"Base,inline"`
 
-	Name                   string                             `bson:"Name"`
-	Description            string                             `bson:"Description"`
-	Creator                string                             `bson:"Creator"`
-	CreateTime             time.Time                          `bson:"CreateTime"`
-	LastModifiedTime       time.Time                          `bson:"LastModifiedTime"`
-	SwcList                []string                           `bson:"SwcList"`
-	UserPermissionOverride []UserPermissionOverrideMetaInfoV1 `bson:"UserPermissionOverride"`
-	WorkMode               string                             `bson:"WorkMode"`
+	Name             string               `bson:"Name"`
+	Description      string               `bson:"Description"`
+	Creator          string               `bson:"Creator"`
+	CreateTime       time.Time            `bson:"CreateTime"`
+	LastModifiedTime time.Time            `bson:"LastModifiedTime"`
+	SwcList          []string             `bson:"SwcList"`
+	WorkMode         string               `bson:"WorkMode"`
+	Permission       PermissionMetaInfoV1 `bson:"Permission"`
 }
 
 type SwcSnapshotMetaInfoV1 struct {
@@ -111,6 +130,8 @@ type SwcMetaInfoV1 struct {
 	CurrentIncrementOperationCollectionName string                            `bson:"CurrentIncrementOperationCollectionName"`
 	SwcAttachmentAnoMetaInfo                SwcAttachmentAnoMetaInfoV1        `bson:"SwcAttachmentAno"`
 	SwcAttachmentApoMetaInfo                SwcAttachmentApoMetaInfoV1        `bson:"SwcAttachmentApo"`
+	SwcAttachmentSwcUuid                    string                            `bson:"SwcAttachmentSwcUuid"`
+	Permission                              PermissionMetaInfoV1              `bson:"Permission"`
 }
 
 type SwcNodeInternalDataV1 struct {

@@ -87,6 +87,13 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 			log.Fatal(err)
 		}
 
+		adminPermissionGroup := dbmodel.PermissionGroupMetaInfoV1{
+			Name: PermissionGroupAdmin,
+		}
+		if result := QueryPermissionGroupUuidByName(&adminPermissionGroup, GetDbInstance()); !result.Status {
+
+		}
+
 		_, userId := GetNewUserIdAndIncrease(dbInfo)
 		var serverUser = dbmodel.UserMetaInfoV1{
 			Base: dbmodel.MetaInfoBase{
@@ -99,7 +106,7 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 			Description:         "",
 			CreateTime:          time.Now(),
 			HeadPhotoBinData:    nil,
-			UserPermissionGroup: PermissionGroupAdmin,
+			PermissionGroupUuid: adminPermissionGroup.Base.Uuid,
 			UserId:              userId,
 		}
 		CreateUser(serverUser, dbInfo)
@@ -117,17 +124,11 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 			},
 			Name:        PermissionGroupAdmin,
 			Description: "Admin Permission Group",
-			Global: dbmodel.GlobalPermissionMetaInfoV1{
-				WritePermissionCreateProject: true,
-				WritePermissionModifyProject: true,
-				WritePermissionDeleteProject: true,
-				ReadPerimissionQuery:         true,
-			},
-			Project: dbmodel.ProjectPermissionMetaInfoV1{
-				WritePermissionAddData:    true,
-				WritePermissionModifyData: true,
-				WritePermissionDeleteData: true,
-				ReadPerimissionQuery:      true,
+			Ace: dbmodel.PermissionGroupAceV1{
+				AllPermissionGroupManagementPermission: true,
+				AllUserManagementPermission:            true,
+				AllProjectManagementPermission:         true,
+				AllSwcManagementPermission:             true,
 			},
 		}
 		CreatePermissionGroup(permissionGroupAdmin, dbInfo)
@@ -140,17 +141,11 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 			},
 			Name:        PermissionGroupDefault,
 			Description: "Default Permission Group",
-			Global: dbmodel.GlobalPermissionMetaInfoV1{
-				WritePermissionCreateProject: false,
-				WritePermissionModifyProject: false,
-				WritePermissionDeleteProject: false,
-				ReadPerimissionQuery:         true,
-			},
-			Project: dbmodel.ProjectPermissionMetaInfoV1{
-				WritePermissionAddData:    true,
-				WritePermissionModifyData: true,
-				WritePermissionDeleteData: true,
-				ReadPerimissionQuery:      true,
+			Ace: dbmodel.PermissionGroupAceV1{
+				AllPermissionGroupManagementPermission: false,
+				AllUserManagementPermission:            false,
+				AllProjectManagementPermission:         false,
+				AllSwcManagementPermission:             false,
 			},
 		}
 		CreatePermissionGroup(permissionGroupDefault, dbInfo)
@@ -163,17 +158,11 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 			},
 			Name:        PermissionGroupGroupLeader,
 			Description: "GroupLeader Permission Group",
-			Global: dbmodel.GlobalPermissionMetaInfoV1{
-				WritePermissionCreateProject: true,
-				WritePermissionModifyProject: true,
-				WritePermissionDeleteProject: true,
-				ReadPerimissionQuery:         true,
-			},
-			Project: dbmodel.ProjectPermissionMetaInfoV1{
-				WritePermissionAddData:    true,
-				WritePermissionModifyData: true,
-				WritePermissionDeleteData: true,
-				ReadPerimissionQuery:      true,
+			Ace: dbmodel.PermissionGroupAceV1{
+				AllPermissionGroupManagementPermission: false,
+				AllUserManagementPermission:            false,
+				AllProjectManagementPermission:         false,
+				AllSwcManagementPermission:             false,
 			},
 		}
 		CreatePermissionGroup(permissionGroupGroupLeader, dbInfo)
@@ -186,17 +175,11 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 			},
 			Name:        PermissionGroupNormalUser,
 			Description: "NormalUser Permission Group",
-			Global: dbmodel.GlobalPermissionMetaInfoV1{
-				WritePermissionCreateProject: false,
-				WritePermissionModifyProject: false,
-				WritePermissionDeleteProject: false,
-				ReadPerimissionQuery:         true,
-			},
-			Project: dbmodel.ProjectPermissionMetaInfoV1{
-				WritePermissionAddData:    true,
-				WritePermissionModifyData: true,
-				WritePermissionDeleteData: true,
-				ReadPerimissionQuery:      true,
+			Ace: dbmodel.PermissionGroupAceV1{
+				AllPermissionGroupManagementPermission: false,
+				AllUserManagementPermission:            false,
+				AllProjectManagementPermission:         false,
+				AllSwcManagementPermission:             false,
 			},
 		}
 		CreatePermissionGroup(permissionGroupGroupNormalUser, dbInfo)
@@ -209,17 +192,11 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 			},
 			Name:        PermissionGroupGuest,
 			Description: "Guest Permission Group",
-			Global: dbmodel.GlobalPermissionMetaInfoV1{
-				WritePermissionCreateProject: false,
-				WritePermissionModifyProject: false,
-				WritePermissionDeleteProject: false,
-				ReadPerimissionQuery:         true,
-			},
-			Project: dbmodel.ProjectPermissionMetaInfoV1{
-				WritePermissionAddData:    false,
-				WritePermissionModifyData: false,
-				WritePermissionDeleteData: false,
-				ReadPerimissionQuery:      true,
+			Ace: dbmodel.PermissionGroupAceV1{
+				AllPermissionGroupManagementPermission: false,
+				AllUserManagementPermission:            false,
+				AllProjectManagementPermission:         false,
+				AllSwcManagementPermission:             false,
 			},
 		}
 		CreatePermissionGroup(permissionGroupGroupGuest, dbInfo)

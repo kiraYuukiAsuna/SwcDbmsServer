@@ -300,6 +300,25 @@ func QueryPermissionGroup(permissionGroupMetaInfo *dbmodel.PermissionGroupMetaIn
 
 	result := permissionGroupCollection.FindOne(
 		context.TODO(),
+		bson.D{{"uuid", permissionGroupMetaInfo.Base.Uuid}})
+
+	if result.Err() != nil {
+		return ReturnWrapper{false, "Cannot find target permission group!"}
+	} else {
+		err := result.Decode(permissionGroupMetaInfo)
+		if err != nil {
+			return ReturnWrapper{false, err.Error()}
+		} else {
+			return ReturnWrapper{true, ""}
+		}
+	}
+}
+
+func QueryPermissionGroupUuidByName(permissionGroupMetaInfo *dbmodel.PermissionGroupMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	var permissionGroupCollection = databaseInfo.MetaInfoDb.Collection(PermissionGroupMetaInfoCollectioString)
+
+	result := permissionGroupCollection.FindOne(
+		context.TODO(),
 		bson.D{{"Name", permissionGroupMetaInfo.Name}})
 
 	if result.Err() != nil {
