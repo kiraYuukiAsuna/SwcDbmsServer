@@ -901,8 +901,6 @@ func (D DBMSServerController) UpdateProject(ctx context.Context, request *reques
 	userMetaInfo := dbmodel.UserMetaInfoV1{}
 	userMetaInfo.Name = request.UserVerifyInfo.GetUserName()
 
-	projectMetaInfo := ProjectMetaInfoV1ProtobufToDbmodel(request.ProjectInfo)
-
 	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.UpdateProjectResponse{
@@ -911,7 +909,6 @@ func (D DBMSServerController) UpdateProject(ctx context.Context, request *reques
 				Id:      "",
 				Message: result.Message,
 			},
-			ProjectInfo: ProjectMetaInfoV1DbmodelToProtobuf(projectMetaInfo),
 		}, nil
 	}
 
@@ -925,15 +922,39 @@ func (D DBMSServerController) UpdateProject(ctx context.Context, request *reques
 				Id:      "",
 				Message: result.Message,
 			},
-			ProjectInfo: ProjectMetaInfoV1DbmodelToProtobuf(projectMetaInfo),
 		}, nil
 	}
 
-	projectMetaInfo.LastModifiedTime = time.Now()
+	projectMetaInfo := dbmodel.ProjectMetaInfoV1{}
+	projectMetaInfo.Name = request.GetProjectInfo().GetName()
+	result = dal.QueryProject(&projectMetaInfo, dal.GetDbInstance())
+	if !result.Status {
+		return &response.UpdateProjectResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
 
-	result = dal.ModifyProject(*projectMetaInfo, dal.GetDbInstance())
+	if !PermissionVerify(&userMetaInfo, &projectMetaInfo.Permission, "WritePermissionModifyProject") {
+		return &response.UpdateProjectResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: "You don't have permission to modify swc!",
+			},
+		}, nil
+	}
+
+	newProjectMetaInfo := ProjectMetaInfoV1ProtobufToDbmodel(request.ProjectInfo)
+
+	newProjectMetaInfo.LastModifiedTime = time.Now()
+
+	result = dal.ModifyProject(*newProjectMetaInfo, dal.GetDbInstance())
 	if result.Status {
-		log.Println("Project " + projectMetaInfo.Name + " Updated")
+		log.Println("Project " + newProjectMetaInfo.Name + " Updated")
 		DailyStatisticsInfo.ModifiedProjectNumber += 1
 		return &response.UpdateProjectResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -941,7 +962,7 @@ func (D DBMSServerController) UpdateProject(ctx context.Context, request *reques
 				Id:      "",
 				Message: result.Message,
 			},
-			ProjectInfo: ProjectMetaInfoV1DbmodelToProtobuf(projectMetaInfo),
+			ProjectInfo: ProjectMetaInfoV1DbmodelToProtobuf(newProjectMetaInfo),
 		}, nil
 	} else {
 		return &response.UpdateProjectResponse{
@@ -950,7 +971,6 @@ func (D DBMSServerController) UpdateProject(ctx context.Context, request *reques
 				Id:      "",
 				Message: result.Message,
 			},
-			ProjectInfo: ProjectMetaInfoV1DbmodelToProtobuf(projectMetaInfo),
 		}, nil
 	}
 }
@@ -1278,8 +1298,6 @@ func (D DBMSServerController) UpdateSwc(ctx context.Context, request *request.Up
 	userMetaInfo := dbmodel.UserMetaInfoV1{}
 	userMetaInfo.Name = request.UserVerifyInfo.GetUserName()
 
-	swcMetaInfo := SwcMetaInfoV1ProtobufToDbmodel(request.SwcInfo)
-
 	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.UpdateSwcResponse{
@@ -1288,7 +1306,6 @@ func (D DBMSServerController) UpdateSwc(ctx context.Context, request *request.Up
 				Id:      "",
 				Message: result.Message,
 			},
-			SwcInfo: SwcMetaInfoV1DbmodelToProtobuf(swcMetaInfo),
 		}, nil
 	}
 
@@ -1302,11 +1319,12 @@ func (D DBMSServerController) UpdateSwc(ctx context.Context, request *request.Up
 				Id:      "",
 				Message: result.Message,
 			},
-			SwcInfo: SwcMetaInfoV1DbmodelToProtobuf(swcMetaInfo),
 		}, nil
 	}
 
-	result = dal.QuerySwc(swcMetaInfo, dal.GetDbInstance())
+	swcMetaInfo := dbmodel.SwcMetaInfoV1{}
+	swcMetaInfo.Name = request.GetSwcInfo().GetName()
+	result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.UpdateSwcResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1314,7 +1332,6 @@ func (D DBMSServerController) UpdateSwc(ctx context.Context, request *request.Up
 				Id:      "",
 				Message: result.Message,
 			},
-			SwcInfo: SwcMetaInfoV1DbmodelToProtobuf(swcMetaInfo),
 		}, nil
 	}
 
@@ -1325,15 +1342,16 @@ func (D DBMSServerController) UpdateSwc(ctx context.Context, request *request.Up
 				Id:      "",
 				Message: "You don't have permission to modify swc!",
 			},
-			SwcInfo: SwcMetaInfoV1DbmodelToProtobuf(swcMetaInfo),
 		}, nil
 	}
 
-	swcMetaInfo.LastModifiedTime = time.Now()
+	newSwcMetaInfo := SwcMetaInfoV1ProtobufToDbmodel(request.SwcInfo)
 
-	result = dal.ModifySwc(*swcMetaInfo, dal.GetDbInstance())
+	newSwcMetaInfo.LastModifiedTime = time.Now()
+
+	result = dal.ModifySwc(*newSwcMetaInfo, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + request.UserVerifyInfo.GetUserName() + " Update SwcMetaInfo " + swcMetaInfo.Name)
+		log.Println("User " + request.UserVerifyInfo.GetUserName() + " Update SwcMetaInfo " + newSwcMetaInfo.Name)
 		DailyStatisticsInfo.ModifiedSwcNumber += 1
 		return &response.UpdateSwcResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1341,7 +1359,7 @@ func (D DBMSServerController) UpdateSwc(ctx context.Context, request *request.Up
 				Id:      "",
 				Message: result.Message,
 			},
-			SwcInfo: SwcMetaInfoV1DbmodelToProtobuf(swcMetaInfo),
+			SwcInfo: SwcMetaInfoV1DbmodelToProtobuf(newSwcMetaInfo),
 		}, nil
 	} else {
 		return &response.UpdateSwcResponse{
@@ -1350,7 +1368,6 @@ func (D DBMSServerController) UpdateSwc(ctx context.Context, request *request.Up
 				Id:      "",
 				Message: result.Message,
 			},
-			SwcInfo: SwcMetaInfoV1DbmodelToProtobuf(swcMetaInfo),
 		}, nil
 	}
 }
