@@ -269,7 +269,7 @@ func DeletePermissionGroup(permissionGroupMetaInfo dbmodel.PermissionGroupMetaIn
 	var permissionGroupCollection = databaseInfo.MetaInfoDb.Collection(PermissionGroupMetaInfoCollectioString)
 
 	result := permissionGroupCollection.FindOneAndDelete(context.TODO(), bson.D{
-		{"Name", permissionGroupMetaInfo.Name},
+		{"uuid", permissionGroupMetaInfo.Base.Uuid},
 	})
 
 	if result.Err() != nil {
@@ -284,7 +284,7 @@ func ModifyPermissionGroup(permissionGroupMetaInfo dbmodel.PermissionGroupMetaIn
 
 	result := permissionGroupCollection.FindOneAndReplace(
 		context.TODO(),
-		bson.D{{"Name", permissionGroupMetaInfo.Name}},
+		bson.D{{"uuid", permissionGroupMetaInfo.Base.Uuid}},
 		permissionGroupMetaInfo)
 
 	if result.Err() != nil {

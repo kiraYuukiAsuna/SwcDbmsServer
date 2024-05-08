@@ -565,7 +565,7 @@ func (D DBMSServerController) GetPermissionGroup(ctx context.Context, request *r
 	}, nil
 }
 
-func GetAllPermissionGroup(ctx context.Context, request *request.GetAllPermissionGroupRequest) (*response.GetAllPermissionGroupResponse, error) {
+func (D DBMSServerController) GetAllPermissionGroup(ctx context.Context, request *request.GetAllPermissionGroupRequest) (*response.GetAllPermissionGroupResponse, error) {
 	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
 	if !apiVersionVerifyResult.Status {
 		return &response.GetAllPermissionGroupResponse{
@@ -3487,6 +3487,145 @@ func (D DBMSServerController) GetSwcAttachmentSwc(context context.Context, reque
 	return &response.GetSwcAttachmentSwcResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
 			Status:  false,
+			Id:      "",
+			Message: result.Message,
+		},
+	}, nil
+}
+
+func (D DBMSServerController) CreatePermissionGroup(context context.Context, request *request.CreatePermissionGroupRequest) (*response.CreatePermissionGroupResponse, error) {
+	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
+	if !apiVersionVerifyResult.Status {
+		return &response.CreatePermissionGroupResponse{
+			MetaInfo: &apiVersionVerifyResult,
+		}, nil
+	}
+
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo())
+	if !responseMetaInfo.Status {
+		return &response.CreatePermissionGroupResponse{
+			MetaInfo: &responseMetaInfo,
+		}, nil
+	}
+
+	var permissionGroupDefault = dbmodel.PermissionGroupMetaInfoV1{
+		Base: dbmodel.MetaInfoBase{
+			Id:                     primitive.NewObjectID(),
+			DataAccessModelVersion: "V1",
+			Uuid:                   uuid.NewString(),
+		},
+		Name:        request.GetPermissionGroupName(),
+		Description: request.GetPermissionGroupDescription(),
+		Ace: dbmodel.PermissionGroupAceV1{
+			AllPermissionGroupManagementPermission: false,
+			AllUserManagementPermission:            false,
+			AllProjectManagementPermission:         false,
+			AllSwcManagementPermission:             false,
+		},
+	}
+	result := dal.CreatePermissionGroup(permissionGroupDefault, dal.GetDbInstance())
+	if !result.Status {
+		return &response.CreatePermissionGroupResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
+	return &response.CreatePermissionGroupResponse{
+		MetaInfo: &message.ResponseMetaInfoV1{
+			Status:  true,
+			Id:      "",
+			Message: result.Message,
+		},
+	}, nil
+}
+
+func (D DBMSServerController) DeletePermissionGroup(context context.Context, request *request.DeletePermissionGroupRequest) (*response.DeletePermissionGroupResponse, error) {
+	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
+	if !apiVersionVerifyResult.Status {
+		return &response.DeletePermissionGroupResponse{
+			MetaInfo: &apiVersionVerifyResult,
+		}, nil
+	}
+
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo())
+	if !responseMetaInfo.Status {
+		return &response.DeletePermissionGroupResponse{
+			MetaInfo: &responseMetaInfo,
+		}, nil
+	}
+
+	var permissionGroupMetaInfo dbmodel.PermissionGroupMetaInfoV1
+	permissionGroupMetaInfo.Base.Uuid = request.GetPermissionGroupUuid()
+	result := dal.DeletePermissionGroup(permissionGroupMetaInfo, dal.GetDbInstance())
+	if !result.Status {
+		return &response.DeletePermissionGroupResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
+	return &response.DeletePermissionGroupResponse{
+		MetaInfo: &message.ResponseMetaInfoV1{
+			Status:  true,
+			Id:      "",
+			Message: result.Message,
+		},
+	}, nil
+}
+
+func (D DBMSServerController) UpdatePermissionGroup(context context.Context, request *request.UpdatePermissionGroupRequest) (*response.UpdatePermissionGroupResponse, error) {
+	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
+	if !apiVersionVerifyResult.Status {
+		return &response.UpdatePermissionGroupResponse{
+			MetaInfo: &apiVersionVerifyResult,
+		}, nil
+	}
+
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo())
+	if !responseMetaInfo.Status {
+		return &response.UpdatePermissionGroupResponse{
+			MetaInfo: &responseMetaInfo,
+		}, nil
+	}
+
+	var permissionGroupMetaInfo dbmodel.PermissionGroupMetaInfoV1
+	permissionGroupMetaInfo.Base.Uuid = request.GetPermissionGroupUuid()
+	result := dal.QueryPermissionGroup(&permissionGroupMetaInfo, dal.GetDbInstance())
+	if !result.Status {
+		return &response.UpdatePermissionGroupResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
+	permissionGroupMetaInfo.Name = request.GetPermissionGroupName()
+	permissionGroupMetaInfo.Description = request.GetPermissionGroupDescription()
+	PermissionGroupAceProtoToDb(request.GetAce(), &permissionGroupMetaInfo.Ace)
+
+	result = dal.ModifyPermissionGroup(permissionGroupMetaInfo, dal.GetDbInstance())
+	if !result.Status {
+		return &response.UpdatePermissionGroupResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
+	return &response.UpdatePermissionGroupResponse{
+		MetaInfo: &message.ResponseMetaInfoV1{
+			Status:  true,
 			Id:      "",
 			Message: result.Message,
 		},
