@@ -47,7 +47,7 @@ func UserTokenVerify(userVerifyInfo *message.UserVerifyInfoV1) (message.Response
 		if userPassword != "" {
 			var userMetaInfo dbmodel.UserMetaInfoV1
 			userMetaInfo.Name = userName
-			result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+			result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 			if !result.Status {
 				return message.ResponseMetaInfoV1{
 					Status:  bFind,

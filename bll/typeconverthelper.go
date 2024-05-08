@@ -144,7 +144,9 @@ func ProjectMetaInfoV1ProtobufToDbmodel(protoMessage *message.ProjectMetaInfoV1)
 				var acl dbmodel.UserPermissionAclV1
 				acl.UserUuid = protoUserPermission.UserUuid
 
-				PermissionAceProtoToDb(protoUserPermission.Ace, &acl.Ace)
+				if protoUserPermission.Ace != nil {
+					PermissionAceProtoToDb(protoUserPermission.Ace, &acl.Ace)
+				}
 
 				dbmodelMessage.Permission.Users = append(dbmodelMessage.Permission.Users, acl)
 			}
@@ -154,7 +156,9 @@ func ProjectMetaInfoV1ProtobufToDbmodel(protoMessage *message.ProjectMetaInfoV1)
 				var acl dbmodel.GroupPermissionAclV1
 				acl.GroupUuid = protoGroupPermission.GroupUuid
 
-				PermissionAceProtoToDb(protoGroupPermission.Ace, &acl.Ace)
+				if protoGroupPermission.Ace != nil {
+					PermissionAceProtoToDb(protoGroupPermission.Ace, &acl.Ace)
+				}
 
 				dbmodelMessage.Permission.Groups = append(dbmodelMessage.Permission.Groups, acl)
 			}
@@ -299,9 +303,9 @@ func SwcMetaInfoV1ProtobufToDbmodel(protoMessage *message.SwcMetaInfoV1) *dbmode
 			for _, protoUserPermission := range protoMessage.Permission.Users {
 				var acl dbmodel.UserPermissionAclV1
 				acl.UserUuid = protoUserPermission.UserUuid
-
-				PermissionAceProtoToDb(protoUserPermission.Ace, &acl.Ace)
-
+				if protoUserPermission.Ace != nil {
+					PermissionAceProtoToDb(protoUserPermission.Ace, &acl.Ace)
+				}
 				dbmodelMessage.Permission.Users = append(dbmodelMessage.Permission.Users, acl)
 			}
 		}
@@ -309,8 +313,9 @@ func SwcMetaInfoV1ProtobufToDbmodel(protoMessage *message.SwcMetaInfoV1) *dbmode
 			for _, protoGroupPermission := range protoMessage.Permission.Groups {
 				var acl dbmodel.GroupPermissionAclV1
 				acl.GroupUuid = protoGroupPermission.GroupUuid
-
-				PermissionAceProtoToDb(protoGroupPermission.Ace, &acl.Ace)
+				if protoGroupPermission.Ace != nil {
+					PermissionAceProtoToDb(protoGroupPermission.Ace, &acl.Ace)
+				}
 
 				dbmodelMessage.Permission.Groups = append(dbmodelMessage.Permission.Groups, acl)
 			}

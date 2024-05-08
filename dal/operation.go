@@ -204,7 +204,26 @@ func ModifyUser(userMetaInfo dbmodel.UserMetaInfoV1, databaseInfo MongoDbDataBas
 
 }
 
-func QueryUser(userMetaInfo *dbmodel.UserMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+func QueryUserByUuid(userMetaInfo *dbmodel.UserMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	var userCollection = databaseInfo.MetaInfoDb.Collection(UserMetaInfoCollectionString)
+
+	result := userCollection.FindOne(
+		context.TODO(),
+		bson.D{{"uuid", userMetaInfo.Base.Uuid}})
+
+	if result.Err() != nil {
+		return ReturnWrapper{false, "Cannot find target user!"}
+	} else {
+		err := result.Decode(userMetaInfo)
+		if err != nil {
+			return ReturnWrapper{false, err.Error()}
+		} else {
+			return ReturnWrapper{true, ""}
+		}
+	}
+}
+
+func QueryUserByName(userMetaInfo *dbmodel.UserMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var userCollection = databaseInfo.MetaInfoDb.Collection(UserMetaInfoCollectionString)
 
 	result := userCollection.FindOne(

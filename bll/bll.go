@@ -110,7 +110,7 @@ func (D DBMSServerController) DeleteUser(ctx context.Context, request *request.D
 	userMetaInfo := dbmodel.UserMetaInfoV1{
 		Name: request.GetUserVerifyInfo().GetUserName(),
 	}
-	if result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance()); !result.Status {
+	if result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.DeleteUserResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  false,
@@ -198,21 +198,21 @@ func (D DBMSServerController) UpdateUser(ctx context.Context, request *request.U
 	}
 }
 
-func (D DBMSServerController) GetUser(ctx context.Context, request *request.GetUserRequest) (*response.GetUserResponse, error) {
+func (D DBMSServerController) GetUserByUuid(ctx context.Context, request *request.GetUserByUuidRequest) (*response.GetUserByUuidResponse, error) {
 	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
 	if !apiVersionVerifyResult.Status {
-		return &response.GetUserResponse{
+		return &response.GetUserByUuidResponse{
 			MetaInfo: &apiVersionVerifyResult,
 		}, nil
 	}
 
 	userMetaInfo := dbmodel.UserMetaInfoV1{}
-	userMetaInfo.Name = request.UserName
+	userMetaInfo.Base.Uuid = request.UserUuid
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByUuid(&userMetaInfo, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + request.UserName + " Get")
-		return &response.GetUserResponse{
+		log.Println("User " + request.UserUuid + " Get")
+		return &response.GetUserByUuidResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  true,
 				Id:      "",
@@ -221,7 +221,41 @@ func (D DBMSServerController) GetUser(ctx context.Context, request *request.GetU
 			UserInfo: UserMetaInfoV1DbmodelToProtobuf(&userMetaInfo),
 		}, nil
 	} else {
-		return &response.GetUserResponse{
+		return &response.GetUserByUuidResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+			UserInfo: UserMetaInfoV1DbmodelToProtobuf(&userMetaInfo),
+		}, nil
+	}
+}
+
+func (D DBMSServerController) GetUserByName(ctx context.Context, request *request.GetUserByNameRequest) (*response.GetUserByNameResponse, error) {
+	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
+	if !apiVersionVerifyResult.Status {
+		return &response.GetUserByNameResponse{
+			MetaInfo: &apiVersionVerifyResult,
+		}, nil
+	}
+
+	userMetaInfo := dbmodel.UserMetaInfoV1{}
+	userMetaInfo.Name = request.UserName
+
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
+	if result.Status {
+		log.Println("User " + request.UserName + " Get")
+		return &response.GetUserByNameResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  true,
+				Id:      "",
+				Message: result.Message,
+			},
+			UserInfo: UserMetaInfoV1DbmodelToProtobuf(&userMetaInfo),
+		}, nil
+	} else {
+		return &response.GetUserByNameResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  false,
 				Id:      "",
@@ -303,7 +337,7 @@ func (D DBMSServerController) UserLogin(ctx context.Context, request *request.Us
 	var userMetaInfo dbmodel.UserMetaInfoV1
 	userMetaInfo.Name = request.UserName
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if result.Status {
 		if userMetaInfo.Password == request.Password {
 			log.Println("User " + request.UserName + " Login")
@@ -433,7 +467,7 @@ func (D DBMSServerController) UserOnlineHeartBeatNotifications(ctx context.Conte
 	var userMetaInfo dbmodel.UserMetaInfoV1
 	userMetaInfo.Name = notification.UserVerifyInfo.GetUserName()
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if result.Status {
 		log.Println("User " + notification.UserVerifyInfo.GetUserName() + " OnlineHeartBeatNotifications")
 
@@ -492,7 +526,7 @@ func (D DBMSServerController) GetUserPermissionGroup(ctx context.Context, reques
 
 	var permissionGroupMetaInfo dbmodel.PermissionGroupMetaInfoV1
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if result.Status {
 		permissionGroupMetaInfo.Base.Uuid = userMetaInfo.PermissionGroupUuid
 		result = dal.QueryPermissionGroup(&permissionGroupMetaInfo, dal.GetDbInstance())
@@ -539,7 +573,7 @@ func (D DBMSServerController) GetPermissionGroup(ctx context.Context, request *r
 
 	permissionGroupMetaInfo := PermissionGroupMetaInfoV1ProtobufToDbmodel(request.PermissionGroup)
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if result.Status {
 		result = dal.QueryPermissionGroup(permissionGroupMetaInfo, dal.GetDbInstance())
 		if result.Status {
@@ -586,7 +620,7 @@ func (D DBMSServerController) GetAllPermissionGroup(ctx context.Context, request
 	var permissionGroupList []dbmodel.PermissionGroupMetaInfoV1
 	var protoMessage []*message.PermissionGroupMetaInfoV1
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if result.Status {
 		result = dal.QueryAllPermissionGroup(&permissionGroupList, dal.GetDbInstance())
 		if result.Status {
@@ -636,7 +670,7 @@ func (D DBMSServerController) ChangeUserPermissionGroup(ctx context.Context, req
 	targetUserMetaInfo := dbmodel.UserMetaInfoV1{}
 	userMetaInfo.Name = request.TargetUserName
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if result.Status {
 		if !PermissionGroupVerify(&userMetaInfo, "AllPermissionGroupManagementPermission") {
 			return &response.ChangeUserPermissionGroupResponse{
@@ -650,7 +684,7 @@ func (D DBMSServerController) ChangeUserPermissionGroup(ctx context.Context, req
 
 		var permissionGroupMetaInfo dbmodel.PermissionGroupMetaInfoV1
 
-		result = dal.QueryUser(&targetUserMetaInfo, dal.GetDbInstance())
+		result = dal.QueryUserByName(&targetUserMetaInfo, dal.GetDbInstance())
 		if result.Status {
 			permissionGroupMetaInfo.Base.Uuid = targetUserMetaInfo.PermissionGroupUuid
 			result = dal.QueryPermissionGroup(&permissionGroupMetaInfo, dal.GetDbInstance())
@@ -706,7 +740,7 @@ func (D DBMSServerController) CreateProject(ctx context.Context, request *reques
 
 	projectMetaInfo := ProjectMetaInfoV1ProtobufToDbmodel(request.ProjectInfo)
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.CreateProjectResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -744,6 +778,15 @@ func (D DBMSServerController) CreateProject(ctx context.Context, request *reques
 	projectMetaInfo.LastModifiedTime = time.Now()
 
 	projectMetaInfo.WorkMode = request.ProjectInfo.WorkMode
+	projectMetaInfo.Permission.Owner.UserUuid = userMetaInfo.Base.Uuid
+	projectMetaInfo.Permission.Owner.Ace.WritePermissionCreateProject = true
+	projectMetaInfo.Permission.Owner.Ace.WritePermissionDeleteProject = true
+	projectMetaInfo.Permission.Owner.Ace.WritePermissionModifyProject = true
+	projectMetaInfo.Permission.Owner.Ace.ReadPerimissionQueryProject = true
+	projectMetaInfo.Permission.Owner.Ace.WritePermissionAddSwcData = true
+	projectMetaInfo.Permission.Owner.Ace.WritePermissionDeleteSwcData = true
+	projectMetaInfo.Permission.Owner.Ace.WritePermissionModifySwcData = true
+	projectMetaInfo.Permission.Owner.Ace.ReadPerimissionQuerySwcData = true
 
 	result = dal.CreateProject(*projectMetaInfo, dal.GetDbInstance())
 	if result.Status {
@@ -790,7 +833,7 @@ func (D DBMSServerController) DeleteProject(ctx context.Context, request *reques
 	projectMetaInfo := dbmodel.ProjectMetaInfoV1{}
 	projectMetaInfo.Name = request.ProjectName
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.DeleteProjectResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -860,7 +903,7 @@ func (D DBMSServerController) UpdateProject(ctx context.Context, request *reques
 
 	projectMetaInfo := ProjectMetaInfoV1ProtobufToDbmodel(request.ProjectInfo)
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.UpdateProjectResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -933,7 +976,7 @@ func (D DBMSServerController) GetProject(ctx context.Context, request *request.G
 	projectMetaInfo := dbmodel.ProjectMetaInfoV1{}
 	projectMetaInfo.Name = request.ProjectName
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.GetProjectResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1048,7 +1091,7 @@ func (D DBMSServerController) CreateSwc(ctx context.Context, request *request.Cr
 
 	swcMetaInfo := SwcMetaInfoV1ProtobufToDbmodel(request.SwcInfo)
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.CreateSwcResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1138,7 +1181,7 @@ func (D DBMSServerController) DeleteSwc(ctx context.Context, request *request.De
 	swcMetaInfo := dbmodel.SwcMetaInfoV1{}
 	swcMetaInfo.Name = request.SwcName
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.DeleteSwcResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1237,7 +1280,7 @@ func (D DBMSServerController) UpdateSwc(ctx context.Context, request *request.Up
 
 	swcMetaInfo := SwcMetaInfoV1ProtobufToDbmodel(request.SwcInfo)
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.UpdateSwcResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1333,7 +1376,7 @@ func (D DBMSServerController) GetSwcMetaInfo(ctx context.Context, request *reque
 	swcMetaInfo := dbmodel.SwcMetaInfoV1{}
 	swcMetaInfo.Name = request.SwcName
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.GetSwcMetaInfoResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1411,7 +1454,7 @@ func (D DBMSServerController) GetAllSwcMetaInfo(ctx context.Context, request *re
 
 	var userMetaInfo dbmodel.UserMetaInfoV1
 	userMetaInfo.Name = request.UserVerifyInfo.GetUserName()
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.GetAllSwcMetaInfoResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1471,7 +1514,7 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 	var userMetaInfo dbmodel.UserMetaInfoV1
 	userMetaInfo.Name = onlineUserInfoCache.UserInfo.Name
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.CreateSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1618,7 +1661,7 @@ func (D DBMSServerController) DeleteSwcNodeData(ctx context.Context, request *re
 		}, nil
 	}
 
-	result = dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result = dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.DeleteSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1735,7 +1778,7 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 		}, nil
 	}
 
-	result = dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result = dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.UpdateSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1849,7 +1892,7 @@ func (D DBMSServerController) GetSwcNodeData(ctx context.Context, request *reque
 	swcMetaInfo := dbmodel.SwcMetaInfoV1{}
 	swcMetaInfo.Name = request.SwcName
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.GetSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1960,7 +2003,7 @@ func (D DBMSServerController) GetSwcFullNodeData(ctx context.Context, request *r
 	var dbmodelMessage dbmodel.SwcDataV1
 	var protoMessage message.SwcDataV1
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.GetSwcFullNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -2060,7 +2103,7 @@ func (D DBMSServerController) GetSwcNodeDataListByTimeAndUser(ctx context.Contex
 	var dbmodelMessage dbmodel.SwcDataV1
 	var protoMessage message.SwcDataV1
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.GetSwcNodeDataListByTimeAndUserResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -2239,7 +2282,7 @@ func (D DBMSServerController) DeleteDailyStatistics(ctx context.Context, request
 	dailyStatisticsInfo := dbmodel.DailyStatisticsMetaInfoV1{}
 	dailyStatisticsInfo.Name = request.DailyStatisticsName
 
-	result := dal.QueryUser(&userMetaInfo, dal.GetDbInstance())
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.DeleteDailyStatisticsResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{

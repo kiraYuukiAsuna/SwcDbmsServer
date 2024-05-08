@@ -91,7 +91,7 @@ func TestUserInfo() {
 	}
 
 	info1.Description = "None"
-	if dal.QueryUser(&info1, dal.GetDbInstance()).Status == false {
+	if dal.QueryUserByName(&info1, dal.GetDbInstance()).Status == false {
 		failedNumber++
 		log.Println("Test 7 Failed")
 	}
