@@ -90,7 +90,7 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 		adminPermissionGroup := dbmodel.PermissionGroupMetaInfoV1{
 			Name: PermissionGroupAdmin,
 		}
-		if result := QueryPermissionGroupUuidByName(&adminPermissionGroup, GetDbInstance()); !result.Status {
+		if result := QueryPermissionGroupByName(&adminPermissionGroup, GetDbInstance()); !result.Status {
 
 		}
 

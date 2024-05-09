@@ -132,7 +132,7 @@ func PermissionGroupVerify(userMetaInfo *dbmodel.UserMetaInfoV1, requestPermissi
 
 	permissionGroupMetaInfo := dbmodel.PermissionGroupMetaInfoV1{}
 	permissionGroupMetaInfo.Base.Uuid = userMetaInfo.PermissionGroupUuid
-	if result := dal.QueryPermissionGroup(&permissionGroupMetaInfo, dal.GetDbInstance()); !result.Status {
+	if result := dal.QueryPermissionGroupByUuid(&permissionGroupMetaInfo, dal.GetDbInstance()); !result.Status {
 		return false
 	}
 

@@ -314,7 +314,7 @@ func ModifyPermissionGroup(permissionGroupMetaInfo dbmodel.PermissionGroupMetaIn
 
 }
 
-func QueryPermissionGroup(permissionGroupMetaInfo *dbmodel.PermissionGroupMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+func QueryPermissionGroupByUuid(permissionGroupMetaInfo *dbmodel.PermissionGroupMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var permissionGroupCollection = databaseInfo.MetaInfoDb.Collection(PermissionGroupMetaInfoCollectioString)
 
 	result := permissionGroupCollection.FindOne(
@@ -333,7 +333,7 @@ func QueryPermissionGroup(permissionGroupMetaInfo *dbmodel.PermissionGroupMetaIn
 	}
 }
 
-func QueryPermissionGroupUuidByName(permissionGroupMetaInfo *dbmodel.PermissionGroupMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+func QueryPermissionGroupByName(permissionGroupMetaInfo *dbmodel.PermissionGroupMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var permissionGroupCollection = databaseInfo.MetaInfoDb.Collection(PermissionGroupMetaInfoCollectioString)
 
 	result := permissionGroupCollection.FindOne(

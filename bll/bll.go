@@ -41,7 +41,7 @@ func (D DBMSServerController) CreateUser(ctx context.Context, request *request.C
 	defaultPermissionGroup := dbmodel.PermissionGroupMetaInfoV1{
 		Name: dal.PermissionGroupDefault,
 	}
-	if result := dal.QueryPermissionGroupUuidByName(&defaultPermissionGroup, dal.GetDbInstance()); !result.Status {
+	if result := dal.QueryPermissionGroupByName(&defaultPermissionGroup, dal.GetDbInstance()); !result.Status {
 		return &response.CreateUserResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  false,
@@ -349,7 +349,7 @@ func (D DBMSServerController) UserLogin(ctx context.Context, request *request.Us
 				defaultPermissionGroup := dbmodel.PermissionGroupMetaInfoV1{
 					Name: dal.PermissionGroupDefault,
 				}
-				_ = dal.QueryPermissionGroupUuidByName(&defaultPermissionGroup, dal.GetDbInstance())
+				_ = dal.QueryPermissionGroupByName(&defaultPermissionGroup, dal.GetDbInstance())
 				userMetaInfo.PermissionGroupUuid = defaultPermissionGroup.Base.Uuid
 			}
 
@@ -529,7 +529,7 @@ func (D DBMSServerController) GetUserPermissionGroup(ctx context.Context, reques
 	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if result.Status {
 		permissionGroupMetaInfo.Base.Uuid = userMetaInfo.PermissionGroupUuid
-		result = dal.QueryPermissionGroup(&permissionGroupMetaInfo, dal.GetDbInstance())
+		result = dal.QueryPermissionGroupByUuid(&permissionGroupMetaInfo, dal.GetDbInstance())
 		if result.Status {
 			log.Println("User " + request.UserVerifyInfo.GetUserName() + " GetUserPermissionGroup")
 			return &response.GetUserPermissionGroupResponse{
@@ -553,17 +553,17 @@ func (D DBMSServerController) GetUserPermissionGroup(ctx context.Context, reques
 	}, nil
 }
 
-func (D DBMSServerController) GetPermissionGroup(ctx context.Context, request *request.GetPermissionGroupRequest) (*response.GetPermissionGroupResponse, error) {
+func (D DBMSServerController) GetPermissionGroupByUuid(ctx context.Context, request *request.GetPermissionGroupByUuidRequest) (*response.GetPermissionGroupByUuidResponse, error) {
 	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
 	if !apiVersionVerifyResult.Status {
-		return &response.GetPermissionGroupResponse{
+		return &response.GetPermissionGroupByUuidResponse{
 			MetaInfo: &apiVersionVerifyResult,
 		}, nil
 	}
 
 	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo())
 	if !responseMetaInfo.Status {
-		return &response.GetPermissionGroupResponse{
+		return &response.GetPermissionGroupByUuidResponse{
 			MetaInfo: &responseMetaInfo,
 		}, nil
 	}
@@ -571,31 +571,79 @@ func (D DBMSServerController) GetPermissionGroup(ctx context.Context, request *r
 	userMetaInfo := dbmodel.UserMetaInfoV1{}
 	userMetaInfo.Name = request.UserVerifyInfo.GetUserName()
 
-	permissionGroupMetaInfo := PermissionGroupMetaInfoV1ProtobufToDbmodel(request.PermissionGroup)
+	var permissionGroupMetaInfo dbmodel.PermissionGroupMetaInfoV1
+	permissionGroupMetaInfo.Base.Uuid = request.PermissionGroupUuid
 
 	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if result.Status {
-		result = dal.QueryPermissionGroup(permissionGroupMetaInfo, dal.GetDbInstance())
+		result = dal.QueryPermissionGroupByUuid(&permissionGroupMetaInfo, dal.GetDbInstance())
 		if result.Status {
 			log.Println("User " + request.UserVerifyInfo.GetUserName() + " GetPermissionGroup")
-			return &response.GetPermissionGroupResponse{
+			return &response.GetPermissionGroupByUuidResponse{
 				MetaInfo: &message.ResponseMetaInfoV1{
 					Status:  true,
 					Id:      "",
 					Message: result.Message,
 				},
-				PermissionGroup: PermissionGroupMetaInfoV1DbmodelToProtobuf(permissionGroupMetaInfo),
+				PermissionGroup: PermissionGroupMetaInfoV1DbmodelToProtobuf(&permissionGroupMetaInfo),
 			}, nil
 		}
 
 	}
-	return &response.GetPermissionGroupResponse{
+	return &response.GetPermissionGroupByUuidResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
 			Status:  false,
 			Id:      "",
 			Message: result.Message,
 		},
-		PermissionGroup: PermissionGroupMetaInfoV1DbmodelToProtobuf(permissionGroupMetaInfo),
+		PermissionGroup: PermissionGroupMetaInfoV1DbmodelToProtobuf(&permissionGroupMetaInfo),
+	}, nil
+}
+
+func (D DBMSServerController) GetPermissionGroupByName(ctx context.Context, request *request.GetPermissionGroupByNameRequest) (*response.GetPermissionGroupByNameResponse, error) {
+	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
+	if !apiVersionVerifyResult.Status {
+		return &response.GetPermissionGroupByNameResponse{
+			MetaInfo: &apiVersionVerifyResult,
+		}, nil
+	}
+
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo())
+	if !responseMetaInfo.Status {
+		return &response.GetPermissionGroupByNameResponse{
+			MetaInfo: &responseMetaInfo,
+		}, nil
+	}
+
+	userMetaInfo := dbmodel.UserMetaInfoV1{}
+	userMetaInfo.Name = request.UserVerifyInfo.GetUserName()
+
+	var permissionGroupMetaInfo dbmodel.PermissionGroupMetaInfoV1
+	permissionGroupMetaInfo.Name = request.PermissionGroupName
+
+	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
+	if result.Status {
+		result = dal.QueryPermissionGroupByName(&permissionGroupMetaInfo, dal.GetDbInstance())
+		if result.Status {
+			log.Println("User " + request.UserVerifyInfo.GetUserName() + " GetPermissionGroup")
+			return &response.GetPermissionGroupByNameResponse{
+				MetaInfo: &message.ResponseMetaInfoV1{
+					Status:  true,
+					Id:      "",
+					Message: result.Message,
+				},
+				PermissionGroup: PermissionGroupMetaInfoV1DbmodelToProtobuf(&permissionGroupMetaInfo),
+			}, nil
+		}
+
+	}
+	return &response.GetPermissionGroupByNameResponse{
+		MetaInfo: &message.ResponseMetaInfoV1{
+			Status:  false,
+			Id:      "",
+			Message: result.Message,
+		},
+		PermissionGroup: PermissionGroupMetaInfoV1DbmodelToProtobuf(&permissionGroupMetaInfo),
 	}, nil
 }
 
@@ -687,7 +735,7 @@ func (D DBMSServerController) ChangeUserPermissionGroup(ctx context.Context, req
 		result = dal.QueryUserByName(&targetUserMetaInfo, dal.GetDbInstance())
 		if result.Status {
 			permissionGroupMetaInfo.Base.Uuid = targetUserMetaInfo.PermissionGroupUuid
-			result = dal.QueryPermissionGroup(&permissionGroupMetaInfo, dal.GetDbInstance())
+			result = dal.QueryPermissionGroupByUuid(&permissionGroupMetaInfo, dal.GetDbInstance())
 			if result.Status {
 				result = dal.ModifyUser(targetUserMetaInfo, dal.GetDbInstance())
 
@@ -754,7 +802,7 @@ func (D DBMSServerController) CreateProject(ctx context.Context, request *reques
 
 	var permissionGroup dbmodel.PermissionGroupMetaInfoV1
 	permissionGroup.Base.Uuid = userMetaInfo.PermissionGroupUuid
-	result = dal.QueryPermissionGroup(&permissionGroup, dal.GetDbInstance())
+	result = dal.QueryPermissionGroupByUuid(&permissionGroup, dal.GetDbInstance())
 	if !result.Status {
 		return &response.CreateProjectResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -847,7 +895,7 @@ func (D DBMSServerController) DeleteProject(ctx context.Context, request *reques
 
 	var permissionGroup dbmodel.PermissionGroupMetaInfoV1
 	permissionGroup.Base.Uuid = userMetaInfo.PermissionGroupUuid
-	result = dal.QueryPermissionGroup(&permissionGroup, dal.GetDbInstance())
+	result = dal.QueryPermissionGroupByUuid(&permissionGroup, dal.GetDbInstance())
 	if !result.Status {
 		return &response.DeleteProjectResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -914,7 +962,7 @@ func (D DBMSServerController) UpdateProject(ctx context.Context, request *reques
 
 	var permissionGroup dbmodel.PermissionGroupMetaInfoV1
 	permissionGroup.Base.Uuid = userMetaInfo.PermissionGroupUuid
-	result = dal.QueryPermissionGroup(&permissionGroup, dal.GetDbInstance())
+	result = dal.QueryPermissionGroupByUuid(&permissionGroup, dal.GetDbInstance())
 	if !result.Status {
 		return &response.UpdateProjectResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1010,7 +1058,7 @@ func (D DBMSServerController) GetProject(ctx context.Context, request *request.G
 
 	var permissionGroup dbmodel.PermissionGroupMetaInfoV1
 	permissionGroup.Base.Uuid = userMetaInfo.PermissionGroupUuid
-	result = dal.QueryPermissionGroup(&permissionGroup, dal.GetDbInstance())
+	result = dal.QueryPermissionGroupByUuid(&permissionGroup, dal.GetDbInstance())
 	if !result.Status {
 		return &response.GetProjectResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1125,7 +1173,7 @@ func (D DBMSServerController) CreateSwc(ctx context.Context, request *request.Cr
 
 	var permissionGroup dbmodel.PermissionGroupMetaInfoV1
 	permissionGroup.Base.Uuid = userMetaInfo.PermissionGroupUuid
-	result = dal.QueryPermissionGroup(&permissionGroup, dal.GetDbInstance())
+	result = dal.QueryPermissionGroupByUuid(&permissionGroup, dal.GetDbInstance())
 	if !result.Status {
 		return &response.CreateSwcResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1311,7 +1359,7 @@ func (D DBMSServerController) UpdateSwc(ctx context.Context, request *request.Up
 
 	var permissionGroup dbmodel.PermissionGroupMetaInfoV1
 	permissionGroup.Base.Uuid = userMetaInfo.PermissionGroupUuid
-	result = dal.QueryPermissionGroup(&permissionGroup, dal.GetDbInstance())
+	result = dal.QueryPermissionGroupByUuid(&permissionGroup, dal.GetDbInstance())
 	if !result.Status {
 		return &response.UpdateSwcResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1407,7 +1455,7 @@ func (D DBMSServerController) GetSwcMetaInfo(ctx context.Context, request *reque
 
 	var permissionGroup dbmodel.PermissionGroupMetaInfoV1
 	permissionGroup.Base.Uuid = userMetaInfo.PermissionGroupUuid
-	result = dal.QueryPermissionGroup(&permissionGroup, dal.GetDbInstance())
+	result = dal.QueryPermissionGroupByUuid(&permissionGroup, dal.GetDbInstance())
 	if !result.Status {
 		return &response.GetSwcMetaInfoResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1544,7 +1592,7 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 
 	var permissionGroup dbmodel.PermissionGroupMetaInfoV1
 	permissionGroup.Base.Uuid = userMetaInfo.PermissionGroupUuid
-	result = dal.QueryPermissionGroup(&permissionGroup, dal.GetDbInstance())
+	result = dal.QueryPermissionGroupByUuid(&permissionGroup, dal.GetDbInstance())
 	if !result.Status {
 		return &response.CreateSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1691,7 +1739,7 @@ func (D DBMSServerController) DeleteSwcNodeData(ctx context.Context, request *re
 
 	var permissionGroup dbmodel.PermissionGroupMetaInfoV1
 	permissionGroup.Base.Uuid = userMetaInfo.PermissionGroupUuid
-	result = dal.QueryPermissionGroup(&permissionGroup, dal.GetDbInstance())
+	result = dal.QueryPermissionGroupByUuid(&permissionGroup, dal.GetDbInstance())
 	if !result.Status {
 		return &response.DeleteSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1808,7 +1856,7 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 
 	var permissionGroup dbmodel.PermissionGroupMetaInfoV1
 	permissionGroup.Base.Uuid = userMetaInfo.PermissionGroupUuid
-	result = dal.QueryPermissionGroup(&permissionGroup, dal.GetDbInstance())
+	result = dal.QueryPermissionGroupByUuid(&permissionGroup, dal.GetDbInstance())
 	if !result.Status {
 		return &response.UpdateSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1923,7 +1971,7 @@ func (D DBMSServerController) GetSwcNodeData(ctx context.Context, request *reque
 
 	var permissionGroup dbmodel.PermissionGroupMetaInfoV1
 	permissionGroup.Base.Uuid = userMetaInfo.PermissionGroupUuid
-	result = dal.QueryPermissionGroup(&permissionGroup, dal.GetDbInstance())
+	result = dal.QueryPermissionGroupByUuid(&permissionGroup, dal.GetDbInstance())
 	if !result.Status {
 		return &response.GetSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -2034,7 +2082,7 @@ func (D DBMSServerController) GetSwcFullNodeData(ctx context.Context, request *r
 
 	var permissionGroup dbmodel.PermissionGroupMetaInfoV1
 	permissionGroup.Base.Uuid = userMetaInfo.PermissionGroupUuid
-	result = dal.QueryPermissionGroup(&permissionGroup, dal.GetDbInstance())
+	result = dal.QueryPermissionGroupByUuid(&permissionGroup, dal.GetDbInstance())
 	if !result.Status {
 		return &response.GetSwcFullNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -2134,7 +2182,7 @@ func (D DBMSServerController) GetSwcNodeDataListByTimeAndUser(ctx context.Contex
 
 	var permissionGroup dbmodel.PermissionGroupMetaInfoV1
 	permissionGroup.Base.Uuid = userMetaInfo.PermissionGroupUuid
-	result = dal.QueryPermissionGroup(&permissionGroup, dal.GetDbInstance())
+	result = dal.QueryPermissionGroupByUuid(&permissionGroup, dal.GetDbInstance())
 	if !result.Status {
 		return &response.GetSwcNodeDataListByTimeAndUserResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -3657,7 +3705,7 @@ func (D DBMSServerController) UpdatePermissionGroup(context context.Context, req
 
 	var permissionGroupMetaInfo dbmodel.PermissionGroupMetaInfoV1
 	permissionGroupMetaInfo.Base.Uuid = request.GetPermissionGroupUuid()
-	result := dal.QueryPermissionGroup(&permissionGroupMetaInfo, dal.GetDbInstance())
+	result := dal.QueryPermissionGroupByUuid(&permissionGroupMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.UpdatePermissionGroupResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{

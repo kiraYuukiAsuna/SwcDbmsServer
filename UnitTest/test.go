@@ -286,7 +286,7 @@ func TestPermissionGroupInfo() {
 	}
 
 	info1.Description = "None"
-	if dal.QueryPermissionGroup(&info1, dal.GetDbInstance()).Status == false {
+	if dal.QueryPermissionGroupByName(&info1, dal.GetDbInstance()).Status == false {
 		failedNumber++
 		log.Println("Test 7 Failed")
 	}
