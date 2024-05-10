@@ -5,6 +5,7 @@ import (
 	"DBMS/dbmodel"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"reflect"
 )
 
 func UserMetaInfoV1ProtobufToDbmodel(protoMessage *message.UserMetaInfoV1) *dbmodel.UserMetaInfoV1 {
@@ -55,11 +56,16 @@ func UserMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.UserMetaInfoV1) *me
 }
 
 func PermissionGroupAceProtoToDb(protoMessage *message.PermissionGroupAceV1, dbmodelMessage *dbmodel.PermissionGroupAceV1) {
-	dbmodelMessage.AllUserManagementPermission = protoMessage.AllUserManagementPermission
-	dbmodelMessage.AllPermissionGroupManagementPermission = protoMessage.AllPermissionGroupManagementPermission
-	dbmodelMessage.AllProjectManagementPermission = protoMessage.AllProjectManagementPermission
-	dbmodelMessage.AllSwcManagementPermission = protoMessage.AllSwcManagementPermission
-	dbmodelMessage.AllDailyStatisticsManagementPermission = protoMessage.AllDailyStatisticsManagementPermission
+	protoVal := reflect.ValueOf(protoMessage).Elem()
+	dbVal := reflect.ValueOf(dbmodelMessage).Elem()
+
+	for i := 0; i < protoVal.NumField(); i++ {
+		name := protoVal.Type().Field(i).Name
+		dbField := dbVal.FieldByName(name)
+		if dbField.IsValid() && dbField.CanSet() {
+			dbField.Set(protoVal.Field(i))
+		}
+	}
 }
 
 func PermissionGroupMetaInfoV1ProtobufToDbmodel(protoMessage *message.PermissionGroupMetaInfoV1) *dbmodel.PermissionGroupMetaInfoV1 {
@@ -81,11 +87,16 @@ func PermissionGroupMetaInfoV1ProtobufToDbmodel(protoMessage *message.Permission
 }
 
 func PermissionGroupAceDbToProto(dbmodelMessage *dbmodel.PermissionGroupAceV1, protoMessage *message.PermissionGroupAceV1) {
-	protoMessage.AllUserManagementPermission = dbmodelMessage.AllUserManagementPermission
-	protoMessage.AllPermissionGroupManagementPermission = dbmodelMessage.AllPermissionGroupManagementPermission
-	protoMessage.AllProjectManagementPermission = dbmodelMessage.AllProjectManagementPermission
-	protoMessage.AllSwcManagementPermission = dbmodelMessage.AllSwcManagementPermission
-	protoMessage.AllDailyStatisticsManagementPermission = dbmodelMessage.AllDailyStatisticsManagementPermission
+	dbVal := reflect.ValueOf(dbmodelMessage).Elem()
+	protoVal := reflect.ValueOf(protoMessage).Elem()
+
+	for i := 0; i < dbVal.NumField(); i++ {
+		name := dbVal.Type().Field(i).Name
+		protoField := protoVal.FieldByName(name)
+		if protoField.IsValid() && protoField.CanSet() {
+			protoField.Set(dbVal.Field(i))
+		}
+	}
 }
 
 func PermissionGroupMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.PermissionGroupMetaInfoV1) *message.PermissionGroupMetaInfoV1 {
@@ -215,15 +226,16 @@ func ProjectMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.ProjectMetaInfoV
 }
 
 func PermissionAceProtoToDb(protoMessage *message.PermissionAceV1, dbmodelMessage *dbmodel.PermissionAceV1) {
-	dbmodelMessage.WritePermissionAddSwcData = protoMessage.WritePermissionAddSwcData
-	dbmodelMessage.WritePermissionDeleteSwcData = protoMessage.WritePermissionDeleteSwcData
-	dbmodelMessage.WritePermissionModifySwcData = protoMessage.WritePermissionModifySwcData
-	dbmodelMessage.ReadPerimissionQuerySwcData = protoMessage.ReadPerimissionQuerySwcData
+	protoVal := reflect.ValueOf(protoMessage).Elem()
+	dbVal := reflect.ValueOf(dbmodelMessage).Elem()
 
-	dbmodelMessage.WritePermissionCreateProject = protoMessage.WritePermissionCreateProject
-	dbmodelMessage.WritePermissionDeleteProject = protoMessage.WritePermissionDeleteProject
-	dbmodelMessage.WritePermissionModifyProject = protoMessage.WritePermissionModifyProject
-	dbmodelMessage.ReadPerimissionQueryProject = protoMessage.ReadPerimissionQueryProject
+	for i := 0; i < protoVal.NumField(); i++ {
+		name := protoVal.Type().Field(i).Name
+		dbField := dbVal.FieldByName(name)
+		if dbField.IsValid() && dbField.CanSet() {
+			dbField.Set(protoVal.Field(i))
+		}
+	}
 }
 
 func SwcMetaInfoV1ProtobufToDbmodel(protoMessage *message.SwcMetaInfoV1) *dbmodel.SwcMetaInfoV1 {
@@ -326,15 +338,16 @@ func SwcMetaInfoV1ProtobufToDbmodel(protoMessage *message.SwcMetaInfoV1) *dbmode
 }
 
 func PermissionAceDbToProto(dbmodelMessage *dbmodel.PermissionAceV1, protoMessage *message.PermissionAceV1) {
-	protoMessage.WritePermissionAddSwcData = dbmodelMessage.WritePermissionAddSwcData
-	protoMessage.WritePermissionDeleteSwcData = dbmodelMessage.WritePermissionDeleteSwcData
-	protoMessage.WritePermissionModifySwcData = dbmodelMessage.WritePermissionModifySwcData
-	protoMessage.ReadPerimissionQuerySwcData = dbmodelMessage.ReadPerimissionQuerySwcData
+	dbVal := reflect.ValueOf(dbmodelMessage).Elem()
+	protoVal := reflect.ValueOf(protoMessage).Elem()
 
-	protoMessage.WritePermissionCreateProject = dbmodelMessage.WritePermissionCreateProject
-	protoMessage.WritePermissionDeleteProject = dbmodelMessage.WritePermissionDeleteProject
-	protoMessage.WritePermissionModifyProject = dbmodelMessage.WritePermissionModifyProject
-	protoMessage.ReadPerimissionQueryProject = dbmodelMessage.ReadPerimissionQueryProject
+	for i := 0; i < dbVal.NumField(); i++ {
+		name := dbVal.Type().Field(i).Name
+		protoField := protoVal.FieldByName(name)
+		if protoField.IsValid() && protoField.CanSet() {
+			protoField.Set(dbVal.Field(i))
+		}
+	}
 }
 
 func SwcMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.SwcMetaInfoV1) *message.SwcMetaInfoV1 {

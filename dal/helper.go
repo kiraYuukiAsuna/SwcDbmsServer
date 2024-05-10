@@ -9,7 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
-	"time"
 )
 
 var globalMongodbdatabaseinfo MongoDbDataBaseInfo
@@ -87,30 +86,6 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 			log.Fatal(err)
 		}
 
-		adminPermissionGroup := dbmodel.PermissionGroupMetaInfoV1{
-			Name: PermissionGroupAdmin,
-		}
-		if result := QueryPermissionGroupByName(&adminPermissionGroup, GetDbInstance()); !result.Status {
-
-		}
-
-		_, userId := GetNewUserIdAndIncrease(dbInfo)
-		var serverUser = dbmodel.UserMetaInfoV1{
-			Base: dbmodel.MetaInfoBase{
-				Id:                     primitive.NewObjectID(),
-				DataAccessModelVersion: "V1",
-				Uuid:                   uuid.NewString(),
-			},
-			Name:                "server",
-			Password:            "123456",
-			Description:         "",
-			CreateTime:          time.Now(),
-			HeadPhotoBinData:    nil,
-			PermissionGroupUuid: adminPermissionGroup.Base.Uuid,
-			UserId:              userId,
-		}
-		CreateUser(serverUser, dbInfo)
-
 		err = dbInfo.MetaInfoDb.CreateCollection(context.TODO(), PermissionGroupMetaInfoCollectioString)
 		if err != nil {
 			log.Fatal(err)
@@ -129,6 +104,9 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 				AllUserManagementPermission:            true,
 				AllProjectManagementPermission:         true,
 				AllSwcManagementPermission:             true,
+				AllDailyStatisticsManagementPermission: true,
+				CreateProjectPermission:                true,
+				CreateSwcPermission:                    true,
 			},
 		}
 		CreatePermissionGroup(permissionGroupAdmin, dbInfo)
@@ -146,6 +124,9 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 				AllUserManagementPermission:            false,
 				AllProjectManagementPermission:         false,
 				AllSwcManagementPermission:             false,
+				AllDailyStatisticsManagementPermission: false,
+				CreateProjectPermission:                false,
+				CreateSwcPermission:                    false,
 			},
 		}
 		CreatePermissionGroup(permissionGroupDefault, dbInfo)
@@ -163,6 +144,9 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 				AllUserManagementPermission:            false,
 				AllProjectManagementPermission:         false,
 				AllSwcManagementPermission:             false,
+				AllDailyStatisticsManagementPermission: false,
+				CreateProjectPermission:                false,
+				CreateSwcPermission:                    false,
 			},
 		}
 		CreatePermissionGroup(permissionGroupGroupLeader, dbInfo)
@@ -180,6 +164,9 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 				AllUserManagementPermission:            false,
 				AllProjectManagementPermission:         false,
 				AllSwcManagementPermission:             false,
+				AllDailyStatisticsManagementPermission: false,
+				CreateProjectPermission:                false,
+				CreateSwcPermission:                    false,
 			},
 		}
 		CreatePermissionGroup(permissionGroupGroupNormalUser, dbInfo)
@@ -197,6 +184,9 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 				AllUserManagementPermission:            false,
 				AllProjectManagementPermission:         false,
 				AllSwcManagementPermission:             false,
+				AllDailyStatisticsManagementPermission: false,
+				CreateProjectPermission:                false,
+				CreateSwcPermission:                    false,
 			},
 		}
 		CreatePermissionGroup(permissionGroupGroupGuest, dbInfo)
@@ -288,5 +278,4 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 		}
 		log.Printf("Database %s does not exist. Will create new one when needed!\n", dataBaseNameInfo.SwcAttachmentDataBaseName)
 	}
-
 }

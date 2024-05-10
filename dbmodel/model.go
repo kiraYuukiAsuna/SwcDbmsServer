@@ -37,6 +37,8 @@ type PermissionGroupAceV1 struct {
 	AllProjectManagementPermission         bool `bson:"AllProjectManagementPermission"`
 	AllSwcManagementPermission             bool `bson:"AllSwcManagementPermission"`
 	AllDailyStatisticsManagementPermission bool `bson:"AllDailyStatisticsManagementPermission"`
+	CreateProjectPermission                bool `bson:"CreateProjectPermission"`
+	CreateSwcPermission                    bool `bson:"CreateSwcPermission"`
 }
 
 type PermissionGroupAclV1 struct {
@@ -45,15 +47,31 @@ type PermissionGroupAclV1 struct {
 }
 
 type PermissionAceV1 struct {
-	WritePermissionCreateProject bool `bson:"WritePermissionCreateProject"`
-	WritePermissionModifyProject bool `bson:"WritePermissionModifyProject"`
-	WritePermissionDeleteProject bool `bson:"WritePermissionDeleteProject"`
-	ReadPerimissionQueryProject  bool `bson:"ReadPerimissionQueryProject"`
-
-	WritePermissionAddSwcData    bool `bson:"WritePermissionAddSwcData"`
-	WritePermissionModifySwcData bool `bson:"WritePermissionModifySwcData"`
-	WritePermissionDeleteSwcData bool `bson:"WritePermissionDeleteSwcData"`
-	ReadPerimissionQuerySwcData  bool `bson:"ReadPerimissionQuerySwcData"`
+	WritePermissionModifyProject         bool `bson:"WritePermissionModifyProject"`
+	WritePermissionDeleteProject         bool `bson:"WritePermissionDeleteProject"`
+	ReadPerimissionQueryProject          bool `bson:"ReadPerimissionQueryProject"`
+	WritePermissionUpdateSwc             bool `bson:"WritePermissionUpdateSwc"`
+	WritePermissionDeleteSwc             bool `bson:"WritePermissionDeleteSwc"`
+	ReadPerimissionQuerySwc              bool `bson:"ReadPerimissionQuerySwc"`
+	WritePermissionAddSwcData            bool `bson:"WritePermissionAddSwcData"`
+	WritePermissionModifySwcData         bool `bson:"WritePermissionModifySwcData"`
+	WritePermissionDeleteSwcData         bool `bson:"WritePermissionDeleteSwcData"`
+	ReadPerimissionQuerySwcData          bool `bson:"ReadPerimissionQuerySwcData"`
+	CreateSnapshotAndIncrementPermission bool `bson:"CreateSnapshotAndIncrementPermission"`
+	DeleteSnapshotAndIncrementPermission bool `bson:"DeleteSnapshotAndIncrementPermission"`
+	QuerySnapshotAndIncrementPermission  bool `bson:"QuerySnapshotAndIncrementPermission"`
+	CreateAnoAttachmentPermission        bool `bson:"CreateAnoAttachmentPermission"`
+	DeleteAnoAttachmentPermission        bool `bson:"DeleteAnoAttachmentPermission"`
+	UpdateAnoAttachmentPermission        bool `bson:"UpdateAnoAttachmentPermission"`
+	QueryAnoAttachmentPermission         bool `bson:"QueryAnoAttachmentPermission"`
+	CreateApoAttachmentPermission        bool `bson:"CreateApoAttachmentPermission"`
+	DeleteApoAttachmentPermission        bool `bson:"DeleteApoAttachmentPermission"`
+	UpdateApoAttachmentPermission        bool `bson:"UpdateApoAttachmentPermission"`
+	QueryApoAttachmentPermission         bool `bson:"QueryApoAttachmentPermission"`
+	CreateSwcAttachmentPermission        bool `bson:"CreateSwcAttachmentPermission"`
+	DeleteSwcAttachmentPermission        bool `bson:"DeleteSwcAttachmentPermission"`
+	UpdateSwcAttachmentPermission        bool `bson:"UpdateSwcAttachmentPermission"`
+	QuerySwcAttachmentPermission         bool `bson:"QuerySwcAttachmentPermission"`
 }
 
 type UserPermissionAclV1 struct {

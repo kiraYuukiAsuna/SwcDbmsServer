@@ -4,12 +4,16 @@ import (
 	"DBMS/SwcDbmsCommon/Generated/go/proto/service"
 	"DBMS/config"
 	"DBMS/dal"
+	"DBMS/dbmodel"
+	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"google.golang.org/grpc"
 	_ "google.golang.org/grpc/encoding/gzip" // Install the gzip compressor
 	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
 	"strconv"
+	"time"
 )
 
 func Initialize() {
@@ -37,6 +41,30 @@ func Initialize() {
 	databaseInstance := dal.ConnectToDataBase(connectionInfo, dataBaseNameInfo)
 
 	dal.SetDbInstance(databaseInstance)
+
+	adminPermissionGroup := dbmodel.PermissionGroupMetaInfoV1{
+		Name: dal.PermissionGroupAdmin,
+	}
+	if result := dal.QueryPermissionGroupByName(&adminPermissionGroup, dal.GetDbInstance()); !result.Status {
+
+	}
+
+	_, userId := dal.GetNewUserIdAndIncrease(databaseInstance)
+	var serverUser = dbmodel.UserMetaInfoV1{
+		Base: dbmodel.MetaInfoBase{
+			Id:                     primitive.NewObjectID(),
+			DataAccessModelVersion: "V1",
+			Uuid:                   uuid.NewString(),
+		},
+		Name:                "server",
+		Password:            "123456",
+		Description:         "",
+		CreateTime:          time.Now(),
+		HeadPhotoBinData:    nil,
+		PermissionGroupUuid: adminPermissionGroup.Base.Uuid,
+		UserId:              userId,
+	}
+	dal.CreateUser(serverUser, databaseInstance)
 }
 
 func NewGrpcServer() {
