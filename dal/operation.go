@@ -1264,16 +1264,7 @@ func UpdateAttachmentSwcData(attachmentCollectionName string, swcData *dbmodel.S
 func QueryAttachmentSwcData(attachmentCollectionName string, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	collection := databaseInfo.AttachmentDb.Collection(attachmentCollectionName)
 
-	uuidList := bson.A{}
-
-	for _, v := range *swcData {
-		uuidList = append(uuidList, bson.D{{"uuid", v.Base.Uuid}})
-	}
-
-	filterInterface := bson.D{
-		{"$or",
-			uuidList},
-	}
+	filterInterface := bson.D{{}}
 
 	cursor, err := collection.Find(context.TODO(), filterInterface)
 	if err != nil {
