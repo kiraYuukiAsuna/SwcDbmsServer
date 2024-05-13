@@ -41,6 +41,24 @@ func CronAutoSaveDailyStatistics() {
 
 		dal.CreateDailyStatistics(DailyStatisticsInfo, dal.GetDbInstance())
 
+		DailyStatisticsInfo.CreatedProjectNumber = 0
+		DailyStatisticsInfo.CreatedSwcNumber = 0
+		DailyStatisticsInfo.CreateSwcNodeNumber = 0
+
+		DailyStatisticsInfo.DeletedProjectNumber = 0
+		DailyStatisticsInfo.DeletedSwcNumber = 0
+		DailyStatisticsInfo.DeletedSwcNodeNumber = 0
+
+		DailyStatisticsInfo.ModifiedProjectNumber = 0
+		DailyStatisticsInfo.ModifiedSwcNumber = 0
+		DailyStatisticsInfo.ModifiedSwcNodeNumber = 0
+
+		DailyStatisticsInfo.ProjectQueryNumber = 0
+		DailyStatisticsInfo.SwcQueryNumber = 0
+		DailyStatisticsInfo.NodeQueryNumber = 0
+
+		DailyStatisticsInfo.ActiveUserNumber = 0
+
 		client := gomail.NewDialer("smtp.qq.com", 25, "1175445708@qq.com", "xxxx")
 
 		fromEmail := "1175445708@qq.com"
