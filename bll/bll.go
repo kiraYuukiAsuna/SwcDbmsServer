@@ -4121,6 +4121,22 @@ func (D DBMSServerController) UpdateSwcAttachmentSwc(context context.Context, re
 		}, nil
 	}
 
+	if querySwcMetaInfo.SwcAttachmentSwcUuid == "" {
+		swcAttachmentCollectionName := "Attachment_Swc_" + uuid.NewString()
+
+		querySwcMetaInfo.SwcAttachmentSwcUuid = swcAttachmentCollectionName
+		result := dal.ModifySwc(querySwcMetaInfo, dal.GetDbInstance())
+		if !result.Status {
+			return &response.UpdateSwcAttachmentSwcResponse{
+				MetaInfo: &message.ResponseMetaInfoV1{
+					Status:  false,
+					Id:      "",
+					Message: "Create Swc Attachment Failed!",
+				},
+			}, nil
+		}
+	}
+
 	var swcData dbmodel.SwcDataV1
 	for _, swcNodeData := range request.NewSwcData {
 		swcData = append(swcData, *SwcNodeDataV1ProtobufToDbmodel(swcNodeData))
@@ -4139,14 +4155,14 @@ func (D DBMSServerController) UpdateSwcAttachmentSwc(context context.Context, re
 		swcData[idx].CheckerUserUuid = ""
 	}
 
-	result := dal.UpdateAttachmentSwcData(request.GetSwcAttachmentUuid(), &swcData, dal.GetDbInstance())
+	result := dal.UpdateAttachmentSwcData(querySwcMetaInfo.SwcAttachmentSwcUuid, &swcData, dal.GetDbInstance())
 	if result.Status {
 		swcMetaInfo := dbmodel.SwcMetaInfoV1{}
 		swcMetaInfo.Name = request.GetSwcName()
 
 		result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 		if result.Status {
-			swcMetaInfo.SwcAttachmentSwcUuid = request.GetSwcAttachmentUuid()
+			swcMetaInfo.SwcAttachmentSwcUuid = querySwcMetaInfo.SwcAttachmentSwcUuid
 			result = dal.ModifySwc(swcMetaInfo, dal.GetDbInstance())
 			if result.Status {
 				return &response.UpdateSwcAttachmentSwcResponse{
