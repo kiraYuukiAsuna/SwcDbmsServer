@@ -3825,30 +3825,30 @@ func (D DBMSServerController) RevertSwcVersion(context context.Context, request 
 	status := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 	if status.Status {
 		// Process SwcSnapshotMetaInfoV1 items
-		var latestSnapshot *dbmodel.SwcSnapshotMetaInfoV1
+		var latestSnapshot dbmodel.SwcSnapshotMetaInfoV1
 		var newSnapshotList []dbmodel.SwcSnapshotMetaInfoV1
 		for _, snapshot := range swcMetaInfo.SwcSnapshotList {
 			if snapshot.CreateTime.Before(endTime) || snapshot.CreateTime.Equal(endTime) {
 				newSnapshotList = append(newSnapshotList, snapshot)
-				if latestSnapshot == nil || snapshot.CreateTime.After(latestSnapshot.CreateTime) {
-					latestSnapshot = &snapshot
+				if snapshot.CreateTime.After(latestSnapshot.CreateTime) {
+					latestSnapshot = snapshot
 				}
 			}
 		}
 
 		// Process SwcIncrementOperationMetaInfoV1 items
-		var latestIncrementOperation *dbmodel.SwcIncrementOperationMetaInfoV1
+		var latestIncrementOperation dbmodel.SwcIncrementOperationMetaInfoV1
 		var newIncrementOperationList []dbmodel.SwcIncrementOperationMetaInfoV1
 		for _, incrementOperation := range swcMetaInfo.SwcIncrementOperationList {
 			if incrementOperation.CreateTime.Before(endTime) || incrementOperation.CreateTime.Equal(endTime) {
 				newIncrementOperationList = append(newIncrementOperationList, incrementOperation)
-				if latestIncrementOperation == nil || incrementOperation.CreateTime.After(latestIncrementOperation.CreateTime) {
-					latestIncrementOperation = &incrementOperation
+				if incrementOperation.CreateTime.After(latestIncrementOperation.CreateTime) {
+					latestIncrementOperation = incrementOperation
 				}
 			}
 		}
 
-		if latestIncrementOperation.StartSnapshot == latestSnapshot.SwcSnapshotCollectionName {
+		if latestIncrementOperation.StartSnapshot == latestSnapshot.SwcSnapshotCollectionName && latestIncrementOperation.StartSnapshot != "" {
 
 			status = dal.RevertSwcNodeData(request.GetSwcName(), latestSnapshot.SwcSnapshotCollectionName, latestIncrementOperation.IncrementOperationCollectionName, endTime, dal.GetDbInstance())
 			if status.Status {

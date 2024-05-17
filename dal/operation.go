@@ -1203,25 +1203,27 @@ func GetNewUserIdAndIncrease(databaseInfo MongoDbDataBaseInfo) (ReturnWrapper, i
 
 func CreateAttachmentSwcData(attachmentCollectionName string, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	collection := databaseInfo.AttachmentDb.Collection(attachmentCollectionName)
-	var interfaceSlice []interface{}
-	for _, v := range *swcData {
-		interfaceSlice = append(interfaceSlice, v)
-	}
-	log.Println("Attachment - Inserting ", len(interfaceSlice), " nodes into ", attachmentCollectionName)
-	result, err := collection.InsertMany(context.TODO(), interfaceSlice)
-	if err != nil {
-		if result != nil {
-			return ReturnWrapper{false,
-				"Attachment - Insert many node failed! Inserted:" + strconv.Itoa(len(result.InsertedIDs)) +
-					" , Error:" + strconv.Itoa(len(interfaceSlice)-len(result.InsertedIDs)) +
-					" Total:" + strconv.Itoa(len(interfaceSlice))}
-		} else {
-			return ReturnWrapper{false, "Insert many node failed!"}
+
+	if len(*swcData) != 0 {
+		var interfaceSlice []interface{}
+		for _, v := range *swcData {
+			interfaceSlice = append(interfaceSlice, v)
 		}
+		log.Println("Attachment - Inserting ", len(interfaceSlice), " nodes into ", attachmentCollectionName)
+		result, err := collection.InsertMany(context.TODO(), interfaceSlice)
+		if err != nil {
+			if result != nil {
+				return ReturnWrapper{false,
+					"Attachment - Insert many node failed! Inserted:" + strconv.Itoa(len(result.InsertedIDs)) +
+						" , Error:" + strconv.Itoa(len(interfaceSlice)-len(result.InsertedIDs)) +
+						" Total:" + strconv.Itoa(len(interfaceSlice))}
+			} else {
+				return ReturnWrapper{false, "Insert many node failed!"}
+			}
+		}
+
+		logger.GetLogger().Println("Attachment - Real Craete nodes in DB: " + strconv.Itoa(len(result.InsertedIDs)))
 	}
-
-	logger.GetLogger().Println("Attachment - Real Craete nodes in DB: " + strconv.Itoa(len(result.InsertedIDs)))
-
 	return ReturnWrapper{true, "Create Swc Attachment Success"}
 }
 
@@ -1241,23 +1243,24 @@ func UpdateAttachmentSwcData(attachmentCollectionName string, swcData *dbmodel.S
 		return ReturnWrapper{false, err.Error()}
 	}
 
-	var interfaceSlice []interface{}
-	for _, v := range *swcData {
-		interfaceSlice = append(interfaceSlice, v)
-	}
-	log.Println("Attachment - Inserting ", len(interfaceSlice), " nodes into ", attachmentCollectionName)
-	result, err := collection.InsertMany(context.TODO(), interfaceSlice)
-	if err != nil {
-		if result != nil {
-			return ReturnWrapper{false,
-				"Attachment - Insert many node failed! Inserted:" + strconv.Itoa(len(result.InsertedIDs)) +
-					" , Error:" + strconv.Itoa(len(interfaceSlice)-len(result.InsertedIDs)) +
-					" Total:" + strconv.Itoa(len(interfaceSlice))}
-		} else {
-			return ReturnWrapper{false, "Insert many node failed!"}
+	if len(*swcData) != 0 {
+		var interfaceSlice []interface{}
+		for _, v := range *swcData {
+			interfaceSlice = append(interfaceSlice, v)
+		}
+		log.Println("Attachment - Inserting ", len(interfaceSlice), " nodes into ", attachmentCollectionName)
+		result, err := collection.InsertMany(context.TODO(), interfaceSlice)
+		if err != nil {
+			if result != nil {
+				return ReturnWrapper{false,
+					"Attachment - Insert many node failed! Inserted:" + strconv.Itoa(len(result.InsertedIDs)) +
+						" , Error:" + strconv.Itoa(len(interfaceSlice)-len(result.InsertedIDs)) +
+						" Total:" + strconv.Itoa(len(interfaceSlice))}
+			} else {
+				return ReturnWrapper{false, "Insert many node failed!"}
+			}
 		}
 	}
-
 	return ReturnWrapper{true, "Update Swc Attachment successfully!"}
 }
 
