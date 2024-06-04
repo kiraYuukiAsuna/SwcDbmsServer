@@ -962,7 +962,7 @@ func (D DBMSServerController) DeleteProject(ctx context.Context, request *reques
 	}
 
 	var queryProjectMetaInfo dbmodel.ProjectMetaInfoV1
-	queryProjectMetaInfo.Name = request.ProjectName
+	queryProjectMetaInfo.Base.Uuid = request.GetProjectUuid()
 	if result := dal.QueryProject(&queryProjectMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.DeleteProjectResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -984,7 +984,7 @@ func (D DBMSServerController) DeleteProject(ctx context.Context, request *reques
 	}
 
 	projectMetaInfo := dbmodel.ProjectMetaInfoV1{}
-	projectMetaInfo.Name = request.ProjectName
+	projectMetaInfo.Base.Uuid = request.GetProjectUuid()
 
 	var permissionGroup dbmodel.PermissionGroupMetaInfoV1
 	permissionGroup.Base.Uuid = executorUserMetaInfo.PermissionGroupUuid
@@ -1011,7 +1011,7 @@ func (D DBMSServerController) DeleteProject(ctx context.Context, request *reques
 			ProjectInfo: ProjectMetaInfoV1DbmodelToProtobuf(&projectMetaInfo),
 		}, nil
 	}
-	log.Println("Project " + request.ProjectName + " Deleted")
+	log.Println("Project " + request.GetProjectUuid() + " Deleted")
 	DailyStatisticsInfo.DeletedProjectNumber += 1
 	return &response.DeleteProjectResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
@@ -1154,7 +1154,7 @@ func (D DBMSServerController) GetProject(ctx context.Context, request *request.G
 	}
 
 	var queryProjectMetaInfo dbmodel.ProjectMetaInfoV1
-	queryProjectMetaInfo.Name = request.ProjectName
+	queryProjectMetaInfo.Base.Uuid = request.GetProjectUuid()
 	if result := dal.QueryProject(&queryProjectMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.GetProjectResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1176,7 +1176,7 @@ func (D DBMSServerController) GetProject(ctx context.Context, request *request.G
 	}
 
 	projectMetaInfo := dbmodel.ProjectMetaInfoV1{}
-	projectMetaInfo.Name = request.ProjectName
+	projectMetaInfo.Base.Uuid = request.GetProjectUuid()
 
 	result := dal.QueryProject(&projectMetaInfo, dal.GetDbInstance())
 	if !result.Status {

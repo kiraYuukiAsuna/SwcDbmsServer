@@ -102,7 +102,7 @@ func ModifyProject(projectMetaInfo dbmodel.ProjectMetaInfoV1, databaseInfo Mongo
 
 	result := projectCollection.FindOneAndReplace(
 		context.TODO(),
-		bson.D{{"Name", projectMetaInfo.Name}},
+		bson.D{{"uuid", projectMetaInfo.Base.Uuid}},
 		projectMetaInfo)
 
 	if result.Err() != nil {
@@ -118,7 +118,7 @@ func QueryProject(projectMetaInfo *dbmodel.ProjectMetaInfoV1, databaseInfo Mongo
 
 	result := projectCollection.FindOne(
 		context.TODO(),
-		bson.D{{"Name", projectMetaInfo.Name}})
+		bson.D{{"uuid", projectMetaInfo.Base.Uuid}})
 
 	if result.Err() != nil {
 		return ReturnWrapper{false, "Cannot find target project!"}
