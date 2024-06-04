@@ -250,6 +250,7 @@ func SwcMetaInfoV1ProtobufToDbmodel(protoMessage *message.SwcMetaInfoV1) *dbmode
 	dbmodelMessage.Description = protoMessage.Description
 	dbmodelMessage.Creator = protoMessage.Creator
 	dbmodelMessage.SwcType = protoMessage.SwcType
+	dbmodelMessage.BelongingProjectUuid = protoMessage.BelongingProjectUuid
 
 	if protoMessage.CreateTime != nil {
 		dbmodelMessage.CreateTime = protoMessage.CreateTime.AsTime()
@@ -361,6 +362,7 @@ func SwcMetaInfoV1DbmodelToProtobuf(dbmodelMessage *dbmodel.SwcMetaInfoV1) *mess
 	protoMessage.Description = dbmodelMessage.Description
 	protoMessage.Creator = dbmodelMessage.Creator
 	protoMessage.SwcType = dbmodelMessage.SwcType
+	protoMessage.BelongingProjectUuid = dbmodelMessage.BelongingProjectUuid
 
 	protoMessage.CreateTime = timestamppb.New(dbmodelMessage.CreateTime)
 	protoMessage.LastModifiedTime = timestamppb.New(dbmodelMessage.LastModifiedTime)

@@ -375,7 +375,7 @@ func CreateSwc(swcMetaInfo dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseIn
 	var swcCollection = databaseInfo.MetaInfoDb.Collection(SwcMetaInfoCollectionString)
 
 	result := swcCollection.FindOne(context.TODO(), bson.D{
-		{"Name", swcMetaInfo.Name},
+		{"uuid", swcMetaInfo.Base.Uuid},
 	})
 
 	if result.Err() != nil {
@@ -398,7 +398,7 @@ func DeleteSwc(swcMetaInfo dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseIn
 	var swcCollection = databaseInfo.MetaInfoDb.Collection(SwcMetaInfoCollectionString)
 
 	result := swcCollection.FindOneAndDelete(context.TODO(), bson.D{
-		{"Name", swcMetaInfo.Name},
+		{"uuid", swcMetaInfo.Base.Uuid},
 	})
 
 	if result.Err() != nil {
@@ -429,7 +429,7 @@ func QuerySwc(swcMetaInfo *dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseIn
 
 	result := swcCollection.FindOne(
 		context.TODO(),
-		bson.D{{"Name", swcMetaInfo.Name}})
+		bson.D{{"uuid", swcMetaInfo.Base.Uuid}})
 
 	if result.Err() != nil {
 		return ReturnWrapper{false, "Cannot find target swc!"}
@@ -553,13 +553,13 @@ func QueryAllDailyStatistics(dailyStatisticsList *[]dbmodel.DailyStatisticsMetaI
 	return ReturnWrapper{true, "Query all DailyStatistics Success"}
 }
 
-func CreateSwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	collection := databaseInfo.SwcDb.Collection(swcName)
+func CreateSwcData(swcUuid string, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	collection := databaseInfo.SwcDb.Collection(swcUuid)
 	var interfaceSlice []interface{}
 	for _, v := range *swcData {
 		interfaceSlice = append(interfaceSlice, v)
 	}
-	log.Println("Inserting ", len(interfaceSlice), " nodes into ", swcName)
+	log.Println("Inserting ", len(interfaceSlice), " nodes into ", swcUuid)
 	result, err := collection.InsertMany(context.TODO(), interfaceSlice)
 	if err != nil {
 		if result != nil {
@@ -577,18 +577,18 @@ func CreateSwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo Mong
 	return ReturnWrapper{true, "Create many node Success"}
 }
 
-func DeleteSwcDataCollection(swcName string, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	collection := databaseInfo.SwcDb.Collection(swcName)
+func DeleteSwcDataCollection(swcUuid string, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	collection := databaseInfo.SwcDb.Collection(swcUuid)
 
 	err := collection.Drop(context.TODO())
 	if err != nil {
 		return ReturnWrapper{false, err.Error()}
 	}
-	return ReturnWrapper{true, "Delete swcdata collection " + swcName + " successfully!"}
+	return ReturnWrapper{true, "Delete swcdata collection " + swcUuid + " successfully!"}
 }
 
-func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	collection := databaseInfo.SwcDb.Collection(swcName)
+func DeleteSwcData(swcUuid string, swcData dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	collection := databaseInfo.SwcDb.Collection(swcUuid)
 
 	uuidList := bson.A{}
 
@@ -611,7 +611,7 @@ func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 	//	return ReturnWrapper{false, "Not all nodes exist in the database"}
 	//}
 
-	log.Println("Delete ", len(filterInterface), " nodes at ", swcName)
+	log.Println("Delete ", len(filterInterface), " nodes at ", swcUuid)
 	result, err := collection.DeleteMany(context.TODO(), filterInterface)
 	if err != nil {
 		log.Print(err.Error())
@@ -720,11 +720,11 @@ func DeleteSwcData(swcName string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 	return ReturnWrapper{true, "Delete many node Success! BulkWrite is not empty."}
 }
 
-func ModifySwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	collection := databaseInfo.SwcDb.Collection(swcName)
+func ModifySwcData(swcUuid string, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	collection := databaseInfo.SwcDb.Collection(swcUuid)
 	var wg sync.WaitGroup
 	errorsChan := make(chan error, len(*swcData))
-	log.Println("Modify ", len(*swcData), " nodes at ", swcName)
+	log.Println("Modify ", len(*swcData), " nodes at ", swcUuid)
 	for _, v := range *swcData {
 		wg.Add(1)
 		go func(val dbmodel.SwcNodeDataV1) {
@@ -783,8 +783,8 @@ func ModifySwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo Mong
 	return ReturnWrapper{true, "Modify swc node Success"}
 }
 
-func QuerySwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	collection := databaseInfo.SwcDb.Collection(swcName)
+func QuerySwcData(swcUuid string, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	collection := databaseInfo.SwcDb.Collection(swcUuid)
 
 	uuidList := bson.A{}
 
@@ -806,20 +806,20 @@ func QuerySwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo Mongo
 		return ReturnWrapper{false, "Query many node failed!"}
 	}
 
-	log.Println("Query ", len(*swcData), " node at ", swcName)
+	log.Println("Query ", len(*swcData), " node at ", swcUuid)
 
 	return ReturnWrapper{true, "Query many node Success"}
 }
 
 func QuerySwcDataByUserAndTime(
-	swcName string,
+	swcUuid string,
 	userName string,
 	startTime time.Time,
 	endTime time.Time,
 	swcData *dbmodel.SwcDataV1,
 	databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 
-	collection := databaseInfo.SwcDb.Collection(swcName)
+	collection := databaseInfo.SwcDb.Collection(swcUuid)
 
 	filterInterface := bson.D{}
 
@@ -847,13 +847,13 @@ func QuerySwcDataByUserAndTime(
 		return ReturnWrapper{false, "QuerySwcDataByUserAndTime failed!"}
 	}
 
-	log.Println("QueryByCondition ", len(*swcData), " nodes at ", swcName)
+	log.Println("QueryByCondition ", len(*swcData), " nodes at ", swcUuid)
 
 	return ReturnWrapper{true, "QuerySwcDataByUserAndTime Success"}
 }
 
-func QueryAllSwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	collection := databaseInfo.SwcDb.Collection(swcName)
+func QueryAllSwcData(swcUuid string, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	collection := databaseInfo.SwcDb.Collection(swcUuid)
 
 	cursor, err := collection.Find(context.TODO(), bson.D{})
 	if err != nil {
@@ -864,13 +864,13 @@ func QueryAllSwcData(swcName string, swcData *dbmodel.SwcDataV1, databaseInfo Mo
 		return ReturnWrapper{false, "Query many node failed!"}
 	}
 
-	log.Println("QueryAll ", len(*swcData), " nodes at ", swcName)
+	log.Println("QueryAll ", len(*swcData), " nodes at ", swcUuid)
 
 	return ReturnWrapper{true, "Query many node Success"}
 }
 
-func CreateSnapshot(swcName string, snapshotName string, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	srcCollection := databaseInfo.SwcDb.Collection(swcName)
+func CreateSnapshot(swcUuid string, snapshotName string, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	srcCollection := databaseInfo.SwcDb.Collection(swcUuid)
 	dstCollection := databaseInfo.SnapshotDb.Collection(snapshotName)
 
 	cursor, err := srcCollection.Find(context.Background(), bson.D{{}})
@@ -962,8 +962,8 @@ func QuerySwcIncrementOperation(incrementOperationCollectionName string, operati
 	return ReturnWrapper{true, "Query many node Success"}
 }
 
-func CreateSwcAttachmentAno(swcName string, anoAttachment *dbmodel.SwcAttachmentAnoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	attachmentCollection := "Attachment_Ano_" + swcName
+func CreateSwcAttachmentAno(swcUuid string, anoAttachment *dbmodel.SwcAttachmentAnoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	attachmentCollection := "Attachment_Ano_" + swcUuid
 	collection := databaseInfo.AttachmentDb.Collection(attachmentCollection)
 	_ = collection.Drop(context.TODO())
 	_, err := collection.InsertOne(context.TODO(), anoAttachment)
@@ -974,8 +974,8 @@ func CreateSwcAttachmentAno(swcName string, anoAttachment *dbmodel.SwcAttachment
 	return ReturnWrapper{true, "Create Ano Attachment successfully!"}
 }
 
-func DeleteSwcAttachmentAno(swcName string, attachmentUuid string, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	attachmentCollection := "Attachment_Ano_" + swcName
+func DeleteSwcAttachmentAno(swcUuid string, attachmentUuid string, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	attachmentCollection := "Attachment_Ano_" + swcUuid
 	collection := databaseInfo.AttachmentDb.Collection(attachmentCollection)
 
 	result := collection.FindOneAndDelete(context.TODO(), bson.D{
@@ -990,8 +990,8 @@ func DeleteSwcAttachmentAno(swcName string, attachmentUuid string, databaseInfo 
 	}
 }
 
-func UpdateSwcAttachmentAno(swcName string, attachmentUuid string, anoAttachment *dbmodel.SwcAttachmentAnoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	attachmentCollection := "Attachment_Ano_" + swcName
+func UpdateSwcAttachmentAno(swcUuid string, attachmentUuid string, anoAttachment *dbmodel.SwcAttachmentAnoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	attachmentCollection := "Attachment_Ano_" + swcUuid
 	collection := databaseInfo.AttachmentDb.Collection(attachmentCollection)
 
 	result := collection.FindOneAndUpdate(
@@ -1012,8 +1012,8 @@ func UpdateSwcAttachmentAno(swcName string, attachmentUuid string, anoAttachment
 	return ReturnWrapper{true, "Update Ano Attachment Success"}
 }
 
-func QuerySwcAttachmentAno(swcName string, attachmentUuid string, anoAttachment *dbmodel.SwcAttachmentAnoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
-	attachmentCollection := "Attachment_Ano_" + swcName
+func QuerySwcAttachmentAno(swcUuid string, attachmentUuid string, anoAttachment *dbmodel.SwcAttachmentAnoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	attachmentCollection := "Attachment_Ano_" + swcUuid
 	var collection = databaseInfo.AttachmentDb.Collection(attachmentCollection)
 
 	result := collection.FindOne(
@@ -1032,7 +1032,7 @@ func QuerySwcAttachmentAno(swcName string, attachmentUuid string, anoAttachment 
 	}
 }
 
-func CreateSwcAttachmentApo(swcName string, apoAttachmentCollectionName string, apoAttachment *[]dbmodel.SwcAttachmentApoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+func CreateSwcAttachmentApo(swcUuid string, apoAttachmentCollectionName string, apoAttachment *[]dbmodel.SwcAttachmentApoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	collection := databaseInfo.AttachmentDb.Collection(apoAttachmentCollectionName)
 
 	if len(*apoAttachment) != 0 {
@@ -1048,7 +1048,7 @@ func CreateSwcAttachmentApo(swcName string, apoAttachmentCollectionName string, 
 	return ReturnWrapper{true, "Create Apo Attachment successfully!"}
 }
 
-func DeleteSwcAttachmentApo(swcName string, apoAttachmentCollectionName string, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+func DeleteSwcAttachmentApo(swcUuid string, apoAttachmentCollectionName string, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	collection := databaseInfo.AttachmentDb.Collection(apoAttachmentCollectionName)
 	err := collection.Drop(context.Background())
 	if err != nil {
@@ -1057,7 +1057,7 @@ func DeleteSwcAttachmentApo(swcName string, apoAttachmentCollectionName string, 
 	return ReturnWrapper{true, "Delete Apo Attachment successfully!"}
 }
 
-func UpdateSwcAttachmentApo(swcName string, apoAttachmentCollectionName string, apoAttachment *[]dbmodel.SwcAttachmentApoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+func UpdateSwcAttachmentApo(swcUuid string, apoAttachmentCollectionName string, apoAttachment *[]dbmodel.SwcAttachmentApoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	collection := databaseInfo.AttachmentDb.Collection(apoAttachmentCollectionName)
 	err := collection.Drop(context.Background())
 	if err != nil {
@@ -1075,7 +1075,7 @@ func UpdateSwcAttachmentApo(swcName string, apoAttachmentCollectionName string, 
 	return ReturnWrapper{true, "Update Apo Attachment successfully!"}
 }
 
-func QuerySwcAttachmentApo(swcName string, apoAttachmentCollectionName string, apoAttachment *[]dbmodel.SwcAttachmentApoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+func QuerySwcAttachmentApo(swcUuid string, apoAttachmentCollectionName string, apoAttachment *[]dbmodel.SwcAttachmentApoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	collection := databaseInfo.AttachmentDb.Collection(apoAttachmentCollectionName)
 
 	cursor, err := collection.Find(
@@ -1094,7 +1094,7 @@ func QuerySwcAttachmentApo(swcName string, apoAttachmentCollectionName string, a
 	return ReturnWrapper{true, "Query Apo Attachment Success"}
 }
 
-func RevertSwcNodeData(swcName string, swcSnapshotCollectionName string, incrementOperationCollectionName string, endTime time.Time, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+func RevertSwcNodeData(swcUuid string, swcSnapshotCollectionName string, incrementOperationCollectionName string, endTime time.Time, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	collection := databaseInfo.IncrementOperationDb.Collection(incrementOperationCollectionName)
 	delFilter := bson.D{{"CreateTime", bson.D{{"$gt", primitive.NewDateTimeFromTime(endTime)}}}}
 	delres, err := collection.DeleteMany(context.TODO(), delFilter)
@@ -1103,14 +1103,14 @@ func RevertSwcNodeData(swcName string, swcSnapshotCollectionName string, increme
 	}
 	println(delres.DeletedCount)
 
-	swcCollection := databaseInfo.SwcDb.Collection(swcName)
+	swcCollection := databaseInfo.SwcDb.Collection(swcUuid)
 	err = swcCollection.Drop(context.TODO())
 	if err != nil {
 		return ReturnWrapper{false, err.Error()}
 	}
 
 	srcCollection := databaseInfo.SnapshotDb.Collection(swcSnapshotCollectionName)
-	dstCollection := databaseInfo.SwcDb.Collection(swcName)
+	dstCollection := databaseInfo.SwcDb.Collection(swcUuid)
 
 	cursor, err := srcCollection.Find(context.Background(), bson.D{{}})
 	if err != nil {
@@ -1161,11 +1161,11 @@ func RevertSwcNodeData(swcName string, swcSnapshotCollectionName string, increme
 	for _, operation := range operations {
 		switch operation.IncrementOperation {
 		case IncrementOp_Create:
-			CreateSwcData(swcName, &operation.SwcData, GetDbInstance())
+			CreateSwcData(swcUuid, &operation.SwcData, GetDbInstance())
 		case IncrementOp_Delete:
-			DeleteSwcData(swcName, operation.SwcData, GetDbInstance())
+			DeleteSwcData(swcUuid, operation.SwcData, GetDbInstance())
 		case IncrementOp_Update:
-			ModifySwcData(swcName, &operation.SwcData, GetDbInstance())
+			ModifySwcData(swcUuid, &operation.SwcData, GetDbInstance())
 		}
 	}
 

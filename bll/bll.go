@@ -1391,7 +1391,7 @@ func (D DBMSServerController) DeleteSwc(ctx context.Context, request *request.De
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.DeleteSwcResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1413,7 +1413,7 @@ func (D DBMSServerController) DeleteSwc(ctx context.Context, request *request.De
 	}
 
 	swcMetaInfo := dbmodel.SwcMetaInfoV1{}
-	swcMetaInfo.Name = request.SwcName
+	swcMetaInfo.Base.Uuid = request.GetSwcUuid()
 
 	result := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 	if !result.Status {
@@ -1433,8 +1433,8 @@ func (D DBMSServerController) DeleteSwc(ctx context.Context, request *request.De
 	dal.QueryAllProject(&projectMetaInfoList, dal.GetDbInstance())
 	for _, projectMetaInfo := range projectMetaInfoList {
 		var bFind = false
-		for idx, swcValue := range projectMetaInfo.SwcList {
-			if swcValue == swcMetaInfo.Name {
+		for idx, swcUuid := range projectMetaInfo.SwcList {
+			if swcUuid == swcMetaInfo.Base.Uuid {
 				projectMetaInfo.SwcList = append(projectMetaInfo.SwcList[:idx], projectMetaInfo.SwcList[idx:]...)
 				bFind = true
 				dal.ModifyProject(projectMetaInfo, dal.GetDbInstance())
@@ -1456,7 +1456,7 @@ func (D DBMSServerController) DeleteSwc(ctx context.Context, request *request.De
 			SwcInfo: SwcMetaInfoV1DbmodelToProtobuf(&swcMetaInfo),
 		}, nil
 	}
-	result = dal.DeleteSwcDataCollection(swcMetaInfo.Name, dal.GetDbInstance())
+	result = dal.DeleteSwcDataCollection(swcMetaInfo.Base.Uuid, dal.GetDbInstance())
 	if !result.Status {
 		return &response.DeleteSwcResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1611,7 +1611,7 @@ func (D DBMSServerController) GetSwcMetaInfo(ctx context.Context, request *reque
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.GetSwcMetaInfoResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1633,7 +1633,7 @@ func (D DBMSServerController) GetSwcMetaInfo(ctx context.Context, request *reque
 	}
 
 	swcMetaInfo := dbmodel.SwcMetaInfoV1{}
-	swcMetaInfo.Name = request.SwcName
+	swcMetaInfo.Base.Uuid = request.GetSwcUuid()
 
 	result := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 	if !result.Status {
@@ -1749,7 +1749,7 @@ func (D DBMSServerController) CreateSwcSnapshot(ctx context.Context, request *re
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.CreateSwcSnapshotResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1771,7 +1771,7 @@ func (D DBMSServerController) CreateSwcSnapshot(ctx context.Context, request *re
 	}
 
 	var swcMetaInfo dbmodel.SwcMetaInfoV1
-	swcMetaInfo.Name = request.SwcName
+	swcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	result := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.CreateSwcSnapshotResponse{
@@ -1809,7 +1809,7 @@ func (D DBMSServerController) CreateSwcSnapshot(ctx context.Context, request *re
 
 	swcMetaInfo.CurrentIncrementOperationCollectionName = swcIncrementOperationMetaInfo.IncrementOperationCollectionName
 
-	result = dal.CreateSnapshot(swcMetaInfo.Name, swcSnapshotMetaInfo.SwcSnapshotCollectionName, dal.GetDbInstance())
+	result = dal.CreateSnapshot(swcMetaInfo.Base.Uuid, swcSnapshotMetaInfo.SwcSnapshotCollectionName, dal.GetDbInstance())
 	if !result.Status {
 		return &response.CreateSwcSnapshotResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1868,7 +1868,7 @@ func (D DBMSServerController) GetAllSnapshotMetaInfo(ctx context.Context, reques
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.GetAllSnapshotMetaInfoResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1890,7 +1890,7 @@ func (D DBMSServerController) GetAllSnapshotMetaInfo(ctx context.Context, reques
 	}
 
 	var dbmodelMessage dbmodel.SwcMetaInfoV1
-	dbmodelMessage.Name = request.SwcName
+	dbmodelMessage.Base.Uuid = request.GetSwcUuid()
 
 	var protoMessage []*message.SwcSnapshotMetaInfoV1
 	result := dal.QuerySwc(&dbmodelMessage, dal.GetDbInstance())
@@ -1989,7 +1989,7 @@ func (D DBMSServerController) GetAllIncrementOperationMetaInfo(ctx context.Conte
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.GetAllIncrementOperationMetaInfoResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -2011,7 +2011,7 @@ func (D DBMSServerController) GetAllIncrementOperationMetaInfo(ctx context.Conte
 	}
 
 	var dbmodelMessage dbmodel.SwcMetaInfoV1
-	dbmodelMessage.Name = request.SwcName
+	dbmodelMessage.Base.Uuid = request.GetSwcUuid()
 
 	var protoMessage []*message.SwcIncrementOperationMetaInfoV1
 	result := dal.QuerySwc(&dbmodelMessage, dal.GetDbInstance())
@@ -2111,7 +2111,7 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.CreateSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -2166,7 +2166,7 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 
 	logger.GetLogger().Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Create Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Name)
 
-	result := dal.CreateSwcData(querySwcMetaInfo.Name, &swcData, dal.GetDbInstance())
+	result := dal.CreateSwcData(querySwcMetaInfo.Base.Uuid, &swcData, dal.GetDbInstance())
 	if !result.Status {
 		return &response.CreateSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -2227,7 +2227,7 @@ func (D DBMSServerController) DeleteSwcNodeData(ctx context.Context, request *re
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.DeleteSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -2267,7 +2267,7 @@ func (D DBMSServerController) DeleteSwcNodeData(ctx context.Context, request *re
 
 	logger.GetLogger().Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Delete Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Name)
 
-	result := dal.DeleteSwcData(querySwcMetaInfo.Name, swcData, dal.GetDbInstance())
+	result := dal.DeleteSwcData(querySwcMetaInfo.Base.Uuid, swcData, dal.GetDbInstance())
 	if result.Status {
 		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Delete Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Name)
 		DailyStatisticsInfo.DeletedSwcNodeNumber += 1
@@ -2327,7 +2327,7 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.UpdateSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -2375,7 +2375,7 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 
 	logger.GetLogger().Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Update Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Name)
 
-	result := dal.ModifySwcData(querySwcMetaInfo.Name, &swcData, dal.GetDbInstance())
+	result := dal.ModifySwcData(querySwcMetaInfo.Base.Uuid, &swcData, dal.GetDbInstance())
 	if result.Status {
 		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Update Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Name)
 		DailyStatisticsInfo.ModifiedSwcNodeNumber += 1
@@ -2436,7 +2436,7 @@ func (D DBMSServerController) GetSwcNodeData(ctx context.Context, request *reque
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.GetSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -2465,7 +2465,7 @@ func (D DBMSServerController) GetSwcNodeData(ctx context.Context, request *reque
 		dbmodelMessage = append(dbmodelMessage, *SwcNodeDataV1ProtobufToDbmodel(swcNodeData))
 	}
 
-	result := dal.QuerySwcData(querySwcMetaInfo.Name, &dbmodelMessage, dal.GetDbInstance())
+	result := dal.QuerySwcData(querySwcMetaInfo.Base.Uuid, &dbmodelMessage, dal.GetDbInstance())
 	if result.Status {
 		log.Println("User " + request.UserVerifyInfo.GetUserName() + " Get SwcData " + querySwcMetaInfo.Name)
 
@@ -2524,7 +2524,7 @@ func (D DBMSServerController) GetSwcFullNodeData(ctx context.Context, request *r
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.GetSwcFullNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -2548,7 +2548,7 @@ func (D DBMSServerController) GetSwcFullNodeData(ctx context.Context, request *r
 	var dbmodelMessage dbmodel.SwcDataV1
 	var protoMessage message.SwcDataV1
 
-	result := dal.QueryAllSwcData(querySwcMetaInfo.Name, &dbmodelMessage, dal.GetDbInstance())
+	result := dal.QueryAllSwcData(querySwcMetaInfo.Base.Uuid, &dbmodelMessage, dal.GetDbInstance())
 	if result.Status {
 		log.Println("User " + request.UserVerifyInfo.GetUserName() + " Get SwcFullNodeData " + querySwcMetaInfo.Name)
 		DailyStatisticsInfo.NodeQueryNumber += 1
@@ -2605,7 +2605,7 @@ func (D DBMSServerController) GetSwcNodeDataListByTimeAndUser(ctx context.Contex
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.GetSwcNodeDataListByTimeAndUserResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -2656,7 +2656,7 @@ func (D DBMSServerController) GetSwcNodeDataListByTimeAndUser(ctx context.Contex
 		startTime = time.Now()
 	}
 
-	result = dal.QuerySwcDataByUserAndTime(querySwcMetaInfo.Name, request.UserName, startTime, endTime, &dbmodelMessage, dal.GetDbInstance())
+	result = dal.QuerySwcDataByUserAndTime(querySwcMetaInfo.Base.Uuid, request.UserName, startTime, endTime, &dbmodelMessage, dal.GetDbInstance())
 	if result.Status {
 		log.Println("User " + request.UserVerifyInfo.UserName + " Get SwcDataByUserAndTime " + querySwcMetaInfo.Name)
 		DailyStatisticsInfo.NodeQueryNumber += 1
@@ -2993,7 +2993,7 @@ func (D DBMSServerController) CreateSwcAttachmentAno(ctx context.Context, reques
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.CreateSwcAttachmentAnoResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -3025,10 +3025,10 @@ func (D DBMSServerController) CreateSwcAttachmentAno(ctx context.Context, reques
 		SWCFILE: request.GetSwcAttachmentAno().SWCFILE,
 	}
 
-	result := dal.CreateSwcAttachmentAno(request.GetSwcName(), &attachmentDb, dal.GetDbInstance())
+	result := dal.CreateSwcAttachmentAno(request.GetSwcUuid(), &attachmentDb, dal.GetDbInstance())
 	if result.Status {
 		swcMetaInfo := dbmodel.SwcMetaInfoV1{}
-		swcMetaInfo.Name = request.GetSwcName()
+		swcMetaInfo.Base.Uuid = request.GetSwcUuid()
 
 		res := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 		if res.Status {
@@ -3101,7 +3101,7 @@ func (D DBMSServerController) DeleteSwcAttachmentAno(ctx context.Context, reques
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.DeleteSwcAttachmentAnoResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -3122,10 +3122,10 @@ func (D DBMSServerController) DeleteSwcAttachmentAno(ctx context.Context, reques
 		}, nil
 	}
 
-	result := dal.DeleteSwcAttachmentAno(request.GetSwcName(), request.GetAnoAttachmentUuid(), dal.GetDbInstance())
+	result := dal.DeleteSwcAttachmentAno(request.GetSwcUuid(), request.GetAnoAttachmentUuid(), dal.GetDbInstance())
 	if result.Status {
 		swcMetaInfo := dbmodel.SwcMetaInfoV1{}
-		swcMetaInfo.Name = request.GetSwcName()
+		swcMetaInfo.Base.Uuid = request.GetSwcUuid()
 
 		res := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 		if res.Status {
@@ -3197,7 +3197,7 @@ func (D DBMSServerController) UpdateSwcAttachmentAno(ctx context.Context, reques
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.UpdateSwcAttachmentAnoResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -3228,10 +3228,10 @@ func (D DBMSServerController) UpdateSwcAttachmentAno(ctx context.Context, reques
 		SWCFILE: request.GetNewSwcAttachmentAno().GetSWCFILE(),
 	}
 
-	result := dal.UpdateSwcAttachmentAno(request.GetSwcName(), request.GetAnoAttachmentUuid(), &attachmentDb, dal.GetDbInstance())
+	result := dal.UpdateSwcAttachmentAno(request.GetSwcUuid(), request.GetAnoAttachmentUuid(), &attachmentDb, dal.GetDbInstance())
 	if result.Status {
 		swcMetaInfo := dbmodel.SwcMetaInfoV1{}
-		swcMetaInfo.Name = request.GetSwcName()
+		swcMetaInfo.Base.Uuid = request.GetSwcUuid()
 
 		res := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 		if res.Status {
@@ -3303,7 +3303,7 @@ func (D DBMSServerController) GetSwcAttachmentAno(ctx context.Context, request *
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.GetSwcAttachmentAnoResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -3327,7 +3327,7 @@ func (D DBMSServerController) GetSwcAttachmentAno(ctx context.Context, request *
 	attachmentDb := dbmodel.SwcAttachmentAnoV1{}
 	attachmentPb := message.SwcAttachmentAnoV1{}
 
-	result := dal.QuerySwcAttachmentAno(request.GetSwcName(), request.GetAnoAttachmentUuid(), &attachmentDb, dal.GetDbInstance())
+	result := dal.QuerySwcAttachmentAno(request.GetSwcUuid(), request.GetAnoAttachmentUuid(), &attachmentDb, dal.GetDbInstance())
 	if result.Status {
 		attachmentPb.Base = &message.MetaInfoBase{}
 		attachmentPb.Base.XId = attachmentDb.Base.Id.Hex()
@@ -3385,7 +3385,7 @@ func (D DBMSServerController) CreateSwcAttachmentApo(ctx context.Context, reques
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.CreateSwcAttachmentApoResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -3435,10 +3435,10 @@ func (D DBMSServerController) CreateSwcAttachmentApo(ctx context.Context, reques
 
 	apoAttachmentCollectionName := "Attachment_Apo_" + uuid.NewString()
 
-	result := dal.CreateSwcAttachmentApo(request.GetSwcName(), apoAttachmentCollectionName, &attachmentDb, dal.GetDbInstance())
+	result := dal.CreateSwcAttachmentApo(request.GetSwcUuid(), apoAttachmentCollectionName, &attachmentDb, dal.GetDbInstance())
 	if result.Status {
 		swcMetaInfo := dbmodel.SwcMetaInfoV1{}
-		swcMetaInfo.Name = request.GetSwcName()
+		swcMetaInfo.Base.Uuid = request.GetSwcUuid()
 
 		result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 		if result.Status {
@@ -3495,7 +3495,7 @@ func (D DBMSServerController) DeleteSwcAttachmentApo(ctx context.Context, reques
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.DeleteSwcAttachmentApoResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -3516,10 +3516,10 @@ func (D DBMSServerController) DeleteSwcAttachmentApo(ctx context.Context, reques
 		}, nil
 	}
 
-	result := dal.DeleteSwcAttachmentApo(request.GetSwcName(), request.GetApoAttachmentUuid(), dal.GetDbInstance())
+	result := dal.DeleteSwcAttachmentApo(request.GetSwcUuid(), request.GetApoAttachmentUuid(), dal.GetDbInstance())
 	if result.Status {
 		swcMetaInfo := dbmodel.SwcMetaInfoV1{}
-		swcMetaInfo.Name = request.GetSwcName()
+		swcMetaInfo.Base.Uuid = request.GetSwcUuid()
 
 		result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 		if result.Status {
@@ -3575,7 +3575,7 @@ func (D DBMSServerController) UpdateSwcAttachmentApo(ctx context.Context, reques
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.UpdateSwcAttachmentApoResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -3633,10 +3633,10 @@ func (D DBMSServerController) UpdateSwcAttachmentApo(ctx context.Context, reques
 		}, nil
 	}
 
-	result := dal.UpdateSwcAttachmentApo(request.GetSwcName(), request.GetApoAttachmentUuid(), &attachmentDb, dal.GetDbInstance())
+	result := dal.UpdateSwcAttachmentApo(request.GetSwcUuid(), request.GetApoAttachmentUuid(), &attachmentDb, dal.GetDbInstance())
 	if result.Status {
 		swcMetaInfo := dbmodel.SwcMetaInfoV1{}
-		swcMetaInfo.Name = request.GetSwcName()
+		swcMetaInfo.Base.Uuid = request.GetSwcUuid()
 
 		result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 		if result.Status {
@@ -3692,7 +3692,7 @@ func (D DBMSServerController) GetSwcAttachmentApo(ctx context.Context, request *
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.GetSwcAttachmentApoResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -3716,7 +3716,7 @@ func (D DBMSServerController) GetSwcAttachmentApo(ctx context.Context, request *
 	var attachmentDb []dbmodel.SwcAttachmentApoV1
 	var attachmentPb []*message.SwcAttachmentApoV1
 
-	result := dal.QuerySwcAttachmentApo(request.GetSwcName(), request.GetApoAttachmentUuid(), &attachmentDb, dal.GetDbInstance())
+	result := dal.QuerySwcAttachmentApo(request.GetSwcUuid(), request.GetApoAttachmentUuid(), &attachmentDb, dal.GetDbInstance())
 	if result.Status {
 		for _, dbData := range attachmentDb {
 			pbData := &message.SwcAttachmentApoV1{
@@ -3792,7 +3792,7 @@ func (D DBMSServerController) RevertSwcVersion(context context.Context, request 
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.RevertSwcVersionResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -3818,7 +3818,7 @@ func (D DBMSServerController) RevertSwcVersion(context context.Context, request 
 	}
 
 	swcMetaInfo := dbmodel.SwcMetaInfoV1{}
-	swcMetaInfo.Name = request.GetSwcName()
+	swcMetaInfo.Base.Uuid = request.GetSwcUuid()
 
 	endTime := request.GetVersionEndTime().AsTime()
 
@@ -3850,7 +3850,7 @@ func (D DBMSServerController) RevertSwcVersion(context context.Context, request 
 
 		if latestIncrementOperation.StartSnapshot == latestSnapshot.SwcSnapshotCollectionName && latestIncrementOperation.StartSnapshot != "" {
 
-			status = dal.RevertSwcNodeData(request.GetSwcName(), latestSnapshot.SwcSnapshotCollectionName, latestIncrementOperation.IncrementOperationCollectionName, endTime, dal.GetDbInstance())
+			status = dal.RevertSwcNodeData(request.GetSwcUuid(), latestSnapshot.SwcSnapshotCollectionName, latestIncrementOperation.IncrementOperationCollectionName, endTime, dal.GetDbInstance())
 			if status.Status {
 
 				swcMetaInfo.SwcSnapshotList = newSnapshotList
@@ -3921,7 +3921,7 @@ func (D DBMSServerController) CreateSwcAttachmentSwc(context context.Context, re
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.CreateSwcAttachmentSwcResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -3965,7 +3965,7 @@ func (D DBMSServerController) CreateSwcAttachmentSwc(context context.Context, re
 	result := dal.CreateAttachmentSwcData(swcAttachmentCollectionName, &swcData, dal.GetDbInstance())
 	if result.Status {
 		swcMetaInfo := dbmodel.SwcMetaInfoV1{}
-		swcMetaInfo.Name = request.GetSwcName()
+		swcMetaInfo.Base.Uuid = request.GetSwcUuid()
 
 		result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 		if result.Status {
@@ -4020,7 +4020,7 @@ func (D DBMSServerController) DeleteSwcAttachmentSwc(context context.Context, re
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.DeleteSwcAttachmentSwcResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -4044,7 +4044,7 @@ func (D DBMSServerController) DeleteSwcAttachmentSwc(context context.Context, re
 	result := dal.DeleteAttachmentSwcData(request.GetSwcAttachmentUuid(), dal.GetDbInstance())
 	if result.Status {
 		swcMetaInfo := dbmodel.SwcMetaInfoV1{}
-		swcMetaInfo.Name = request.GetSwcName()
+		swcMetaInfo.Base.Uuid = request.GetSwcUuid()
 
 		result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 		if result.Status {
@@ -4100,7 +4100,7 @@ func (D DBMSServerController) UpdateSwcAttachmentSwc(context context.Context, re
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.UpdateSwcAttachmentSwcResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -4158,7 +4158,7 @@ func (D DBMSServerController) UpdateSwcAttachmentSwc(context context.Context, re
 	result := dal.UpdateAttachmentSwcData(querySwcMetaInfo.SwcAttachmentSwcUuid, &swcData, dal.GetDbInstance())
 	if result.Status {
 		swcMetaInfo := dbmodel.SwcMetaInfoV1{}
-		swcMetaInfo.Name = request.GetSwcName()
+		swcMetaInfo.Base.Uuid = request.GetSwcUuid()
 
 		result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 		if result.Status {
@@ -4214,7 +4214,7 @@ func (D DBMSServerController) GetSwcAttachmentSwc(context context.Context, reque
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.GetSwcAttachmentSwcResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
