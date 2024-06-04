@@ -1052,7 +1052,7 @@ func (D DBMSServerController) UpdateProject(ctx context.Context, request *reques
 	}
 
 	var queryProjectMetaInfo dbmodel.ProjectMetaInfoV1
-	queryProjectMetaInfo.Name = request.ProjectInfo.Name
+	queryProjectMetaInfo.Base.Uuid = request.GetProjectInfo().GetBase().GetUuid()
 	if result := dal.QueryProject(&queryProjectMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.UpdateProjectResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1087,7 +1087,7 @@ func (D DBMSServerController) UpdateProject(ctx context.Context, request *reques
 	}
 
 	projectMetaInfo := dbmodel.ProjectMetaInfoV1{}
-	projectMetaInfo.Name = request.GetProjectInfo().GetName()
+	projectMetaInfo.Base.Uuid = request.GetProjectInfo().GetBase().GetUuid()
 	result = dal.QueryProject(&projectMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.UpdateProjectResponse{
@@ -1350,7 +1350,7 @@ func (D DBMSServerController) CreateSwc(ctx context.Context, request *request.Cr
 			SwcInfo: SwcMetaInfoV1DbmodelToProtobuf(swcMetaInfo),
 		}, nil
 	}
-	log.Println("User " + request.UserVerifyInfo.GetUserName() + "Create Swc " + swcMetaInfo.Name)
+	log.Println("User " + request.UserVerifyInfo.GetUserName() + "Create Swc " + swcMetaInfo.Base.Uuid)
 	DailyStatisticsInfo.CreatedSwcNumber += 1
 	return &response.CreateSwcResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
@@ -1468,7 +1468,7 @@ func (D DBMSServerController) DeleteSwc(ctx context.Context, request *request.De
 		}, nil
 	}
 
-	log.Println("User " + request.UserVerifyInfo.GetUserName() + "Delete Swc " + swcMetaInfo.Name)
+	log.Println("User " + request.UserVerifyInfo.GetUserName() + "Delete Swc " + swcMetaInfo.Base.Uuid)
 	DailyStatisticsInfo.DeletedSwcNumber += 1
 	return &response.DeleteSwcResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
@@ -1509,7 +1509,7 @@ func (D DBMSServerController) UpdateSwc(ctx context.Context, request *request.Up
 	}
 
 	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
-	querySwcMetaInfo.Name = request.GetSwcInfo().GetName()
+	querySwcMetaInfo.Base.Uuid = request.GetSwcInfo().GetBase().GetUuid()
 	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
 		return &response.UpdateSwcResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -1544,7 +1544,7 @@ func (D DBMSServerController) UpdateSwc(ctx context.Context, request *request.Up
 	}
 
 	swcMetaInfo := dbmodel.SwcMetaInfoV1{}
-	swcMetaInfo.Name = request.GetSwcInfo().GetName()
+	swcMetaInfo.Base.Uuid = request.GetSwcInfo().GetBase().GetUuid()
 	result = dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance())
 	if !result.Status {
 		return &response.UpdateSwcResponse{
@@ -1570,7 +1570,7 @@ func (D DBMSServerController) UpdateSwc(ctx context.Context, request *request.Up
 			},
 		}, nil
 	}
-	log.Println("User " + request.UserVerifyInfo.GetUserName() + " Update SwcMetaInfo " + newSwcMetaInfo.Name)
+	log.Println("User " + request.UserVerifyInfo.GetUserName() + " Update SwcMetaInfo " + newSwcMetaInfo.Base.Uuid)
 	DailyStatisticsInfo.ModifiedSwcNumber += 1
 	return &response.UpdateSwcResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
@@ -1647,7 +1647,7 @@ func (D DBMSServerController) GetSwcMetaInfo(ctx context.Context, request *reque
 		}, nil
 	}
 
-	log.Println("User " + request.UserVerifyInfo.GetUserName() + " Query SwcMetaInfo " + swcMetaInfo.Name)
+	log.Println("User " + request.UserVerifyInfo.GetUserName() + " Query SwcMetaInfo " + swcMetaInfo.Base.Uuid)
 	DailyStatisticsInfo.SwcQueryNumber += 1
 	return &response.GetSwcMetaInfoResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
@@ -2164,7 +2164,7 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 		}, nil
 	}
 
-	logger.GetLogger().Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Create Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Name)
+	logger.GetLogger().Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Create Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Base.Uuid)
 
 	result := dal.CreateSwcData(querySwcMetaInfo.Base.Uuid, &swcData, dal.GetDbInstance())
 	if !result.Status {
@@ -2176,7 +2176,7 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 			},
 		}, nil
 	}
-	log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Create Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Name)
+	log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Create Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Base.Uuid)
 	DailyStatisticsInfo.CreateSwcNodeNumber += 1
 
 	operationRecord := dbmodel.SwcIncrementOperationV1{}
@@ -2265,11 +2265,11 @@ func (D DBMSServerController) DeleteSwcNodeData(ctx context.Context, request *re
 		}, nil
 	}
 
-	logger.GetLogger().Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Delete Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Name)
+	logger.GetLogger().Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Delete Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Base.Uuid)
 
 	result := dal.DeleteSwcData(querySwcMetaInfo.Base.Uuid, swcData, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Delete Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Name)
+		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Delete Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Base.Uuid)
 		DailyStatisticsInfo.DeletedSwcNodeNumber += 1
 
 		operationRecord := dbmodel.SwcIncrementOperationV1{}
@@ -2373,11 +2373,11 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 		}, nil
 	}
 
-	logger.GetLogger().Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Update Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Name)
+	logger.GetLogger().Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Update Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Base.Uuid)
 
 	result := dal.ModifySwcData(querySwcMetaInfo.Base.Uuid, &swcData, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Update Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Name)
+		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Update Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Base.Uuid)
 		DailyStatisticsInfo.ModifiedSwcNodeNumber += 1
 
 		operationRecord := dbmodel.SwcIncrementOperationV1{}
@@ -2467,7 +2467,7 @@ func (D DBMSServerController) GetSwcNodeData(ctx context.Context, request *reque
 
 	result := dal.QuerySwcData(querySwcMetaInfo.Base.Uuid, &dbmodelMessage, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + request.UserVerifyInfo.GetUserName() + " Get SwcData " + querySwcMetaInfo.Name)
+		log.Println("User " + request.UserVerifyInfo.GetUserName() + " Get SwcData " + querySwcMetaInfo.Base.Uuid)
 
 		DailyStatisticsInfo.NodeQueryNumber += 1
 
@@ -2550,7 +2550,7 @@ func (D DBMSServerController) GetSwcFullNodeData(ctx context.Context, request *r
 
 	result := dal.QueryAllSwcData(querySwcMetaInfo.Base.Uuid, &dbmodelMessage, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + request.UserVerifyInfo.GetUserName() + " Get SwcFullNodeData " + querySwcMetaInfo.Name)
+		log.Println("User " + request.UserVerifyInfo.GetUserName() + " Get SwcFullNodeData " + querySwcMetaInfo.Base.Uuid)
 		DailyStatisticsInfo.NodeQueryNumber += 1
 		for _, swcNodeData := range dbmodelMessage {
 			protoMessage.SwcData = append(protoMessage.SwcData, SwcNodeDataV1DbmodelToProtobuf(&swcNodeData))
@@ -2658,7 +2658,7 @@ func (D DBMSServerController) GetSwcNodeDataListByTimeAndUser(ctx context.Contex
 
 	result = dal.QuerySwcDataByUserAndTime(querySwcMetaInfo.Base.Uuid, request.UserName, startTime, endTime, &dbmodelMessage, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + request.UserVerifyInfo.UserName + " Get SwcDataByUserAndTime " + querySwcMetaInfo.Name)
+		log.Println("User " + request.UserVerifyInfo.UserName + " Get SwcDataByUserAndTime " + querySwcMetaInfo.Base.Uuid)
 		DailyStatisticsInfo.NodeQueryNumber += 1
 
 		for _, swcNodeData := range dbmodelMessage {

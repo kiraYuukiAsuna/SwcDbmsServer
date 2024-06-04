@@ -88,7 +88,7 @@ func DeleteProject(projectMetaInfo dbmodel.ProjectMetaInfoV1, databaseInfo Mongo
 	var projectCollection = databaseInfo.MetaInfoDb.Collection(ProjectMetaInfoCollectionString)
 
 	result := projectCollection.FindOneAndDelete(context.TODO(), bson.D{
-		{"Name", projectMetaInfo.Name}})
+		{"uuid", projectMetaInfo.Base.Uuid}})
 
 	if result.Err() != nil {
 		return ReturnWrapper{false, result.Err().Error()}
@@ -413,7 +413,7 @@ func ModifySwc(swcMetaInfo dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseIn
 
 	result := swcCollection.FindOneAndReplace(
 		context.TODO(),
-		bson.D{{"Name", swcMetaInfo.Name}},
+		bson.D{{"uuid", swcMetaInfo.Base.Uuid}},
 		swcMetaInfo)
 
 	if result.Err() != nil {
