@@ -4470,3 +4470,81 @@ func (D DBMSServerController) UpdatePermissionGroup(context context.Context, req
 		},
 	}, nil
 }
+
+func (D DBMSServerController) GetProjectSwcNamesByProjectUuid(context context.Context, request *request.GetProjectSwcNamesByProjectUuidRequest) (*response.GetProjectSwcNamesByProjectUuidResponse, error) {
+	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
+	if !apiVersionVerifyResult.Status {
+		return &response.GetProjectSwcNamesByProjectUuidResponse{
+			MetaInfo: &apiVersionVerifyResult,
+		}, nil
+	}
+
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo())
+	if !responseMetaInfo.Status {
+		return &response.GetProjectSwcNamesByProjectUuidResponse{
+			MetaInfo: &responseMetaInfo,
+		}, nil
+	}
+
+	executorUserMetaInfo := dbmodel.UserMetaInfoV1{
+		Name: request.GetUserVerifyInfo().GetUserName(),
+	}
+	if result := dal.QueryUserByName(&executorUserMetaInfo, dal.GetDbInstance()); !result.Status {
+		return &response.GetProjectSwcNamesByProjectUuidResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
+	var queryProjectMetaInfo dbmodel.ProjectMetaInfoV1
+	queryProjectMetaInfo.Base.Uuid = request.GetProjectUuid()
+	if result := dal.QueryProject(&queryProjectMetaInfo, dal.GetDbInstance()); !result.Status {
+		return &response.GetProjectSwcNamesByProjectUuidResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
+	if !PermissionVerify(&executorUserMetaInfo, &queryProjectMetaInfo.Permission, "ReadPerimissionQueryProject") && !PermissionGroupVerify(&executorUserMetaInfo, "AllProjectManagementPermission") {
+		return &response.GetProjectSwcNamesByProjectUuidResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: "You don't have permission to access this project!",
+			},
+		}, nil
+	}
+
+	var swcUuidNames []*message.SwcUuidName
+	for _, value := range queryProjectMetaInfo.SwcList {
+		var swcInfo dbmodel.SwcMetaInfoV1
+		swcInfo.Base.Uuid = value
+		if result := dal.QuerySwc(&swcInfo, dal.GetDbInstance()); !result.Status {
+			return &response.GetProjectSwcNamesByProjectUuidResponse{
+				MetaInfo: &message.ResponseMetaInfoV1{
+					Status:  false,
+					Id:      "",
+					Message: result.Message,
+				},
+			}, nil
+		}
+		var swcUuidName message.SwcUuidName
+		swcUuidName.SwcUuid = swcInfo.Base.Uuid
+		swcUuidName.SwcName = swcInfo.Name
+		swcUuidNames = append(swcUuidNames, &swcUuidName)
+	}
+	return &response.GetProjectSwcNamesByProjectUuidResponse{
+		MetaInfo: &message.ResponseMetaInfoV1{
+			Status:  true,
+			Id:      "",
+			Message: "",
+		},
+		SwcUuidName: swcUuidNames,
+	}, nil
+}
