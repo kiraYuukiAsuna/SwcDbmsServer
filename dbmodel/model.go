@@ -150,6 +150,7 @@ type SwcMetaInfoV1 struct {
 	SwcAttachmentApoMetaInfo                SwcAttachmentApoMetaInfoV1        `bson:"SwcAttachmentApo"`
 	SwcAttachmentSwcUuid                    string                            `bson:"SwcAttachmentSwcUuid"`
 	Permission                              PermissionMetaInfoV1              `bson:"Permission"`
+	BelongingProjectUuid                    string                            `bson:"BelongingProjectUuid"`
 }
 
 type SwcNodeInternalDataV1 struct {
