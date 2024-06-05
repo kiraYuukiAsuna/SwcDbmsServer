@@ -9,6 +9,7 @@ import (
 	"DBMS/dbmodel"
 	"DBMS/logger"
 	"context"
+	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"reflect"
 	"strconv"
@@ -1113,6 +1114,43 @@ func (D DBMSServerController) UpdateProject(ctx context.Context, request *reques
 			},
 		}, nil
 	}
+
+	_, err := dal.GetDbInstance().MetaInfoDb.Collection(dal.SwcMetaInfoCollectionString).UpdateMany(context.TODO(), bson.M{"BelongingProjectUuid": newProjectMetaInfo.Base.Uuid}, bson.M{"$set": bson.M{"BelongingProjectUuid": ""}})
+	if err != nil {
+		return &response.UpdateProjectResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: err.Error(),
+			},
+		}, nil
+	}
+
+	for _, swcUuid := range newProjectMetaInfo.SwcList {
+		var swcMetaInfo dbmodel.SwcMetaInfoV1
+		swcMetaInfo.Base.Uuid = swcUuid
+		if result := dal.QuerySwc(&swcMetaInfo, dal.GetDbInstance()); !result.Status {
+			return &response.UpdateProjectResponse{
+				MetaInfo: &message.ResponseMetaInfoV1{
+					Status:  false,
+					Id:      "",
+					Message: result.Message,
+				},
+			}, nil
+		}
+		swcMetaInfo.BelongingProjectUuid = newProjectMetaInfo.Base.Uuid
+		if result := dal.ModifySwc(swcMetaInfo, dal.GetDbInstance()); !result.Status {
+			return &response.UpdateProjectResponse{
+				MetaInfo: &message.ResponseMetaInfoV1{
+					Status:  false,
+					Id:      "",
+					Message: result.Message,
+				},
+			}, nil
+
+		}
+	}
+
 	log.Println("Project " + newProjectMetaInfo.Name + " Updated")
 	DailyStatisticsInfo.ModifiedProjectNumber += 1
 	return &response.UpdateProjectResponse{
@@ -1350,6 +1388,34 @@ func (D DBMSServerController) CreateSwc(ctx context.Context, request *request.Cr
 			SwcInfo: SwcMetaInfoV1DbmodelToProtobuf(swcMetaInfo),
 		}, nil
 	}
+
+	var project dbmodel.ProjectMetaInfoV1
+	project.Base.Uuid = request.SwcInfo.BelongingProjectUuid
+	if result := dal.QueryProject(&project, dal.GetDbInstance()); result.Status {
+		project.SwcList = append(project.SwcList, swcMetaInfo.Base.Uuid)
+		if result := dal.ModifyProject(project, dal.GetDbInstance()); result.Status {
+			log.Println("Swc " + swcMetaInfo.Base.Uuid + " Created in Project " + project.Name)
+		} else {
+			return &response.CreateSwcResponse{
+				MetaInfo: &message.ResponseMetaInfoV1{
+					Status:  false,
+					Id:      "",
+					Message: result.Message,
+				},
+				SwcInfo: SwcMetaInfoV1DbmodelToProtobuf(swcMetaInfo),
+			}, nil
+		}
+	} else {
+		return &response.CreateSwcResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+			SwcInfo: SwcMetaInfoV1DbmodelToProtobuf(swcMetaInfo),
+		}, nil
+	}
+
 	log.Println("User " + request.UserVerifyInfo.GetUserName() + "Create Swc " + swcMetaInfo.Base.Uuid)
 	DailyStatisticsInfo.CreatedSwcNumber += 1
 	return &response.CreateSwcResponse{
