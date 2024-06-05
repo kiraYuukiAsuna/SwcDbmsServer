@@ -1534,6 +1534,18 @@ func (D DBMSServerController) DeleteSwc(ctx context.Context, request *request.De
 		}, nil
 	}
 
+	_, err := dal.GetDbInstance().MetaInfoDb.Collection(dal.ProjectMetaInfoCollectionString).UpdateMany(context.TODO(), bson.M{"SwcList": swcMetaInfo.Base.Uuid}, bson.M{"$pull": bson.M{"SwcList": swcMetaInfo.Base.Uuid}})
+	if err != nil {
+		return &response.DeleteSwcResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: err.Error(),
+			},
+			SwcInfo: SwcMetaInfoV1DbmodelToProtobuf(&swcMetaInfo),
+		}, nil
+	}
+
 	log.Println("User " + request.UserVerifyInfo.GetUserName() + "Delete Swc " + swcMetaInfo.Base.Uuid)
 	DailyStatisticsInfo.DeletedSwcNumber += 1
 	return &response.DeleteSwcResponse{
