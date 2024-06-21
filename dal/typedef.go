@@ -75,8 +75,10 @@ const (
 )
 
 const (
-	IncrementOp_Unknown string = "Unknown"
-	IncrementOp_Create  string = "Create"
-	IncrementOp_Delete  string = "Delete"
-	IncrementOp_Update  string = "Update"
+	IncrementOp_Unknown       string = "Unknown"
+	IncrementOp_Create        string = "Create"
+	IncrementOp_Delete        string = "Delete"
+	IncrementOp_Update        string = "Update"
+	IncrementOp_UpdateNParent string = "UpdateNParent"
+	IncrementOp_ClearAll      string = "ClearAll"
 )

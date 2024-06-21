@@ -4626,3 +4626,175 @@ func (D DBMSServerController) GetProjectSwcNamesByProjectUuid(context context.Co
 		SwcUuidName: swcUuidNames,
 	}, nil
 }
+
+func (D DBMSServerController) UpdateSwcNParentInfo(context context.Context, request *request.UpdateSwcNParentInfoRequest) (*response.UpdateSwcNParentInfoResponse, error) {
+	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
+	if !apiVersionVerifyResult.Status {
+		return &response.UpdateSwcNParentInfoResponse{
+			MetaInfo: &apiVersionVerifyResult,
+		}, nil
+	}
+
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo())
+	if !responseMetaInfo.Status {
+		return &response.UpdateSwcNParentInfoResponse{
+			MetaInfo: &responseMetaInfo,
+		}, nil
+	}
+
+	executorUserMetaInfo := dbmodel.UserMetaInfoV1{
+		Name: request.GetUserVerifyInfo().GetUserName(),
+	}
+	if result := dal.QueryUserByName(&executorUserMetaInfo, dal.GetDbInstance()); !result.Status {
+		return &response.UpdateSwcNParentInfoResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
+	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
+	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
+		return &response.UpdateSwcNParentInfoResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
+	if !PermissionVerify(&executorUserMetaInfo, &querySwcMetaInfo.Permission, "WritePermissionAddSwcData") && !PermissionGroupVerify(&executorUserMetaInfo, "AllSwcManagementPermission") {
+		return &response.UpdateSwcNParentInfoResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: "You don't have permission to access this swc!",
+			},
+		}, nil
+	}
+
+	var nodeNParent []dbmodel.NodeNParentV1
+	if request.GetNodeNParentVec() != nil {
+		for _, node := range request.GetNodeNParentVec() {
+			var nodeNP dbmodel.NodeNParentV1
+			nodeNP.Uuid = node.NodeUuid
+			nodeNP.N = node.N
+			nodeNP.Parent = node.Parent
+
+			nodeNParent = append(nodeNParent, nodeNP)
+		}
+	}
+
+	var result, updateCount, noUpdateCount, incomingNotExistCount, dbNotExistCount, _, _, _ = dal.UpdateSwcNParent(request.GetSwcUuid(), &nodeNParent, dal.GetDbInstance())
+
+	if !result.Status {
+		return &response.UpdateSwcNParentInfoResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
+	operationRecord := dbmodel.SwcIncrementOperationV1{}
+	operationRecord.Base.Id = primitive.NewObjectID()
+	operationRecord.Base.Uuid = uuid.NewString()
+	operationRecord.Base.DataAccessModelVersion = "V1"
+	operationRecord.IncrementOperation = dal.IncrementOp_UpdateNParent
+	operationRecord.NodeNParentV1 = nodeNParent
+	dal.CreateIncrementOperation(querySwcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
+
+	return &response.UpdateSwcNParentInfoResponse{
+		MetaInfo: &message.ResponseMetaInfoV1{
+			Status:  true,
+			Id:      "",
+			Message: "Update Swc NParent Info Successfully!",
+		},
+		UpdateNumber:        int32(updateCount),
+		SameNumber:          int32(noUpdateCount),
+		DiffIncomingMissing: int32(incomingNotExistCount),
+		DiffDBMissing:       int32(dbNotExistCount),
+	}, nil
+}
+
+func (D DBMSServerController) ClearAllNodes(context context.Context, request *request.ClearAllNodesRequest) (*response.ClearAllNodesResponse, error) {
+	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
+	if !apiVersionVerifyResult.Status {
+		return &response.ClearAllNodesResponse{
+			MetaInfo: &apiVersionVerifyResult,
+		}, nil
+	}
+
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo())
+	if !responseMetaInfo.Status {
+		return &response.ClearAllNodesResponse{
+			MetaInfo: &responseMetaInfo,
+		}, nil
+	}
+
+	executorUserMetaInfo := dbmodel.UserMetaInfoV1{
+		Name: request.GetUserVerifyInfo().GetUserName(),
+	}
+	if result := dal.QueryUserByName(&executorUserMetaInfo, dal.GetDbInstance()); !result.Status {
+		return &response.ClearAllNodesResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
+	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
+	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
+		return &response.ClearAllNodesResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
+	if !PermissionVerify(&executorUserMetaInfo, &querySwcMetaInfo.Permission, "WritePermissionAddSwcData") && !PermissionGroupVerify(&executorUserMetaInfo, "AllSwcManagementPermission") {
+		return &response.ClearAllNodesResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: "You don't have permission to access this swc!",
+			},
+		}, nil
+	}
+
+	var result = dal.ClearAllNode(request.GetSwcUuid(), dal.GetDbInstance())
+	if result.Status {
+		return &response.ClearAllNodesResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
+	operationRecord := dbmodel.SwcIncrementOperationV1{}
+	operationRecord.Base.Id = primitive.NewObjectID()
+	operationRecord.Base.Uuid = uuid.NewString()
+	operationRecord.Base.DataAccessModelVersion = "V1"
+	operationRecord.IncrementOperation = dal.IncrementOp_ClearAll
+	dal.CreateIncrementOperation(querySwcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
+
+	return &response.ClearAllNodesResponse{
+		MetaInfo: &message.ResponseMetaInfoV1{
+			Status:  true,
+			Id:      "",
+			Message: "Clear All Nodes Successfully!",
+		},
+	}, nil
+}

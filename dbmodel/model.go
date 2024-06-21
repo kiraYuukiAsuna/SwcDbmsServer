@@ -126,11 +126,18 @@ type SwcIncrementOperationMetaInfoV1 struct {
 	IncrementOperationCollectionName string       `bson:"IncrementOperationCollectionName"`
 }
 
+type NodeNParentV1 struct {
+	Uuid   string `bson:"uuid"`
+	N      int32  `bson:"n"`
+	Parent int32  `bson:"parent"`
+}
+
 type SwcIncrementOperationV1 struct {
-	Base               MetaInfoBase `bson:"Base,inline"`
-	CreateTime         time.Time    `bson:"CreateTime"`
-	IncrementOperation string       `bson:"IncrementOperation"`
-	SwcData            SwcDataV1    `bson:"SwcNodeData"`
+	Base               MetaInfoBase    `bson:"Base,inline"`
+	CreateTime         time.Time       `bson:"CreateTime"`
+	IncrementOperation string          `bson:"IncrementOperation"`
+	SwcData            SwcDataV1       `bson:"SwcNodeData"`
+	NodeNParentV1      []NodeNParentV1 `bson:"NodeNParent"`
 }
 
 type SwcIncrementOperationListV1 = []SwcIncrementOperationV1

@@ -5,6 +5,7 @@ import (
 	"DBMS/logger"
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"strconv"
 	"sync"
@@ -1166,6 +1167,8 @@ func RevertSwcNodeData(swcUuid string, swcSnapshotCollectionName string, increme
 			DeleteSwcData(swcUuid, operation.SwcData, GetDbInstance())
 		case IncrementOp_Update:
 			ModifySwcData(swcUuid, &operation.SwcData, GetDbInstance())
+		case IncrementOp_UpdateNParent: //TODO
+		case IncrementOp_ClearAll: //TODO
 		}
 	}
 
@@ -1281,4 +1284,83 @@ func QueryAttachmentSwcData(attachmentCollectionName string, swcData *dbmodel.Sw
 	log.Println("Query ", len(*swcData), " node at ", attachmentCollectionName)
 
 	return ReturnWrapper{true, "Query Swc Attachment Success"}
+}
+
+func UpdateSwcNParent(swcUuid string, nodeNParent *[]dbmodel.NodeNParentV1, databaseInfo MongoDbDataBaseInfo) (ReturnWrapper, int, int, int, int, []string, []string, []string) {
+	// Get the collection for the given swcUuid
+	collection := databaseInfo.SwcDb.Collection(swcUuid)
+
+	// Get all nodes in the collection
+	cursor, err := collection.Find(context.TODO(), bson.D{})
+	if err != nil {
+		return ReturnWrapper{false, "Failed to retrieve nodes: " + err.Error()}, 0, 0, 0, 0, nil, nil, nil
+	}
+
+	var nodesInDb []dbmodel.SwcNodeDataV1
+	if err = cursor.All(context.TODO(), &nodesInDb); err != nil {
+		return ReturnWrapper{false, "Failed to retrieve nodes: " + err.Error()}, 0, 0, 0, 0, nil, nil, nil
+	}
+
+	// Create a map for quick lookup of nodes in the database
+	nodeMap := make(map[string]dbmodel.SwcNodeDataV1)
+	for _, node := range nodesInDb {
+		nodeMap[node.Base.Uuid] = node
+	}
+
+	var updateCount, noUpdateCount, incomingNotExistCount, dbNotExistCount int
+	var updateNodes, notExistNodes, dbNotExistNodes []string
+
+	// Iterate over the nodes in the input data
+	for _, node := range *nodeNParent {
+		dbNode, exists := nodeMap[node.Uuid]
+
+		// If the node exists in the database
+		if exists {
+			// If the N or Parent values do not match
+			if dbNode.SwcNodeInternalData.N != node.N || dbNode.SwcNodeInternalData.Parent != node.Parent {
+				// Update the node in the database
+				_, err := collection.UpdateOne(
+					context.TODO(),
+					bson.M{"uuid": node.Uuid},
+					bson.D{
+						{"$set", bson.D{
+							{"n", node.N},
+							{"parent", node.Parent},
+						}},
+					},
+				)
+				if err != nil {
+					return ReturnWrapper{false, "Failed to update node: " + err.Error()}, 0, 0, 0, 0, nil, nil, nil
+				}
+				updateCount++
+				updateNodes = append(updateNodes, node.Uuid)
+			} else {
+				noUpdateCount++
+			}
+			// Remove the node from the map
+			delete(nodeMap, node.Uuid)
+		} else {
+			incomingNotExistCount++
+			notExistNodes = append(notExistNodes, node.Uuid)
+		}
+	}
+
+	// Now, nodeMap only contains nodes that exist in the database but not in the input data
+	for uuid := range nodeMap {
+		dbNotExistCount++
+		dbNotExistNodes = append(dbNotExistNodes, uuid)
+	}
+
+	return ReturnWrapper{true, fmt.Sprintf("Update completed. Updated: %d, Not Updated: %d, Incoming Not Exist: %d, DB Not Exist: %d.",
+		updateCount, noUpdateCount, incomingNotExistCount, dbNotExistCount)}, updateCount, noUpdateCount, incomingNotExistCount, dbNotExistCount, updateNodes, notExistNodes, dbNotExistNodes
+}
+
+func ClearAllNode(swcUuid string, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	// Get the collection for the given swcUuid
+	collection := databaseInfo.SwcDb.Collection(swcUuid)
+	err := collection.Drop(context.Background())
+	if err != nil {
+		return ReturnWrapper{false, err.Error()}
+	}
+	return ReturnWrapper{true, err.Error()}
 }

@@ -640,12 +640,26 @@ func SwcIncrementOperationV1MetaInfoV1ProtobufToDbmodel(protoMessage *message.Sw
 	dbmodelMessage.IncrementOperation = protoMessage.IncrementOperation.String()
 
 	var dbSwcData dbmodel.SwcDataV1
+	var dbNParent []dbmodel.NodeNParentV1
 
-	for _, swcNodeData := range protoMessage.GetSwcData().GetSwcData() {
-		dbSwcData = append(dbSwcData, *SwcNodeDataV1ProtobufToDbmodel(swcNodeData))
+	if protoMessage.GetSwcData() != nil {
+		for _, swcNodeData := range protoMessage.GetSwcData().GetSwcData() {
+			dbSwcData = append(dbSwcData, *SwcNodeDataV1ProtobufToDbmodel(swcNodeData))
+		}
+	}
+
+	if protoMessage.GetNodeNParent() != nil {
+		for _, nodeNParent := range protoMessage.GetNodeNParent() {
+			var dbNParentItem dbmodel.NodeNParentV1
+			dbNParentItem.Uuid = nodeNParent.NodeUuid
+			dbNParentItem.N = nodeNParent.N
+			dbNParentItem.Parent = nodeNParent.Parent
+			dbNParent = append(dbNParent, dbNParentItem)
+		}
 	}
 
 	dbmodelMessage.SwcData = dbSwcData
+	dbmodelMessage.NodeNParentV1 = dbNParent
 
 	return &dbmodelMessage
 }
@@ -659,13 +673,26 @@ func SwcIncrementOperationListV1DbmodelToProtobuf(dbmodelMessage *dbmodel.SwcInc
 	protoMessage.CreateTime = timestamppb.New(dbmodelMessage.CreateTime)
 	protoMessage.IncrementOperation = message.IncrementOperationV1(message.IncrementOperationV1_value[dbmodelMessage.IncrementOperation])
 
-	var pbSwcData message.SwcDataV1
-
-	for _, swcNodeData := range dbmodelMessage.SwcData {
-		pbSwcData.SwcData = append(pbSwcData.SwcData, SwcNodeDataV1DbmodelToProtobuf(&swcNodeData))
+	if dbmodelMessage.SwcData != nil {
+		var pbSwcData message.SwcDataV1
+		for _, swcNodeData := range dbmodelMessage.SwcData {
+			pbSwcData.SwcData = append(pbSwcData.SwcData, SwcNodeDataV1DbmodelToProtobuf(&swcNodeData))
+		}
+		protoMessage.SwcData = &pbSwcData
 	}
 
-	protoMessage.SwcData = &pbSwcData
+	if dbmodelMessage.NodeNParentV1 != nil {
+		var pbNodeNParentData []*message.NodeNParentV1
+		for _, nodeNParent := range dbmodelMessage.NodeNParentV1 {
+			var msgNodeNParent message.NodeNParentV1
+			msgNodeNParent.NodeUuid = nodeNParent.Uuid
+			msgNodeNParent.N = nodeNParent.N
+			msgNodeNParent.Parent = nodeNParent.Parent
+
+			pbNodeNParentData = append(pbNodeNParentData, &msgNodeNParent)
+		}
+		protoMessage.NodeNParent = pbNodeNParentData
+	}
 
 	return &protoMessage
 }
