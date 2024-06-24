@@ -4798,3 +4798,136 @@ func (D DBMSServerController) ClearAllNodes(context context.Context, request *re
 		},
 	}, nil
 }
+
+func (D DBMSServerController) OverwriteSwcNodeData(context context.Context, request *request.OverwriteSwcNodeDataRequest) (*response.OverwriteSwcNodeDataResponse, error) {
+	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
+	if !apiVersionVerifyResult.Status {
+		return &response.OverwriteSwcNodeDataResponse{
+			MetaInfo: &apiVersionVerifyResult,
+		}, nil
+	}
+
+	responseMetaInfo, onlineUserInfoCache := UserTokenVerify(request.GetUserVerifyInfo())
+	if !responseMetaInfo.Status {
+		return &response.OverwriteSwcNodeDataResponse{
+			MetaInfo: &responseMetaInfo,
+		}, nil
+	}
+
+	executorUserMetaInfo := dbmodel.UserMetaInfoV1{
+		Name: request.GetUserVerifyInfo().GetUserName(),
+	}
+	if result := dal.QueryUserByName(&executorUserMetaInfo, dal.GetDbInstance()); !result.Status {
+		return &response.OverwriteSwcNodeDataResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
+	var querySwcMetaInfo dbmodel.SwcMetaInfoV1
+	querySwcMetaInfo.Base.Uuid = request.GetSwcUuid()
+	if result := dal.QuerySwc(&querySwcMetaInfo, dal.GetDbInstance()); !result.Status {
+		return &response.OverwriteSwcNodeDataResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
+	if !PermissionVerify(&executorUserMetaInfo, &querySwcMetaInfo.Permission, "WritePermissionAddSwcData") && !PermissionGroupVerify(&executorUserMetaInfo, "AllSwcManagementPermission") {
+		return &response.OverwriteSwcNodeDataResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: "You don't have permission to access this swc!",
+			},
+		}, nil
+	}
+
+	var result = dal.ClearAllNode(request.GetSwcUuid(), dal.GetDbInstance())
+	if result.Status {
+		return &response.OverwriteSwcNodeDataResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
+	operationRecord := dbmodel.SwcIncrementOperationV1{}
+	operationRecord.Base.Id = primitive.NewObjectID()
+	operationRecord.Base.Uuid = uuid.NewString()
+	operationRecord.Base.DataAccessModelVersion = "V1"
+	operationRecord.IncrementOperation = dal.IncrementOp_ClearAll
+	dal.CreateIncrementOperation(querySwcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
+
+	var swcData dbmodel.SwcDataV1
+	for _, swcNodeData := range request.SwcData.SwcData {
+		swcData = append(swcData, *SwcNodeDataV1ProtobufToDbmodel(swcNodeData))
+	}
+
+	createTime := time.Now()
+
+	var nodesUuid []string
+
+	for idx := range swcData {
+		swcData[idx].Creator = executorUserMetaInfo.Name
+		swcData[idx].Base.Id = primitive.NewObjectID()
+		newUuid := uuid.NewString()
+		nodesUuid = append(nodesUuid, newUuid)
+		swcData[idx].Base.Uuid = newUuid
+		swcData[idx].Base.DataAccessModelVersion = "V1"
+		swcData[idx].CreateTime = createTime
+		swcData[idx].LastModifiedTime = createTime
+		swcData[idx].CheckerUserUuid = ""
+	}
+
+	if len(swcData) == 0 {
+		return &response.OverwriteSwcNodeDataResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  true,
+				Id:      "",
+				Message: "Empty Swc Data",
+			},
+			CreatedNodesUuid: nodesUuid,
+		}, nil
+	}
+
+	log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Overwrite swc data " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Base.Uuid)
+
+	result = dal.CreateSwcData(request.GetSwcUuid(), &swcData, dal.GetDbInstance())
+	if !result.Status {
+		return &response.OverwriteSwcNodeDataResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+			CreatedNodesUuid: nodesUuid,
+		}, nil
+	}
+
+	operationRecord = dbmodel.SwcIncrementOperationV1{}
+	operationRecord.Base.Id = primitive.NewObjectID()
+	operationRecord.Base.Uuid = uuid.NewString()
+	operationRecord.Base.DataAccessModelVersion = "V1"
+	operationRecord.IncrementOperation = dal.IncrementOp_OverwriteAll
+	operationRecord.SwcData = swcData
+	operationRecord.CreateTime = createTime
+	dal.CreateIncrementOperation(querySwcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
+
+	return &response.OverwriteSwcNodeDataResponse{
+		MetaInfo: &message.ResponseMetaInfoV1{
+			Status:  true,
+			Id:      "",
+			Message: "Overwrite Swc Node Data Successfully!",
+		},
+		CreatedNodesUuid: nodesUuid,
+	}, nil
+}

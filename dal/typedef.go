@@ -81,4 +81,5 @@ const (
 	IncrementOp_Update        string = "Update"
 	IncrementOp_UpdateNParent string = "UpdateNParent"
 	IncrementOp_ClearAll      string = "ClearAll"
+	IncrementOp_OverwriteAll  string = "OverwriteAll"
 )
