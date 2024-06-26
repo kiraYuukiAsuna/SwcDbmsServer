@@ -1389,12 +1389,23 @@ func (D DBMSServerController) CreateSwc(ctx context.Context, request *request.Cr
 		}, nil
 	}
 
-	var project dbmodel.ProjectMetaInfoV1
-	project.Base.Uuid = request.SwcInfo.BelongingProjectUuid
-	if result := dal.QueryProject(&project, dal.GetDbInstance()); result.Status {
-		project.SwcList = append(project.SwcList, swcMetaInfo.Base.Uuid)
-		if result := dal.ModifyProject(project, dal.GetDbInstance()); result.Status {
-			log.Println("Swc " + swcMetaInfo.Base.Uuid + " Created in Project " + project.Name)
+	if request.SwcInfo.BelongingProjectUuid != "" {
+		var project dbmodel.ProjectMetaInfoV1
+		project.Base.Uuid = request.SwcInfo.BelongingProjectUuid
+		if result := dal.QueryProject(&project, dal.GetDbInstance()); result.Status {
+			project.SwcList = append(project.SwcList, swcMetaInfo.Base.Uuid)
+			if result := dal.ModifyProject(project, dal.GetDbInstance()); result.Status {
+				log.Println("Swc " + swcMetaInfo.Base.Uuid + " Created in Project " + project.Name)
+			} else {
+				return &response.CreateSwcResponse{
+					MetaInfo: &message.ResponseMetaInfoV1{
+						Status:  false,
+						Id:      "",
+						Message: result.Message,
+					},
+					SwcInfo: SwcMetaInfoV1DbmodelToProtobuf(swcMetaInfo),
+				}, nil
+			}
 		} else {
 			return &response.CreateSwcResponse{
 				MetaInfo: &message.ResponseMetaInfoV1{
@@ -1405,15 +1416,40 @@ func (D DBMSServerController) CreateSwc(ctx context.Context, request *request.Cr
 				SwcInfo: SwcMetaInfoV1DbmodelToProtobuf(swcMetaInfo),
 			}, nil
 		}
+	}
+
+	timePoint := time.Now()
+	year, mouth, day := timePoint.Date()
+	hour, minute, second := timePoint.Clock()
+	_ = strconv.Itoa(year) + "-" + mouth.String() + "-" + strconv.Itoa(day-1) + "_" + strconv.Itoa(hour) + ":" + strconv.Itoa(minute) + "-" + strconv.Itoa(second)
+
+	createTime := time.Now()
+	var swcSnapshotMetaInfo dbmodel.SwcSnapshotMetaInfoV1
+	swcSnapshotMetaInfo.Base.Id = primitive.NewObjectID()
+	swcSnapshotMetaInfo.Base.Uuid = uuid.NewString()
+	swcSnapshotMetaInfo.Base.DataAccessModelVersion = "V1"
+	swcSnapshotMetaInfo.CreateTime = createTime
+	swcSnapshotMetaInfo.Creator = request.GetUserVerifyInfo().GetUserName()
+	swcSnapshotMetaInfo.SwcSnapshotCollectionName = "Snapshot_" + uuid.NewString()
+	swcMetaInfo.SwcSnapshotList = append(swcMetaInfo.SwcSnapshotList, swcSnapshotMetaInfo)
+
+	var swcIncrementOperationMetaInfo dbmodel.SwcIncrementOperationMetaInfoV1
+	swcIncrementOperationMetaInfo.Base.Id = primitive.NewObjectID()
+	swcIncrementOperationMetaInfo.Base.Uuid = uuid.NewString()
+	swcIncrementOperationMetaInfo.Base.DataAccessModelVersion = "V1"
+	swcIncrementOperationMetaInfo.CreateTime = createTime
+	swcIncrementOperationMetaInfo.StartSnapshot = swcSnapshotMetaInfo.SwcSnapshotCollectionName
+	swcIncrementOperationMetaInfo.IncrementOperationCollectionName = "IncrementOperation_" + uuid.NewString()
+	swcMetaInfo.SwcIncrementOperationList = append(swcMetaInfo.SwcIncrementOperationList, swcIncrementOperationMetaInfo)
+
+	swcMetaInfo.CurrentIncrementOperationCollectionName = swcIncrementOperationMetaInfo.IncrementOperationCollectionName
+
+	resultvs := dal.CreateSnapshot(swcMetaInfo.Base.Uuid, swcSnapshotMetaInfo.SwcSnapshotCollectionName, dal.GetDbInstance())
+	resultms := dal.ModifySwc(*swcMetaInfo, dal.GetDbInstance())
+	if resultvs.Status && resultms.Status {
+		log.Println("Version Control Enabled Successfully for Swc " + swcMetaInfo.Base.Uuid)
 	} else {
-		return &response.CreateSwcResponse{
-			MetaInfo: &message.ResponseMetaInfoV1{
-				Status:  false,
-				Id:      "",
-				Message: result.Message,
-			},
-			SwcInfo: SwcMetaInfoV1DbmodelToProtobuf(swcMetaInfo),
-		}, nil
+		log.Println("Version Control Enabled Failed for Swc " + swcMetaInfo.Base.Uuid)
 	}
 
 	log.Println("User " + request.UserVerifyInfo.GetUserName() + "Create Swc " + swcMetaInfo.Base.Uuid)
@@ -4701,13 +4737,17 @@ func (D DBMSServerController) UpdateSwcNParentInfo(context context.Context, requ
 		}, nil
 	}
 
-	operationRecord := dbmodel.SwcIncrementOperationV1{}
-	operationRecord.Base.Id = primitive.NewObjectID()
-	operationRecord.Base.Uuid = uuid.NewString()
-	operationRecord.Base.DataAccessModelVersion = "V1"
-	operationRecord.IncrementOperation = dal.IncrementOp_UpdateNParent
-	operationRecord.NodeNParentV1 = nodeNParent
-	dal.CreateIncrementOperation(querySwcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
+	if querySwcMetaInfo.CurrentIncrementOperationCollectionName != "" {
+		operationRecord := dbmodel.SwcIncrementOperationV1{}
+		operationRecord.Base.Id = primitive.NewObjectID()
+		operationRecord.Base.Uuid = uuid.NewString()
+		operationRecord.Base.DataAccessModelVersion = "V1"
+		operationRecord.IncrementOperation = dal.IncrementOp_UpdateNParent
+		operationRecord.NodeNParent = nodeNParent
+		operationRecord.CreateTime = time.Now()
+		dal.CreateIncrementOperation(querySwcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
+	}
+	log.Println("Update Swc NParent Info Successfully! ", "Swc Uuid: ", querySwcMetaInfo.Base.Uuid, "Update Number: ", updateCount, " Same Number: ", noUpdateCount, " Diff Incoming Missing: ", incomingNotExistCount, " Diff DB Missing: ", dbNotExistCount)
 
 	return &response.UpdateSwcNParentInfoResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
@@ -4773,7 +4813,7 @@ func (D DBMSServerController) ClearAllNodes(context context.Context, request *re
 	}
 
 	var result = dal.ClearAllNode(request.GetSwcUuid(), dal.GetDbInstance())
-	if result.Status {
+	if !result.Status {
 		return &response.ClearAllNodesResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  false,
@@ -4783,12 +4823,16 @@ func (D DBMSServerController) ClearAllNodes(context context.Context, request *re
 		}, nil
 	}
 
-	operationRecord := dbmodel.SwcIncrementOperationV1{}
-	operationRecord.Base.Id = primitive.NewObjectID()
-	operationRecord.Base.Uuid = uuid.NewString()
-	operationRecord.Base.DataAccessModelVersion = "V1"
-	operationRecord.IncrementOperation = dal.IncrementOp_ClearAll
-	dal.CreateIncrementOperation(querySwcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
+	if querySwcMetaInfo.CurrentIncrementOperationCollectionName != "" {
+		operationRecord := dbmodel.SwcIncrementOperationV1{}
+		operationRecord.Base.Id = primitive.NewObjectID()
+		operationRecord.Base.Uuid = uuid.NewString()
+		operationRecord.Base.DataAccessModelVersion = "V1"
+		operationRecord.IncrementOperation = dal.IncrementOp_ClearAll
+		operationRecord.CreateTime = time.Now()
+		dal.CreateIncrementOperation(querySwcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
+	}
+	log.Println("User " + executorUserMetaInfo.Name + " Clear All Nodes at " + querySwcMetaInfo.Base.Uuid)
 
 	return &response.ClearAllNodesResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
@@ -4860,12 +4904,15 @@ func (D DBMSServerController) OverwriteSwcNodeData(context context.Context, requ
 		}, nil
 	}
 
-	operationRecord := dbmodel.SwcIncrementOperationV1{}
-	operationRecord.Base.Id = primitive.NewObjectID()
-	operationRecord.Base.Uuid = uuid.NewString()
-	operationRecord.Base.DataAccessModelVersion = "V1"
-	operationRecord.IncrementOperation = dal.IncrementOp_ClearAll
-	dal.CreateIncrementOperation(querySwcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
+	if querySwcMetaInfo.CurrentIncrementOperationCollectionName != "" {
+		operationRecord := dbmodel.SwcIncrementOperationV1{}
+		operationRecord.Base.Id = primitive.NewObjectID()
+		operationRecord.Base.Uuid = uuid.NewString()
+		operationRecord.Base.DataAccessModelVersion = "V1"
+		operationRecord.IncrementOperation = dal.IncrementOp_ClearAll
+		operationRecord.CreateTime = time.Now()
+		dal.CreateIncrementOperation(querySwcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
+	}
 
 	var swcData dbmodel.SwcDataV1
 	for _, swcNodeData := range request.SwcData.SwcData {
@@ -4913,14 +4960,16 @@ func (D DBMSServerController) OverwriteSwcNodeData(context context.Context, requ
 		}, nil
 	}
 
-	operationRecord = dbmodel.SwcIncrementOperationV1{}
-	operationRecord.Base.Id = primitive.NewObjectID()
-	operationRecord.Base.Uuid = uuid.NewString()
-	operationRecord.Base.DataAccessModelVersion = "V1"
-	operationRecord.IncrementOperation = dal.IncrementOp_OverwriteAll
-	operationRecord.SwcData = swcData
-	operationRecord.CreateTime = createTime
-	dal.CreateIncrementOperation(querySwcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
+	if querySwcMetaInfo.CurrentIncrementOperationCollectionName != "" {
+		operationRecord := dbmodel.SwcIncrementOperationV1{}
+		operationRecord.Base.Id = primitive.NewObjectID()
+		operationRecord.Base.Uuid = uuid.NewString()
+		operationRecord.Base.DataAccessModelVersion = "V1"
+		operationRecord.IncrementOperation = dal.IncrementOp_OverwriteAll
+		operationRecord.SwcData = swcData
+		operationRecord.CreateTime = createTime
+		dal.CreateIncrementOperation(querySwcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
+	}
 
 	var swcSnapshotMetaInfo dbmodel.SwcSnapshotMetaInfoV1
 	swcSnapshotMetaInfo.Base.Id = primitive.NewObjectID()

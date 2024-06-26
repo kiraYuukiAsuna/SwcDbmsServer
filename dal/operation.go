@@ -1167,8 +1167,12 @@ func RevertSwcNodeData(swcUuid string, swcSnapshotCollectionName string, increme
 			DeleteSwcData(swcUuid, operation.SwcData, GetDbInstance())
 		case IncrementOp_Update:
 			ModifySwcData(swcUuid, &operation.SwcData, GetDbInstance())
-		case IncrementOp_UpdateNParent: //TODO
-		case IncrementOp_ClearAll: //TODO
+		case IncrementOp_UpdateNParent:
+			UpdateSwcNParent(swcUuid, &operation.NodeNParent, GetDbInstance())
+		case IncrementOp_ClearAll:
+			ClearAllNode(swcUuid, GetDbInstance())
+		case IncrementOp_OverwriteAll:
+			CreateSwcData(swcUuid, &operation.SwcData, GetDbInstance())
 		}
 	}
 
@@ -1326,8 +1330,8 @@ func UpdateSwcNParent(swcUuid string, nodeNParent *[]dbmodel.NodeNParentV1, data
 				update.SetFilter(bson.M{"uuid": node.Uuid})
 				update.SetUpdate(bson.D{
 					{"$set", bson.D{
-						{"n", node.N},
-						{"parent", node.Parent},
+						{"SwcData.n", node.N},
+						{"SwcData.parent", node.Parent},
 					}},
 				})
 				writes = append(writes, update)

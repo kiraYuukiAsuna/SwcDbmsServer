@@ -659,7 +659,7 @@ func SwcIncrementOperationV1MetaInfoV1ProtobufToDbmodel(protoMessage *message.Sw
 	}
 
 	dbmodelMessage.SwcData = dbSwcData
-	dbmodelMessage.NodeNParentV1 = dbNParent
+	dbmodelMessage.NodeNParent = dbNParent
 
 	return &dbmodelMessage
 }
@@ -681,9 +681,9 @@ func SwcIncrementOperationListV1DbmodelToProtobuf(dbmodelMessage *dbmodel.SwcInc
 		protoMessage.SwcData = &pbSwcData
 	}
 
-	if dbmodelMessage.NodeNParentV1 != nil {
+	if dbmodelMessage.NodeNParent != nil {
 		var pbNodeNParentData []*message.NodeNParentV1
-		for _, nodeNParent := range dbmodelMessage.NodeNParentV1 {
+		for _, nodeNParent := range dbmodelMessage.NodeNParent {
 			var msgNodeNParent message.NodeNParentV1
 			msgNodeNParent.NodeUuid = nodeNParent.Uuid
 			msgNodeNParent.N = nodeNParent.N

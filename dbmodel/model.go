@@ -137,7 +137,7 @@ type SwcIncrementOperationV1 struct {
 	CreateTime         time.Time       `bson:"CreateTime"`
 	IncrementOperation string          `bson:"IncrementOperation"`
 	SwcData            SwcDataV1       `bson:"SwcNodeData"`
-	NodeNParentV1      []NodeNParentV1 `bson:"NodeNParent"`
+	NodeNParent        []NodeNParentV1 `bson:"NodeNParent"`
 }
 
 type SwcIncrementOperationListV1 = []SwcIncrementOperationV1
