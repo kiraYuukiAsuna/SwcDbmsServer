@@ -4922,6 +4922,38 @@ func (D DBMSServerController) OverwriteSwcNodeData(context context.Context, requ
 	operationRecord.CreateTime = createTime
 	dal.CreateIncrementOperation(querySwcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
 
+	var swcSnapshotMetaInfo dbmodel.SwcSnapshotMetaInfoV1
+	swcSnapshotMetaInfo.Base.Id = primitive.NewObjectID()
+	swcSnapshotMetaInfo.Base.Uuid = uuid.NewString()
+	swcSnapshotMetaInfo.Base.DataAccessModelVersion = "V1"
+	swcSnapshotMetaInfo.CreateTime = createTime
+	swcSnapshotMetaInfo.Creator = request.GetUserVerifyInfo().GetUserName()
+	swcSnapshotMetaInfo.SwcSnapshotCollectionName = "Snapshot_" + uuid.NewString()
+	querySwcMetaInfo.SwcSnapshotList = append(querySwcMetaInfo.SwcSnapshotList, swcSnapshotMetaInfo)
+
+	var swcIncrementOperationMetaInfo dbmodel.SwcIncrementOperationMetaInfoV1
+	swcIncrementOperationMetaInfo.Base.Id = primitive.NewObjectID()
+	swcIncrementOperationMetaInfo.Base.Uuid = uuid.NewString()
+	swcIncrementOperationMetaInfo.Base.DataAccessModelVersion = "V1"
+	swcIncrementOperationMetaInfo.CreateTime = createTime
+	swcIncrementOperationMetaInfo.StartSnapshot = swcSnapshotMetaInfo.SwcSnapshotCollectionName
+	swcIncrementOperationMetaInfo.IncrementOperationCollectionName = "IncrementOperation_" + uuid.NewString()
+	querySwcMetaInfo.SwcIncrementOperationList = append(querySwcMetaInfo.SwcIncrementOperationList, swcIncrementOperationMetaInfo)
+
+	querySwcMetaInfo.CurrentIncrementOperationCollectionName = swcIncrementOperationMetaInfo.IncrementOperationCollectionName
+
+	result = dal.CreateSnapshot(querySwcMetaInfo.Base.Uuid, swcSnapshotMetaInfo.SwcSnapshotCollectionName, dal.GetDbInstance())
+	if !result.Status {
+		return &response.OverwriteSwcNodeDataResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+			CreatedNodesUuid: nodesUuid,
+		}, nil
+	}
+
 	return &response.OverwriteSwcNodeDataResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
 			Status:  true,

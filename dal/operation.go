@@ -1290,15 +1290,18 @@ func UpdateSwcNParent(swcUuid string, nodeNParent *[]dbmodel.NodeNParentV1, data
 	// Get the collection for the given swcUuid
 	collection := databaseInfo.SwcDb.Collection(swcUuid)
 
+	var updateCount, noUpdateCount, incomingNotExistCount, dbNotExistCount int
+	var updateNodes, notExistNodes, dbNotExistNodes []string
+
 	// Get all nodes in the collection
 	cursor, err := collection.Find(context.TODO(), bson.D{})
 	if err != nil {
-		return ReturnWrapper{false, "Failed to retrieve nodes: " + err.Error()}, 0, 0, 0, 0, nil, nil, nil
+		return ReturnWrapper{false, "Failed to retrieve nodes: " + err.Error()}, updateCount, noUpdateCount, incomingNotExistCount, dbNotExistCount, updateNodes, notExistNodes, dbNotExistNodes
 	}
 
 	var nodesInDb []dbmodel.SwcNodeDataV1
 	if err = cursor.All(context.TODO(), &nodesInDb); err != nil {
-		return ReturnWrapper{false, "Failed to retrieve nodes: " + err.Error()}, 0, 0, 0, 0, nil, nil, nil
+		return ReturnWrapper{false, "Failed to retrieve nodes: " + err.Error()}, updateCount, noUpdateCount, incomingNotExistCount, dbNotExistCount, updateNodes, notExistNodes, dbNotExistNodes
 	}
 
 	// Create a map for quick lookup of nodes in the database
@@ -1307,8 +1310,8 @@ func UpdateSwcNParent(swcUuid string, nodeNParent *[]dbmodel.NodeNParentV1, data
 		nodeMap[node.Base.Uuid] = node
 	}
 
-	var updateCount, noUpdateCount, incomingNotExistCount, dbNotExistCount int
-	var updateNodes, notExistNodes, dbNotExistNodes []string
+	// Prepare a slice to hold the write models for the bulk operation
+	var writes []mongo.WriteModel
 
 	// Iterate over the nodes in the input data
 	for _, node := range *nodeNParent {
@@ -1318,20 +1321,16 @@ func UpdateSwcNParent(swcUuid string, nodeNParent *[]dbmodel.NodeNParentV1, data
 		if exists {
 			// If the N or Parent values do not match
 			if dbNode.SwcNodeInternalData.N != node.N || dbNode.SwcNodeInternalData.Parent != node.Parent {
-				// Update the node in the database
-				_, err := collection.UpdateOne(
-					context.TODO(),
-					bson.M{"uuid": node.Uuid},
-					bson.D{
-						{"$set", bson.D{
-							{"n", node.N},
-							{"parent", node.Parent},
-						}},
-					},
-				)
-				if err != nil {
-					return ReturnWrapper{false, "Failed to update node: " + err.Error()}, 0, 0, 0, 0, nil, nil, nil
-				}
+				// Prepare the update model
+				update := mongo.NewUpdateOneModel()
+				update.SetFilter(bson.M{"uuid": node.Uuid})
+				update.SetUpdate(bson.D{
+					{"$set", bson.D{
+						{"n", node.N},
+						{"parent", node.Parent},
+					}},
+				})
+				writes = append(writes, update)
 				updateCount++
 				updateNodes = append(updateNodes, node.Uuid)
 			} else {
@@ -1343,6 +1342,16 @@ func UpdateSwcNParent(swcUuid string, nodeNParent *[]dbmodel.NodeNParentV1, data
 			incomingNotExistCount++
 			notExistNodes = append(notExistNodes, node.Uuid)
 		}
+	}
+
+	if len(writes) == 0 {
+		return ReturnWrapper{true, "Update completed! BulkWrite is empty."}, updateCount, noUpdateCount, incomingNotExistCount, dbNotExistCount, updateNodes, notExistNodes, dbNotExistNodes
+	}
+
+	// Execute the bulk operation
+	_, err = collection.BulkWrite(context.TODO(), writes)
+	if err != nil {
+		return ReturnWrapper{false, "Failed to update nodes: " + err.Error()}, updateCount, noUpdateCount, incomingNotExistCount, dbNotExistCount, updateNodes, notExistNodes, dbNotExistNodes
 	}
 
 	// Now, nodeMap only contains nodes that exist in the database but not in the input data
@@ -1362,5 +1371,5 @@ func ClearAllNode(swcUuid string, databaseInfo MongoDbDataBaseInfo) ReturnWrappe
 	if err != nil {
 		return ReturnWrapper{false, err.Error()}
 	}
-	return ReturnWrapper{true, err.Error()}
+	return ReturnWrapper{true, "Delete all nodes successfully!"}
 }
