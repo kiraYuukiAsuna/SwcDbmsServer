@@ -4894,7 +4894,7 @@ func (D DBMSServerController) OverwriteSwcNodeData(context context.Context, requ
 	}
 
 	var result = dal.ClearAllNode(request.GetSwcUuid(), dal.GetDbInstance())
-	if result.Status {
+	if !result.Status {
 		return &response.OverwriteSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  false,
@@ -4991,7 +4991,14 @@ func (D DBMSServerController) OverwriteSwcNodeData(context context.Context, requ
 
 	querySwcMetaInfo.CurrentIncrementOperationCollectionName = swcIncrementOperationMetaInfo.IncrementOperationCollectionName
 
-	result = dal.CreateSnapshot(querySwcMetaInfo.Base.Uuid, swcSnapshotMetaInfo.SwcSnapshotCollectionName, dal.GetDbInstance())
+	resultcs := dal.CreateSnapshot(querySwcMetaInfo.Base.Uuid, swcSnapshotMetaInfo.SwcSnapshotCollectionName, dal.GetDbInstance())
+	resultms := dal.ModifySwc(querySwcMetaInfo, dal.GetDbInstance())
+	if resultcs.Status && resultms.Status {
+		log.Println("Overwrite Swc Node Data and create new snapshot Successfully for Swc " + querySwcMetaInfo.Base.Uuid)
+	} else {
+		log.Println("Overwrite Swc Node Data and create new snapshot Failed for Swc " + querySwcMetaInfo.Base.Uuid)
+	}
+
 	if !result.Status {
 		return &response.OverwriteSwcNodeDataResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
