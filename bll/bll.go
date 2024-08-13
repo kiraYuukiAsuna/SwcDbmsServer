@@ -3737,16 +3737,6 @@ func (D DBMSServerController) UpdateSwcAttachmentApo(ctx context.Context, reques
 		attachmentDb = append(attachmentDb, dbData)
 	}
 
-	if len(attachmentDb) == 0 {
-		return &response.UpdateSwcAttachmentApoResponse{
-			MetaInfo: &message.ResponseMetaInfoV1{
-				Status:  true,
-				Id:      "",
-				Message: "No data need to be saved.",
-			},
-		}, nil
-	}
-
 	result := dal.UpdateSwcAttachmentApo(request.GetSwcUuid(), request.GetApoAttachmentUuid(), &attachmentDb, dal.GetDbInstance())
 	if result.Status {
 		swcMetaInfo := dbmodel.SwcMetaInfoV1{}

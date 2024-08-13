@@ -1065,6 +1065,10 @@ func UpdateSwcAttachmentApo(swcUuid string, apoAttachmentCollectionName string, 
 		return ReturnWrapper{false, err.Error()}
 	}
 
+	if len(*apoAttachment) == 0 {
+		return ReturnWrapper{true, "Update Apo Attachment successfully!"}
+	}
+
 	var interfaceSlice []interface{}
 	for _, v := range *apoAttachment {
 		interfaceSlice = append(interfaceSlice, v)
