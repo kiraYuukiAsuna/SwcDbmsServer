@@ -14,6 +14,7 @@ import (
 
 func UserLoginTokenGeneration(userMetaInfo dbmodel.UserMetaInfoV1) (string, OnlineUserInfo) {
 	userToken := ""
+	mu.Lock()
 	if _, ok := OnlineUserInfoCache[userMetaInfo.Name]; !ok {
 		userToken = uuid.NewString()
 		OnlineUserInfoCache[userMetaInfo.Name] = OnlineUserInfo{userMetaInfo, userToken, false, time.Now().Add(30 * time.Second)}
@@ -25,7 +26,9 @@ func UserLoginTokenGeneration(userMetaInfo dbmodel.UserMetaInfoV1) (string, Onli
 		OnlineUserInfoCache[userMetaInfo.Name] = onlineUserInfo
 		log.Println("User " + userMetaInfo.Name + " HeartBeat Restart")
 	}
-	return userToken, OnlineUserInfoCache[userMetaInfo.Name]
+	var cache = OnlineUserInfoCache[userMetaInfo.Name]
+	mu.Unlock()
+	return userToken, cache
 }
 
 func UserTokenVerify(userVerifyInfo *message.UserVerifyInfoV1) (message.ResponseMetaInfoV1, OnlineUserInfo) {
@@ -36,12 +39,14 @@ func UserTokenVerify(userVerifyInfo *message.UserVerifyInfoV1) (message.Response
 	bFind := false
 	var cachedOnlineUserInfo OnlineUserInfo
 
+	mu.Lock()
 	if _, ok := OnlineUserInfoCache[userName]; ok {
 		cachedOnlineUserInfo = OnlineUserInfoCache[userName]
 		if cachedOnlineUserInfo.Token == userToken {
 			bFind = true
 		}
 	}
+	mu.Unlock()
 
 	if !bFind {
 		if userPassword != "" {

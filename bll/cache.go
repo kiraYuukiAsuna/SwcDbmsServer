@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -22,6 +23,7 @@ type OnlineUserInfo struct {
 	LastHeartBeatTime time.Time
 }
 
+var mu sync.Mutex
 var OnlineUserInfoCache = map[string]OnlineUserInfo{}
 
 func CronAutoSaveDailyStatistics() {
