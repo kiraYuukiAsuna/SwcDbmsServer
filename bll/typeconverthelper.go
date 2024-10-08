@@ -446,6 +446,7 @@ func SwcNodeDataV1ProtobufToDbmodel(protoMessage *message.SwcNodeDataV1) *dbmode
 		dbmodelMessage.LastModifiedTime = protoMessage.LastModifiedTime.AsTime()
 	}
 	dbmodelMessage.CheckerUserUuid = protoMessage.CheckerUserUuid
+	dbmodelMessage.DeviceType = protoMessage.DeviceType
 
 	if protoMessage.SwcNodeInternalData != nil {
 		dbmodelMessage.SwcNodeInternalData.N = protoMessage.SwcNodeInternalData.N
@@ -478,6 +479,7 @@ func SwcNodeDataV1DbmodelToProtobuf(dbmodelMessage *dbmodel.SwcNodeDataV1) *mess
 	protoMessage.LastModifiedTime = timestamppb.New(dbmodelMessage.LastModifiedTime)
 
 	protoMessage.CheckerUserUuid = dbmodelMessage.CheckerUserUuid
+	protoMessage.DeviceType = dbmodelMessage.DeviceType
 
 	protoMessage.SwcNodeInternalData = &message.SwcNodeInternalDataV1{}
 	protoMessage.SwcNodeInternalData.N = dbmodelMessage.SwcNodeInternalData.N

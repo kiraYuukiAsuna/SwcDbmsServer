@@ -182,6 +182,7 @@ type SwcNodeDataV1 struct {
 	CreateTime          time.Time             `bson:"CreateTime"`
 	LastModifiedTime    time.Time             `bson:"LastModifiedTime"`
 	CheckerUserUuid     string                `bson:"CheckerUserUuid"`
+	DeviceType          string                `bson:"DeviceType"`
 }
 
 type SwcDataV1 = []SwcNodeDataV1

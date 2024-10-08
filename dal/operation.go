@@ -742,9 +742,9 @@ func ModifySwcData(swcUuid string, swcData *dbmodel.SwcDataV1, databaseInfo Mong
 				{"SwcData.timestamp", val.SwcNodeInternalData.Timestamp},
 				{"SwcData.feature_value", val.SwcNodeInternalData.Feature_value},
 				{"Creator", val.Creator},
-				{"CreateTime", val.CreateTime},
 				{"LastModifiedTime", val.LastModifiedTime},
 				{"CheckerUserUuid", val.CheckerUserUuid},
+				{"DeviceType", val.DeviceType},
 			}
 
 			if val.SwcNodeInternalData.N != 0 {
