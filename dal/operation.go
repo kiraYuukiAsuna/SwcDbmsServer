@@ -629,7 +629,7 @@ func DeleteSwcData(swcUuid string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 	logger.GetLogger().Println("Real Delete nodes in DB: " + strconv.Itoa(int(result.DeletedCount)))
 
 	//log.Println("Start adjuest n and parent")
-	//
+
 	//// adjust remaining node's n parent
 	//cur, err := collection.Find(context.TODO(), bson.D{{}})
 	//if err != nil {
@@ -710,7 +710,7 @@ func DeleteSwcData(swcUuid string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 	//}
 	//
 	//log.Println("Execute the bulk operation Success")
-
+	//
 	//// Close the cursor
 	//if cur != nil {
 	//	_ = cur.Close(context.TODO())
@@ -742,6 +742,7 @@ func ModifySwcData(swcUuid string, swcData *dbmodel.SwcDataV1, databaseInfo Mong
 				{"SwcData.timestamp", val.SwcNodeInternalData.Timestamp},
 				{"SwcData.feature_value", val.SwcNodeInternalData.Feature_value},
 				{"Creator", val.Creator},
+				{"CreateTime", val.CreateTime},
 				{"LastModifiedTime", val.LastModifiedTime},
 				{"CheckerUserUuid", val.CheckerUserUuid},
 				{"DeviceType", val.DeviceType},

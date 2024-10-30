@@ -2264,6 +2264,7 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 		swcData[idx].Base.DataAccessModelVersion = "V1"
 		swcData[idx].CreateTime = createTime
 		swcData[idx].LastModifiedTime = createTime
+		swcData[idx].CheckerUserUuid = ""
 	}
 
 	if len(swcData) == 0 {
@@ -2461,19 +2462,20 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 		}, nil
 	}
 
-	modifiedTime := time.Now()
+	createTime := time.Now()
 
 	var swcData dbmodel.SwcDataV1
 
 	for _, swcNodeData := range request.SwcData.SwcData {
 		var data = *SwcNodeDataV1ProtobufToDbmodel(swcNodeData)
-		data.LastModifiedTime = modifiedTime
+		data.CreateTime = createTime
+		data.LastModifiedTime = createTime
 		data.Base.Id = primitive.NewObjectID()
 		data.Creator = request.GetUserVerifyInfo().GetUserName()
 		swcData = append(swcData, data)
 	}
 
-	querySwcMetaInfo.LastModifiedTime = modifiedTime
+	querySwcMetaInfo.LastModifiedTime = createTime
 
 	if len(swcData) == 0 {
 		return &response.UpdateSwcNodeDataResponse{
@@ -2498,7 +2500,7 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 		operationRecord.Base.DataAccessModelVersion = "V1"
 		operationRecord.IncrementOperation = dal.IncrementOp_Update
 		operationRecord.SwcData = swcData
-		operationRecord.CreateTime = modifiedTime
+		operationRecord.CreateTime = createTime
 		dal.CreateIncrementOperation(querySwcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
 
 		return &response.UpdateSwcNodeDataResponse{
