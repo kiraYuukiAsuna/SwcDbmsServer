@@ -628,95 +628,95 @@ func DeleteSwcData(swcUuid string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 
 	logger.GetLogger().Println("Real Delete nodes in DB: " + strconv.Itoa(int(result.DeletedCount)))
 
-	log.Println("Start adjuest n and parent")
+	//log.Println("Start adjuest n and parent")
+	//
+	//// adjust remaining node's n parent
+	//cur, err := collection.Find(context.TODO(), bson.D{{}})
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//
+	//var lastNode *dbmodel.SwcNodeDataV1
+	//counter := 1
+	//
+	//// Prepare a slice to hold the write models for the bulk operation
+	//var writes []mongo.WriteModel
+	//
+	//log.Println("For loop start")
+	//
+	//// Iterate over the cursor and update the documents
+	//for cur.Next(context.TODO()) {
+	//	var node dbmodel.SwcNodeDataV1
+	//	err := cur.Decode(&node)
+	//	if err != nil {
+	//		log.Fatal(err)
+	//	}
+	//
+	//	// Update the node
+	//	node.SwcNodeInternalData.N = int32(counter)
+	//	counter++
+	//
+	//	// Update the current node's n
+	//	update := bson.D{
+	//		{"$set", bson.D{
+	//			{"SwcData.n", node.SwcNodeInternalData.N},
+	//		}},
+	//	}
+	//	model := mongo.NewUpdateOneModel().SetFilter(bson.M{"_id": node.Base.Id}).SetUpdate(update)
+	//	writes = append(writes, model)
+	//
+	//	// Update the last node's parent to the current node's n
+	//	if lastNode != nil {
+	//		if lastNode.SwcNodeInternalData.Parent != -1 {
+	//			update1 := bson.D{
+	//				{"$set", bson.D{
+	//					{"SwcData.parent", node.SwcNodeInternalData.N},
+	//				}},
+	//			}
+	//			model1 := mongo.NewUpdateOneModel().SetFilter(bson.M{"_id": lastNode.Base.Id}).SetUpdate(update1)
+	//			writes = append(writes, model1)
+	//		}
+	//	}
+	//
+	//	// Save the current node for the next iteration
+	//	lastNode = &node
+	//}
+	//
+	//log.Println("For loop end")
+	//
+	//// Update the last node's parent to -1
+	//if lastNode != nil {
+	//	log.Println("lastNode != nil")
+	//	update := bson.D{
+	//		{"$set", bson.D{
+	//			{"SwcData.parent", -1},
+	//		}},
+	//	}
+	//	model := mongo.NewUpdateOneModel().SetFilter(bson.M{"_id": lastNode.Base.Id}).SetUpdate(update)
+	//	writes = append(writes, model)
+	//}
+	//
+	//log.Println("Execute the bulk operation")
+	//
+	//if len(writes) == 0 {
+	//	return ReturnWrapper{true, "Delete many node Success! BulkWrite is empty."}
+	//}
+	//
+	//// Execute the bulk operation
+	//_, err = collection.BulkWrite(context.TODO(), writes)
+	//if err != nil {
+	//	log.Println("Execute the bulk operation Failed")
+	//	log.Fatal(err)
+	//}
+	//
+	//log.Println("Execute the bulk operation Success")
 
-	// adjust remaining node's n parent
-	cur, err := collection.Find(context.TODO(), bson.D{{}})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var lastNode *dbmodel.SwcNodeDataV1
-	counter := 1
-
-	// Prepare a slice to hold the write models for the bulk operation
-	var writes []mongo.WriteModel
-
-	log.Println("For loop start")
-
-	// Iterate over the cursor and update the documents
-	for cur.Next(context.TODO()) {
-		var node dbmodel.SwcNodeDataV1
-		err := cur.Decode(&node)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// Update the node
-		node.SwcNodeInternalData.N = int32(counter)
-		counter++
-
-		// Update the current node's n
-		update := bson.D{
-			{"$set", bson.D{
-				{"SwcData.n", node.SwcNodeInternalData.N},
-			}},
-		}
-		model := mongo.NewUpdateOneModel().SetFilter(bson.M{"_id": node.Base.Id}).SetUpdate(update)
-		writes = append(writes, model)
-
-		// Update the last node's parent to the current node's n
-		if lastNode != nil {
-			if lastNode.SwcNodeInternalData.Parent != -1 {
-				update1 := bson.D{
-					{"$set", bson.D{
-						{"SwcData.parent", node.SwcNodeInternalData.N},
-					}},
-				}
-				model1 := mongo.NewUpdateOneModel().SetFilter(bson.M{"_id": lastNode.Base.Id}).SetUpdate(update1)
-				writes = append(writes, model1)
-			}
-		}
-
-		// Save the current node for the next iteration
-		lastNode = &node
-	}
-
-	log.Println("For loop end")
-
-	// Update the last node's parent to -1
-	if lastNode != nil {
-		log.Println("lastNode != nil")
-		update := bson.D{
-			{"$set", bson.D{
-				{"SwcData.parent", -1},
-			}},
-		}
-		model := mongo.NewUpdateOneModel().SetFilter(bson.M{"_id": lastNode.Base.Id}).SetUpdate(update)
-		writes = append(writes, model)
-	}
-
-	log.Println("Execute the bulk operation")
-
-	if len(writes) == 0 {
-		return ReturnWrapper{true, "Delete many node Success! BulkWrite is empty."}
-	}
-
-	// Execute the bulk operation
-	_, err = collection.BulkWrite(context.TODO(), writes)
-	if err != nil {
-		log.Println("Execute the bulk operation Failed")
-		log.Fatal(err)
-	}
-
-	log.Println("Execute the bulk operation Success")
-
-	// Close the cursor
-	if cur != nil {
-		_ = cur.Close(context.TODO())
-	}
-
-	log.Println("Close the cursor And Return")
+	//// Close the cursor
+	//if cur != nil {
+	//	_ = cur.Close(context.TODO())
+	//}
+	//
+	//log.Println("Close the cursor And Return")
 
 	return ReturnWrapper{true, "Delete many node Success! BulkWrite is not empty."}
 }
