@@ -3,12 +3,12 @@ package dal
 import (
 	"DBMS/config"
 	"DBMS/dbmodel"
+	"DBMS/logger"
 	"context"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
 )
 
 var globalMongodbdatabaseinfo MongoDbDataBaseInfo
@@ -32,7 +32,7 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 	connectionInfo := ConnectToMongoDb(createInfo)
 
 	if connectionInfo.Err != nil {
-		log.Fatal(connectionInfo.Err)
+		logger.GetLogger().Fatal(connectionInfo.Err)
 	}
 
 	var dbInfo MongoDbDataBaseInfo
@@ -47,7 +47,7 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 
 	databaseNames, err := connectionInfo.Client.ListDatabaseNames(context.TODO(), bson.M{})
 	if err != nil {
-		log.Fatal(err)
+		logger.GetLogger().Fatal(err)
 	}
 
 	databaseMetaInfoExists := false
@@ -58,37 +58,37 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 		}
 	}
 	if databaseMetaInfoExists && !deleteIfExist {
-		log.Printf("Database %s exists! Do not create a new one!\n", dataBaseNameInfo.MetaInfoDataBaseName)
+		logger.GetLogger().Printf("Database %s exists! Do not create a new one!\n", dataBaseNameInfo.MetaInfoDataBaseName)
 
 	} else {
 		if databaseMetaInfoExists && deleteIfExist {
 			err := dbInfo.MetaInfoDb.Drop(context.TODO())
 			if err != nil {
-				log.Fatal("Delete exist meta info database failed")
+				logger.GetLogger().Fatal("Delete exist meta info database failed")
 			}
 		}
-		log.Printf("Database %s does not exist. Start to create a new one!\n", dataBaseNameInfo.MetaInfoDataBaseName)
+		logger.GetLogger().Printf("Database %s does not exist. Start to create a new one!\n", dataBaseNameInfo.MetaInfoDataBaseName)
 
 		var err error
 
 		err = dbInfo.MetaInfoDb.CreateCollection(context.TODO(), MetaInfoDbStatusCollectonString)
 		if err != nil {
-			log.Fatal(err)
+			logger.GetLogger().Fatal(err)
 		}
 
 		err = dbInfo.MetaInfoDb.CreateCollection(context.TODO(), ProjectMetaInfoCollectionString)
 		if err != nil {
-			log.Fatal(err)
+			logger.GetLogger().Fatal(err)
 		}
 
 		err = dbInfo.MetaInfoDb.CreateCollection(context.TODO(), UserMetaInfoCollectionString)
 		if err != nil {
-			log.Fatal(err)
+			logger.GetLogger().Fatal(err)
 		}
 
 		err = dbInfo.MetaInfoDb.CreateCollection(context.TODO(), PermissionGroupMetaInfoCollectioString)
 		if err != nil {
-			log.Fatal(err)
+			logger.GetLogger().Fatal(err)
 		}
 
 		var permissionGroupAdmin = dbmodel.PermissionGroupMetaInfoV1{
@@ -193,13 +193,13 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 
 		err = dbInfo.MetaInfoDb.CreateCollection(context.TODO(), SwcMetaInfoCollectionString)
 		if err != nil {
-			log.Fatal(err)
+			logger.GetLogger().Fatal(err)
 		}
 
 		opts := options.CreateCollection().SetCapped(true).SetMaxDocuments(1000).SetSizeInBytes(100 * 1024 * 1025)
 		err = dbInfo.MetaInfoDb.CreateCollection(context.TODO(), DailyStatisticsMetaInfoCollectionString, opts)
 		if err != nil {
-			log.Fatal(err)
+			logger.GetLogger().Fatal(err)
 		}
 	}
 
@@ -211,15 +211,15 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 		}
 	}
 	if databaseSwcDataExists && !deleteIfExist {
-		log.Printf("Database %s exists! Do not create a new one!\n", dataBaseNameInfo.SwcDataBaseName)
+		logger.GetLogger().Printf("Database %s exists! Do not create a new one!\n", dataBaseNameInfo.SwcDataBaseName)
 	} else {
 		if databaseSwcDataExists && deleteIfExist {
 			err := dbInfo.SwcDb.Drop(context.TODO())
 			if err != nil {
-				log.Fatal("Delete exist swc database failed")
+				logger.GetLogger().Fatal("Delete exist swc database failed")
 			}
 		}
-		log.Printf("Database %s does not exist. Will create new one when needed!\n", dataBaseNameInfo.SwcDataBaseName)
+		logger.GetLogger().Printf("Database %s does not exist. Will create new one when needed!\n", dataBaseNameInfo.SwcDataBaseName)
 	}
 
 	databaseSwcSnapshotExists := false
@@ -230,15 +230,15 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 		}
 	}
 	if databaseSwcSnapshotExists && !deleteIfExist {
-		log.Printf("Database %s exists! Do not create a new one!\n", dataBaseNameInfo.SwcSnapshotDataBaseName)
+		logger.GetLogger().Printf("Database %s exists! Do not create a new one!\n", dataBaseNameInfo.SwcSnapshotDataBaseName)
 	} else {
 		if databaseSwcSnapshotExists && deleteIfExist {
 			err := dbInfo.SwcDb.Drop(context.TODO())
 			if err != nil {
-				log.Fatal("Delete exist swc snapshot database failed")
+				logger.GetLogger().Fatal("Delete exist swc snapshot database failed")
 			}
 		}
-		log.Printf("Database %s does not exist. Will create new one when needed!\n", dataBaseNameInfo.SwcSnapshotDataBaseName)
+		logger.GetLogger().Printf("Database %s does not exist. Will create new one when needed!\n", dataBaseNameInfo.SwcSnapshotDataBaseName)
 	}
 
 	databaseSwcIncrementOperationExists := false
@@ -249,15 +249,15 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 		}
 	}
 	if databaseSwcIncrementOperationExists && !deleteIfExist {
-		log.Printf("Database %s exists! Do not create a new one!\n", dataBaseNameInfo.SwcIncrementOperationDataBaseName)
+		logger.GetLogger().Printf("Database %s exists! Do not create a new one!\n", dataBaseNameInfo.SwcIncrementOperationDataBaseName)
 	} else {
 		if databaseSwcIncrementOperationExists && deleteIfExist {
 			err := dbInfo.SwcDb.Drop(context.TODO())
 			if err != nil {
-				log.Fatal("Delete exist swc increment operation database failed")
+				logger.GetLogger().Fatal("Delete exist swc increment operation database failed")
 			}
 		}
-		log.Printf("Database %s does not exist. Will create new one when needed!\n", dataBaseNameInfo.SwcIncrementOperationDataBaseName)
+		logger.GetLogger().Printf("Database %s does not exist. Will create new one when needed!\n", dataBaseNameInfo.SwcIncrementOperationDataBaseName)
 	}
 
 	databaseSwcAttachmentExists := false
@@ -268,14 +268,14 @@ func InitializeNewDataBaseIfNotExist(dataBaseNameInfo DataBaseNameInfo) {
 		}
 	}
 	if databaseSwcAttachmentExists && !deleteIfExist {
-		log.Printf("Database %s exists! Do not create a new one!\n", dataBaseNameInfo.SwcAttachmentDataBaseName)
+		logger.GetLogger().Printf("Database %s exists! Do not create a new one!\n", dataBaseNameInfo.SwcAttachmentDataBaseName)
 	} else {
 		if databaseSwcAttachmentExists && deleteIfExist {
 			err := dbInfo.SwcDb.Drop(context.TODO())
 			if err != nil {
-				log.Fatal("Delete exist swc increment operation database failed")
+				logger.GetLogger().Fatal("Delete exist swc increment operation database failed")
 			}
 		}
-		log.Printf("Database %s does not exist. Will create new one when needed!\n", dataBaseNameInfo.SwcAttachmentDataBaseName)
+		logger.GetLogger().Printf("Database %s does not exist. Will create new one when needed!\n", dataBaseNameInfo.SwcAttachmentDataBaseName)
 	}
 }

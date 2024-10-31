@@ -7,6 +7,7 @@ import (
 	"DBMS/config"
 	"DBMS/logger"
 	"context"
+	"google.golang.org/grpc/grpclog"
 	"net/http"
 	"strconv"
 
@@ -14,7 +15,6 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/grpclog"
 )
 
 func startHttpReverseProxyServer() error {
@@ -47,7 +47,7 @@ func main() {
 		err := startHttpReverseProxyServer()
 		if err != nil {
 			grpclog.Fatal(err)
-
+			logger.GetLogger().Fatal(err)
 		}
 	}()
 

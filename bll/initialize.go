@@ -5,12 +5,12 @@ import (
 	"DBMS/config"
 	"DBMS/dal"
 	"DBMS/dbmodel"
+	"DBMS/logger"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"google.golang.org/grpc"
 	_ "google.golang.org/grpc/encoding/gzip" // Install the gzip compressor
 	"google.golang.org/grpc/reflection"
-	"log"
 	"net"
 	"strconv"
 	"time"
@@ -35,7 +35,7 @@ func Initialize() {
 	connectionInfo := dal.ConnectToMongoDb(createInfo)
 
 	if connectionInfo.Err != nil {
-		log.Fatal(connectionInfo.Err)
+		logger.GetLogger().Fatal(connectionInfo.Err)
 	}
 
 	databaseInstance := dal.ConnectToDataBase(connectionInfo, dataBaseNameInfo)
@@ -71,7 +71,7 @@ func NewGrpcServer() {
 	address := config.AppConfig.GrpcIP + ":" + strconv.Itoa(int(config.AppConfig.GrpcPort))
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
-		log.Fatal(err)
+		logger.GetLogger().Fatal(err)
 	}
 
 	s := grpc.NewServer(grpc.MaxRecvMsgSize(1024*1024*256), grpc.MaxSendMsgSize(1024*1024*256)) // 256mb, 256mb
@@ -82,7 +82,7 @@ func NewGrpcServer() {
 
 	err = s.Serve(listener)
 	if err != nil {
-		log.Fatal(err)
+		logger.GetLogger().Fatal(err)
 	}
 
 }

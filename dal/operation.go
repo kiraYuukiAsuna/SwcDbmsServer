@@ -6,9 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
-	"sync"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -32,14 +30,14 @@ func ConnectToMongoDb(createInfo MongoDbConnectionCreateInfo) MongoDbConnectionI
 
 	connectionInfo.Client, connectionInfo.Err = mongo.Connect(context.TODO(), clientOpts)
 	if connectionInfo.Err != nil {
-		log.Fatal(connectionInfo.Err)
+		logger.GetLogger().Fatal(connectionInfo.Err)
 		return connectionInfo
 	}
 
 	var err = connectionInfo.Client.Ping(context.TODO(), nil)
 
 	if err != nil {
-		log.Fatal(err)
+		logger.GetLogger().Fatal(err)
 		return connectionInfo
 	}
 
@@ -48,7 +46,7 @@ func ConnectToMongoDb(createInfo MongoDbConnectionCreateInfo) MongoDbConnectionI
 
 func ConnectToDataBase(connectionInfo MongoDbConnectionInfo, dataBaseNameInfo DataBaseNameInfo) MongoDbDataBaseInfo {
 	if connectionInfo.Err != nil {
-		log.Fatal(connectionInfo.Err)
+		logger.GetLogger().Fatal(connectionInfo.Err)
 		return MongoDbDataBaseInfo{}
 	}
 
@@ -61,6 +59,47 @@ func ConnectToDataBase(connectionInfo MongoDbConnectionInfo, dataBaseNameInfo Da
 	dbInfo.AttachmentDb = connectionInfo.Client.Database(dataBaseNameInfo.SwcAttachmentDataBaseName)
 
 	return dbInfo
+}
+
+func EnsureUniqueUUIDIndex(collection *mongo.Collection) error {
+	indexName := "uuid_unique"
+	ctx := context.Background()
+
+	// 列出所有现有索引
+	cursor, err := collection.Indexes().List(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to list indexes: %v", err)
+	}
+	defer cursor.Close(ctx)
+
+	// 检查是否已存在所需的索引
+	for cursor.Next(ctx) {
+		var index bson.M
+		if err := cursor.Decode(&index); err != nil {
+			return fmt.Errorf("failed to decode index: %v", err)
+		}
+
+		if indexInfo, ok := index["name"].(string); ok && indexInfo == indexName {
+			// logger.GetLogger().Printf("Index '%s' already exists", indexName)
+			return nil
+		}
+	}
+
+	// 如果索引不存在，创建它
+	indexModel := mongo.IndexModel{
+		Keys: bson.D{{"uuid", 1}},
+		Options: options.Index().
+			SetName(indexName).
+			SetUnique(true),
+	}
+
+	_, err = collection.Indexes().CreateOne(ctx, indexModel)
+	if err != nil {
+		return fmt.Errorf("failed to create index: %v", err)
+	}
+
+	logger.GetLogger().Printf("Successfully created unique index '%s' on 'uuid' field. Collection Name '%s'", indexName, collection.Name())
+	return nil
 }
 
 func CreateProject(projectMetaInfo dbmodel.ProjectMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
@@ -87,6 +126,7 @@ func CreateProject(projectMetaInfo dbmodel.ProjectMetaInfoV1, databaseInfo Mongo
 
 func DeleteProject(projectMetaInfo dbmodel.ProjectMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var projectCollection = databaseInfo.MetaInfoDb.Collection(ProjectMetaInfoCollectionString)
+	_ = EnsureUniqueUUIDIndex(projectCollection)
 
 	result := projectCollection.FindOneAndDelete(context.TODO(), bson.D{
 		{"uuid", projectMetaInfo.Base.Uuid}})
@@ -100,6 +140,7 @@ func DeleteProject(projectMetaInfo dbmodel.ProjectMetaInfoV1, databaseInfo Mongo
 
 func ModifyProject(projectMetaInfo dbmodel.ProjectMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var projectCollection = databaseInfo.MetaInfoDb.Collection(ProjectMetaInfoCollectionString)
+	_ = EnsureUniqueUUIDIndex(projectCollection)
 
 	result := projectCollection.FindOneAndReplace(
 		context.TODO(),
@@ -116,6 +157,7 @@ func ModifyProject(projectMetaInfo dbmodel.ProjectMetaInfoV1, databaseInfo Mongo
 
 func QueryProject(projectMetaInfo *dbmodel.ProjectMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var projectCollection = databaseInfo.MetaInfoDb.Collection(ProjectMetaInfoCollectionString)
+	_ = EnsureUniqueUUIDIndex(projectCollection)
 
 	result := projectCollection.FindOne(
 		context.TODO(),
@@ -145,7 +187,7 @@ func QueryAllProject(projectMetaInfoList *[]dbmodel.ProjectMetaInfoV1, databaseI
 	}
 
 	if err = cursor.All(context.TODO(), projectMetaInfoList); err != nil {
-		log.Println(err.Error())
+		logger.GetLogger().Println(err.Error())
 		return ReturnWrapper{false, "Query all Project failed!"}
 	}
 
@@ -177,6 +219,7 @@ func CreateUser(userMetaInfo dbmodel.UserMetaInfoV1, databaseInfo MongoDbDataBas
 
 func DeleteUser(userMetaInfo dbmodel.UserMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var userCollection = databaseInfo.MetaInfoDb.Collection(UserMetaInfoCollectionString)
+	_ = EnsureUniqueUUIDIndex(userCollection)
 
 	result := userCollection.FindOneAndDelete(context.TODO(), bson.D{
 		{"Name", userMetaInfo.Name},
@@ -191,6 +234,7 @@ func DeleteUser(userMetaInfo dbmodel.UserMetaInfoV1, databaseInfo MongoDbDataBas
 
 func ModifyUser(userMetaInfo dbmodel.UserMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var userCollection = databaseInfo.MetaInfoDb.Collection(UserMetaInfoCollectionString)
+	_ = EnsureUniqueUUIDIndex(userCollection)
 
 	result := userCollection.FindOneAndReplace(
 		context.TODO(),
@@ -207,6 +251,7 @@ func ModifyUser(userMetaInfo dbmodel.UserMetaInfoV1, databaseInfo MongoDbDataBas
 
 func QueryUserByUuid(userMetaInfo *dbmodel.UserMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var userCollection = databaseInfo.MetaInfoDb.Collection(UserMetaInfoCollectionString)
+	_ = EnsureUniqueUUIDIndex(userCollection)
 
 	result := userCollection.FindOne(
 		context.TODO(),
@@ -226,6 +271,7 @@ func QueryUserByUuid(userMetaInfo *dbmodel.UserMetaInfoV1, databaseInfo MongoDbD
 
 func QueryUserByName(userMetaInfo *dbmodel.UserMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var userCollection = databaseInfo.MetaInfoDb.Collection(UserMetaInfoCollectionString)
+	_ = EnsureUniqueUUIDIndex(userCollection)
 
 	result := userCollection.FindOne(
 		context.TODO(),
@@ -255,7 +301,7 @@ func QueryAllUser(userMetaInfoList *[]dbmodel.UserMetaInfoV1, databaseInfo Mongo
 	}
 
 	if err = cursor.All(context.TODO(), userMetaInfoList); err != nil {
-		log.Println(err.Error())
+		logger.GetLogger().Println(err.Error())
 		return ReturnWrapper{false, "Query all user failed!"}
 	}
 
@@ -287,6 +333,7 @@ func CreatePermissionGroup(permissionGroupMetaInfo dbmodel.PermissionGroupMetaIn
 
 func DeletePermissionGroup(permissionGroupMetaInfo dbmodel.PermissionGroupMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var permissionGroupCollection = databaseInfo.MetaInfoDb.Collection(PermissionGroupMetaInfoCollectioString)
+	_ = EnsureUniqueUUIDIndex(permissionGroupCollection)
 
 	result := permissionGroupCollection.FindOneAndDelete(context.TODO(), bson.D{
 		{"uuid", permissionGroupMetaInfo.Base.Uuid},
@@ -301,6 +348,7 @@ func DeletePermissionGroup(permissionGroupMetaInfo dbmodel.PermissionGroupMetaIn
 
 func ModifyPermissionGroup(permissionGroupMetaInfo dbmodel.PermissionGroupMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var permissionGroupCollection = databaseInfo.MetaInfoDb.Collection(PermissionGroupMetaInfoCollectioString)
+	_ = EnsureUniqueUUIDIndex(permissionGroupCollection)
 
 	result := permissionGroupCollection.FindOneAndReplace(
 		context.TODO(),
@@ -317,6 +365,7 @@ func ModifyPermissionGroup(permissionGroupMetaInfo dbmodel.PermissionGroupMetaIn
 
 func QueryPermissionGroupByUuid(permissionGroupMetaInfo *dbmodel.PermissionGroupMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var permissionGroupCollection = databaseInfo.MetaInfoDb.Collection(PermissionGroupMetaInfoCollectioString)
+	_ = EnsureUniqueUUIDIndex(permissionGroupCollection)
 
 	result := permissionGroupCollection.FindOne(
 		context.TODO(),
@@ -336,6 +385,7 @@ func QueryPermissionGroupByUuid(permissionGroupMetaInfo *dbmodel.PermissionGroup
 
 func QueryPermissionGroupByName(permissionGroupMetaInfo *dbmodel.PermissionGroupMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var permissionGroupCollection = databaseInfo.MetaInfoDb.Collection(PermissionGroupMetaInfoCollectioString)
+	_ = EnsureUniqueUUIDIndex(permissionGroupCollection)
 
 	result := permissionGroupCollection.FindOne(
 		context.TODO(),
@@ -365,7 +415,7 @@ func QueryAllPermissionGroup(permissionGroupList *[]dbmodel.PermissionGroupMetaI
 	}
 
 	if err = cursor.All(context.TODO(), permissionGroupList); err != nil {
-		log.Println(err.Error())
+		logger.GetLogger().Println(err.Error())
 		return ReturnWrapper{false, "Query all PermissionGroup failed!"}
 	}
 
@@ -397,6 +447,7 @@ func CreateSwc(swcMetaInfo dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseIn
 
 func DeleteSwc(swcMetaInfo dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var swcCollection = databaseInfo.MetaInfoDb.Collection(SwcMetaInfoCollectionString)
+	_ = EnsureUniqueUUIDIndex(swcCollection)
 
 	result := swcCollection.FindOneAndDelete(context.TODO(), bson.D{
 		{"uuid", swcMetaInfo.Base.Uuid},
@@ -411,6 +462,7 @@ func DeleteSwc(swcMetaInfo dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseIn
 
 func ModifySwc(swcMetaInfo dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var swcCollection = databaseInfo.MetaInfoDb.Collection(SwcMetaInfoCollectionString)
+	_ = EnsureUniqueUUIDIndex(swcCollection)
 
 	result := swcCollection.FindOneAndReplace(
 		context.TODO(),
@@ -427,6 +479,7 @@ func ModifySwc(swcMetaInfo dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseIn
 
 func QuerySwc(swcMetaInfo *dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var swcCollection = databaseInfo.MetaInfoDb.Collection(SwcMetaInfoCollectionString)
+	_ = EnsureUniqueUUIDIndex(swcCollection)
 
 	result := swcCollection.FindOne(
 		context.TODO(),
@@ -456,7 +509,7 @@ func QueryAllSwc(swcMetaInfoList *[]dbmodel.SwcMetaInfoV1, databaseInfo MongoDbD
 	}
 
 	if err = cursor.All(context.TODO(), swcMetaInfoList); err != nil {
-		log.Println(err.Error())
+		logger.GetLogger().Println(err.Error())
 		return ReturnWrapper{false, "Query all swc failed!"}
 	}
 
@@ -488,6 +541,7 @@ func CreateDailyStatistics(dailyStatisticsMetaInfo dbmodel.DailyStatisticsMetaIn
 
 func DeleteDailyStatistics(dailyStatisticsMetaInfo dbmodel.DailyStatisticsMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var dailyStatisticsCollection = databaseInfo.MetaInfoDb.Collection(DailyStatisticsMetaInfoCollectionString)
+	_ = EnsureUniqueUUIDIndex(dailyStatisticsCollection)
 
 	result := dailyStatisticsCollection.FindOneAndDelete(context.TODO(), bson.D{
 		{"Name", dailyStatisticsMetaInfo.Name},
@@ -502,6 +556,7 @@ func DeleteDailyStatistics(dailyStatisticsMetaInfo dbmodel.DailyStatisticsMetaIn
 
 func ModifyDailyStatistics(dailyStatisticsMetaInfo dbmodel.DailyStatisticsMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var dailyStatisticsCollection = databaseInfo.MetaInfoDb.Collection(DailyStatisticsMetaInfoCollectionString)
+	_ = EnsureUniqueUUIDIndex(dailyStatisticsCollection)
 
 	result := dailyStatisticsCollection.FindOneAndReplace(
 		context.TODO(),
@@ -518,6 +573,7 @@ func ModifyDailyStatistics(dailyStatisticsMetaInfo dbmodel.DailyStatisticsMetaIn
 
 func QueryDailyStatistics(permissionGroupMetaInfo *dbmodel.DailyStatisticsMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var dailyStatisticsCollection = databaseInfo.MetaInfoDb.Collection(DailyStatisticsMetaInfoCollectionString)
+	_ = EnsureUniqueUUIDIndex(dailyStatisticsCollection)
 
 	result := dailyStatisticsCollection.FindOne(
 		context.TODO(),
@@ -547,7 +603,7 @@ func QueryAllDailyStatistics(dailyStatisticsList *[]dbmodel.DailyStatisticsMetaI
 	}
 
 	if err = cursor.All(context.TODO(), dailyStatisticsList); err != nil {
-		log.Println(err.Error())
+		logger.GetLogger().Println(err.Error())
 		return ReturnWrapper{false, "Query all DailyStatistics failed!"}
 	}
 
@@ -556,11 +612,12 @@ func QueryAllDailyStatistics(dailyStatisticsList *[]dbmodel.DailyStatisticsMetaI
 
 func CreateSwcData(swcUuid string, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	collection := databaseInfo.SwcDb.Collection(swcUuid)
+
 	var interfaceSlice []interface{}
 	for _, v := range *swcData {
 		interfaceSlice = append(interfaceSlice, v)
 	}
-	log.Println("Inserting ", len(interfaceSlice), " nodes into ", swcUuid)
+	logger.GetLogger().Println("Inserting ", len(interfaceSlice), " nodes into ", swcUuid)
 	result, err := collection.InsertMany(context.TODO(), interfaceSlice)
 	if err != nil {
 		if result != nil {
@@ -590,6 +647,7 @@ func DeleteSwcDataCollection(swcUuid string, databaseInfo MongoDbDataBaseInfo) R
 
 func DeleteSwcData(swcUuid string, swcData dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	collection := databaseInfo.SwcDb.Collection(swcUuid)
+	_ = EnsureUniqueUUIDIndex(collection)
 
 	uuidList := bson.A{}
 
@@ -612,10 +670,10 @@ func DeleteSwcData(swcUuid string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 	//	return ReturnWrapper{false, "Not all nodes exist in the database"}
 	//}
 
-	log.Println("Delete ", len(filterInterface), " nodes at ", swcUuid)
+	logger.GetLogger().Println("Delete ", len(filterInterface), " nodes at ", swcUuid)
 	result, err := collection.DeleteMany(context.TODO(), filterInterface)
 	if err != nil {
-		log.Print(err.Error())
+		logger.GetLogger().Println(err.Error())
 		if result != nil {
 			return ReturnWrapper{false,
 				"Delete many node failed! Deleted:" + strconv.Itoa(int(result.DeletedCount)) +
@@ -628,12 +686,12 @@ func DeleteSwcData(swcUuid string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 
 	logger.GetLogger().Println("Real Delete nodes in DB: " + strconv.Itoa(int(result.DeletedCount)))
 
-	//log.Println("Start adjuest n and parent")
+	//logger.GetLogger().Println("Start adjuest n and parent")
 
 	//// adjust remaining node's n parent
 	//cur, err := collection.Find(context.TODO(), bson.D{{}})
 	//if err != nil {
-	//	log.Fatal(err)
+	//	logger.GetLogger().Fatal(err)
 	//}
 	//
 	//var lastNode *dbmodel.SwcNodeDataV1
@@ -642,14 +700,14 @@ func DeleteSwcData(swcUuid string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 	//// Prepare a slice to hold the write models for the bulk operation
 	//var writes []mongo.WriteModel
 	//
-	//log.Println("For loop start")
+	//logger.GetLogger().Println("For loop start")
 	//
 	//// Iterate over the cursor and update the documents
 	//for cur.Next(context.TODO()) {
 	//	var node dbmodel.SwcNodeDataV1
 	//	err := cur.Decode(&node)
 	//	if err != nil {
-	//		log.Fatal(err)
+	//		logger.GetLogger().Fatal(err)
 	//	}
 	//
 	//	// Update the node
@@ -682,11 +740,11 @@ func DeleteSwcData(swcUuid string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 	//	lastNode = &node
 	//}
 	//
-	//log.Println("For loop end")
+	//logger.GetLogger().Println("For loop end")
 	//
 	//// Update the last node's parent to -1
 	//if lastNode != nil {
-	//	log.Println("lastNode != nil")
+	//	logger.GetLogger().Println("lastNode != nil")
 	//	update := bson.D{
 	//		{"$set", bson.D{
 	//			{"SwcData.parent", -1},
@@ -696,7 +754,7 @@ func DeleteSwcData(swcUuid string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 	//	writes = append(writes, model)
 	//}
 	//
-	//log.Println("Execute the bulk operation")
+	//logger.GetLogger().Println("Execute the bulk operation")
 	//
 	//if len(writes) == 0 {
 	//	return ReturnWrapper{true, "Delete many node Success! BulkWrite is empty."}
@@ -705,88 +763,90 @@ func DeleteSwcData(swcUuid string, swcData dbmodel.SwcDataV1, databaseInfo Mongo
 	//// Execute the bulk operation
 	//_, err = collection.BulkWrite(context.TODO(), writes)
 	//if err != nil {
-	//	log.Println("Execute the bulk operation Failed")
-	//	log.Fatal(err)
+	//	logger.GetLogger().Println("Execute the bulk operation Failed")
+	//	logger.GetLogger().Fatal(err)
 	//}
 	//
-	//log.Println("Execute the bulk operation Success")
+	//logger.GetLogger().Println("Execute the bulk operation Success")
 	//
 	//// Close the cursor
 	//if cur != nil {
 	//	_ = cur.Close(context.TODO())
 	//}
 	//
-	//log.Println("Close the cursor And Return")
+	//logger.GetLogger().Println("Close the cursor And Return")
 
 	return ReturnWrapper{true, "Delete many node Success! BulkWrite is not empty."}
 }
 
 func ModifySwcData(swcUuid string, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	collection := databaseInfo.SwcDb.Collection(swcUuid)
-	var wg sync.WaitGroup
-	errorsChan := make(chan error, len(*swcData))
-	log.Println("Modify ", len(*swcData), " nodes at ", swcUuid)
+	_ = EnsureUniqueUUIDIndex(collection)
+
+	logger.GetLogger().Printf("Modifying %d nodes at %s", len(*swcData), swcUuid)
+
+	var operations []mongo.WriteModel
 	for _, v := range *swcData {
-		wg.Add(1)
-		go func(val dbmodel.SwcNodeDataV1) {
-			defer wg.Done()
-			updateData := bson.D{
-				{"SwcData.type", val.SwcNodeInternalData.Type},
-				{"SwcData.x", val.SwcNodeInternalData.X},
-				{"SwcData.y", val.SwcNodeInternalData.Y},
-				{"SwcData.z", val.SwcNodeInternalData.Z},
-				{"SwcData.radius", val.SwcNodeInternalData.Radius},
-				{"SwcData.seg_id", val.SwcNodeInternalData.Seg_id},
-				{"SwcData.level", val.SwcNodeInternalData.Level},
-				{"SwcData.mode", val.SwcNodeInternalData.Mode},
-				{"SwcData.timestamp", val.SwcNodeInternalData.Timestamp},
-				{"SwcData.feature_value", val.SwcNodeInternalData.Feature_value},
-				{"Creator", val.Creator},
-				{"CreateTime", val.CreateTime},
-				{"LastModifiedTime", val.LastModifiedTime},
-				{"CheckerUserUuid", val.CheckerUserUuid},
-				{"DeviceType", val.DeviceType},
-			}
+		updateData := bson.D{
+			{"SwcData.type", v.SwcNodeInternalData.Type},
+			{"SwcData.x", v.SwcNodeInternalData.X},
+			{"SwcData.y", v.SwcNodeInternalData.Y},
+			{"SwcData.z", v.SwcNodeInternalData.Z},
+			{"SwcData.radius", v.SwcNodeInternalData.Radius},
+			{"SwcData.seg_id", v.SwcNodeInternalData.Seg_id},
+			{"SwcData.level", v.SwcNodeInternalData.Level},
+			{"SwcData.mode", v.SwcNodeInternalData.Mode},
+			{"SwcData.timestamp", v.SwcNodeInternalData.Timestamp},
+			{"SwcData.feature_value", v.SwcNodeInternalData.Feature_value},
+			{"Creator", v.Creator},
+			{"LastModifiedTime", v.LastModifiedTime},
+			{"CheckerUserUuid", v.CheckerUserUuid},
+			{"DeviceType", v.DeviceType},
+		}
 
-			if val.SwcNodeInternalData.N != 0 {
-				updateData = append(updateData, bson.E{Key: "SwcData.n", Value: val.SwcNodeInternalData.N})
-			}
+		if v.SwcNodeInternalData.N != 0 {
+			updateData = append(updateData, bson.E{Key: "SwcData.n", Value: v.SwcNodeInternalData.N})
+		}
 
-			if val.SwcNodeInternalData.Parent != 0 {
-				updateData = append(updateData, bson.E{Key: "SwcData.parent", Value: val.SwcNodeInternalData.Parent})
-			}
+		if v.SwcNodeInternalData.Parent != 0 {
+			updateData = append(updateData, bson.E{Key: "SwcData.parent", Value: v.SwcNodeInternalData.Parent})
+		}
 
-			_, err := collection.UpdateOne(context.TODO(),
-				bson.D{{"uuid", val.Base.Uuid}},
-				bson.D{{"$set", updateData}},
-			)
-			if err != nil {
-				errorsChan <- err
-			}
-		}(v)
+		operation := mongo.NewUpdateOneModel().
+			SetFilter(bson.D{{"uuid", v.Base.Uuid}}).
+			SetUpdate(bson.D{{"$set", updateData}})
+
+		operations = append(operations, operation)
 	}
 
-	wg.Wait()
-	close(errorsChan)
-
-	errorNum := 0
-	for err := range errorsChan {
-		log.Println(err) // replace with your preferred logging method
-		errorNum++
+	if len(operations) == 0 {
+		return ReturnWrapper{true, "No nodes to modify"}
 	}
 
-	if errorNum != 0 {
-		return ReturnWrapper{false,
-			"Modify swc node failed! Error! Number=" + strconv.Itoa(errorNum) + " update failed!"}
+	// 执行批量写入操作
+	opts := options.BulkWrite().SetOrdered(false)
+	result, err := collection.BulkWrite(context.TODO(), operations, opts)
+	if err != nil {
+		logger.GetLogger().Printf("Bulk write error: %v", err)
+		return ReturnWrapper{false, "Modify swc node failed! Error during bulk write."}
 	}
 
-	logger.GetLogger().Println("Real Update nodes in DB: " + strconv.Itoa(len(*swcData)-errorNum))
+	// 检查结果
+	modifiedCount := result.ModifiedCount
+	if modifiedCount != int64(len(*swcData)) {
+		logger.GetLogger().Printf("Warning: Expected to modify %d documents, but actually modified %d", len(*swcData), modifiedCount)
+		return ReturnWrapper{false, "Warning: Expected to modify " + strconv.Itoa(len(*swcData)) + " documents, but actually modified " + strconv.Itoa(int(modifiedCount))}
+	}
 
-	return ReturnWrapper{true, "Modify swc node Success"}
+	logger.GetLogger().Printf("Successfully updated %d nodes in DB", modifiedCount)
+
+	return ReturnWrapper{true, fmt.Sprintf("Modified %d swc nodes successfully", modifiedCount)}
+
 }
 
 func QuerySwcData(swcUuid string, swcData *dbmodel.SwcDataV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	collection := databaseInfo.SwcDb.Collection(swcUuid)
+	_ = EnsureUniqueUUIDIndex(collection)
 
 	uuidList := bson.A{}
 
@@ -808,7 +868,7 @@ func QuerySwcData(swcUuid string, swcData *dbmodel.SwcDataV1, databaseInfo Mongo
 		return ReturnWrapper{false, "Query many node failed!"}
 	}
 
-	log.Println("Query ", len(*swcData), " node at ", swcUuid)
+	logger.GetLogger().Println("Query ", len(*swcData), " node at ", swcUuid)
 
 	return ReturnWrapper{true, "Query many node Success"}
 }
@@ -849,7 +909,7 @@ func QuerySwcDataByUserAndTime(
 		return ReturnWrapper{false, "QuerySwcDataByUserAndTime failed!"}
 	}
 
-	log.Println("QueryByCondition ", len(*swcData), " nodes at ", swcUuid)
+	logger.GetLogger().Println("QueryByCondition ", len(*swcData), " nodes at ", swcUuid)
 
 	return ReturnWrapper{true, "QuerySwcDataByUserAndTime Success"}
 }
@@ -866,7 +926,7 @@ func QueryAllSwcData(swcUuid string, swcData *dbmodel.SwcDataV1, databaseInfo Mo
 		return ReturnWrapper{false, "Query many node failed!"}
 	}
 
-	log.Println("QueryAll ", len(*swcData), " nodes at ", swcUuid)
+	logger.GetLogger().Println("QueryAll ", len(*swcData), " nodes at ", swcUuid)
 
 	return ReturnWrapper{true, "Query many node Success"}
 }
@@ -1093,7 +1153,7 @@ func QuerySwcAttachmentApo(swcUuid string, apoAttachmentCollectionName string, a
 	}
 
 	if err = cursor.All(context.TODO(), apoAttachment); err != nil {
-		log.Println(err.Error())
+		logger.GetLogger().Println(err.Error())
 		return ReturnWrapper{false, err.Error()}
 	}
 
@@ -1221,7 +1281,7 @@ func CreateAttachmentSwcData(attachmentCollectionName string, swcData *dbmodel.S
 		for _, v := range *swcData {
 			interfaceSlice = append(interfaceSlice, v)
 		}
-		log.Println("Attachment - Inserting ", len(interfaceSlice), " nodes into ", attachmentCollectionName)
+		logger.GetLogger().Println("Attachment - Inserting ", len(interfaceSlice), " nodes into ", attachmentCollectionName)
 		result, err := collection.InsertMany(context.TODO(), interfaceSlice)
 		if err != nil {
 			if result != nil {
@@ -1260,7 +1320,7 @@ func UpdateAttachmentSwcData(attachmentCollectionName string, swcData *dbmodel.S
 		for _, v := range *swcData {
 			interfaceSlice = append(interfaceSlice, v)
 		}
-		log.Println("Attachment - Inserting ", len(interfaceSlice), " nodes into ", attachmentCollectionName)
+		logger.GetLogger().Println("Attachment - Inserting ", len(interfaceSlice), " nodes into ", attachmentCollectionName)
 		result, err := collection.InsertMany(context.TODO(), interfaceSlice)
 		if err != nil {
 			if result != nil {
@@ -1290,7 +1350,7 @@ func QueryAttachmentSwcData(attachmentCollectionName string, swcData *dbmodel.Sw
 		return ReturnWrapper{false, "Query Swc Attachment failed!"}
 	}
 
-	log.Println("Query ", len(*swcData), " node at ", attachmentCollectionName)
+	logger.GetLogger().Println("Query ", len(*swcData), " node at ", attachmentCollectionName)
 
 	return ReturnWrapper{true, "Query Swc Attachment Success"}
 }

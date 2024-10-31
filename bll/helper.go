@@ -6,8 +6,8 @@ import (
 	"DBMS/dal"
 	"DBMS/dbmodel"
 	"DBMS/errcode"
+	"DBMS/logger"
 	"github.com/google/uuid"
-	"log"
 	"reflect"
 	"time"
 )
@@ -18,13 +18,13 @@ func UserLoginTokenGeneration(userMetaInfo dbmodel.UserMetaInfoV1) (string, Onli
 	if _, ok := OnlineUserInfoCache[userMetaInfo.Name]; !ok {
 		userToken = uuid.NewString()
 		OnlineUserInfoCache[userMetaInfo.Name] = OnlineUserInfo{userMetaInfo, userToken, false, time.Now().Add(30 * time.Second)}
-		log.Println("User " + userMetaInfo.Name + " HeartBeat Init")
+		logger.GetLogger().Println("User " + userMetaInfo.Name + " HeartBeat Init")
 	} else {
 		userToken = OnlineUserInfoCache[userMetaInfo.Name].Token
 		onlineUserInfo := OnlineUserInfoCache[userMetaInfo.Name]
 		onlineUserInfo.LastHeartBeatTime = time.Now().Add(30 * time.Second)
 		OnlineUserInfoCache[userMetaInfo.Name] = onlineUserInfo
-		log.Println("User " + userMetaInfo.Name + " HeartBeat Restart")
+		logger.GetLogger().Println("User " + userMetaInfo.Name + " HeartBeat Restart")
 	}
 	var cache = OnlineUserInfoCache[userMetaInfo.Name]
 	mu.Unlock()
@@ -62,7 +62,7 @@ func UserTokenVerify(userVerifyInfo *message.UserVerifyInfoV1) (message.Response
 			}
 
 			if userMetaInfo.Password == userPassword {
-				log.Println("User " + userName + " Login Through implicit user token verify using password")
+				logger.GetLogger().Println("User " + userName + " Login Through implicit user token verify using password")
 
 				_, onlineUserInfoUPAuth := UserLoginTokenGeneration(userMetaInfo)
 				return message.ResponseMetaInfoV1{

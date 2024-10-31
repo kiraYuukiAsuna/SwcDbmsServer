@@ -10,7 +10,6 @@ import (
 	"DBMS/logger"
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
-	"log"
 	"reflect"
 	"strconv"
 	"time"
@@ -83,7 +82,7 @@ func (D DBMSServerController) CreateUser(ctx context.Context, request *request.C
 		}, nil
 
 	}
-	log.Println("User " + request.UserInfo.Name + " Created")
+	logger.GetLogger().Println("User " + request.UserInfo.Name + " Created")
 	return &response.CreateUserResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
 			Status:  true,
@@ -156,7 +155,7 @@ func (D DBMSServerController) DeleteUser(ctx context.Context, request *request.D
 		}, nil
 	}
 
-	log.Println("User " + request.UserName + " Deleted")
+	logger.GetLogger().Println("User " + request.UserName + " Deleted")
 	return &response.DeleteUserResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
 			Status:  true,
@@ -220,7 +219,7 @@ func (D DBMSServerController) UpdateUser(ctx context.Context, request *request.U
 		}, nil
 	}
 
-	log.Println("User " + request.UserInfo.Name + " Updated")
+	logger.GetLogger().Println("User " + request.UserInfo.Name + " Updated")
 
 	// update online user cache
 	if _, ok := OnlineUserInfoCache[userMetaInfo.Name]; !ok {
@@ -258,7 +257,7 @@ func (D DBMSServerController) GetUserByUuid(ctx context.Context, request *reques
 
 	result := dal.QueryUserByUuid(&userMetaInfo, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + request.UserUuid + " Get")
+		logger.GetLogger().Println("User " + request.UserUuid + " Get")
 		return &response.GetUserByUuidResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  true,
@@ -299,7 +298,7 @@ func (D DBMSServerController) GetUserByName(ctx context.Context, request *reques
 
 	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + request.UserName + " Get")
+		logger.GetLogger().Println("User " + request.UserName + " Get")
 		return &response.GetUserByNameResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  true,
@@ -340,7 +339,7 @@ func (D DBMSServerController) GetAllUser(ctx context.Context, request *request.G
 
 	result := dal.QueryAllUser(&userMetaInfoList, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + request.UserVerifyInfo.GetUserName() + " Try Get AllUser")
+		logger.GetLogger().Println("User " + request.UserVerifyInfo.GetUserName() + " Try Get AllUser")
 		for _, userMetaInfo := range userMetaInfoList {
 			userMetaInfo.Password = ""
 			protoMessage = append(protoMessage, UserMetaInfoV1DbmodelToProtobuf(&userMetaInfo))
@@ -394,7 +393,7 @@ func (D DBMSServerController) UserLogin(ctx context.Context, request *request.Us
 	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if result.Status {
 		if userMetaInfo.Password == request.Password {
-			log.Println("User " + request.UserName + " Login")
+			logger.GetLogger().Println("User " + request.UserName + " Login")
 			DailyStatisticsInfo.ActiveUserNumber += 1
 
 			userToken, _ := UserLoginTokenGeneration(userMetaInfo)
@@ -474,7 +473,7 @@ func (D DBMSServerController) UserLogout(ctx context.Context, request *request.U
 		OnlineUserInfoCache[request.UserVerifyInfo.GetUserName()] = onlineUserInfo
 		delete(OnlineUserInfoCache, request.UserVerifyInfo.GetUserName())
 
-		log.Println("User " + onlineUserInfo.UserInfo.Name + " Logout")
+		logger.GetLogger().Println("User " + onlineUserInfo.UserInfo.Name + " Logout")
 
 		return &response.UserLogoutResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
@@ -523,20 +522,20 @@ func (D DBMSServerController) UserOnlineHeartBeatNotifications(ctx context.Conte
 
 	result := dal.QueryUserByName(&userMetaInfo, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + notification.UserVerifyInfo.GetUserName() + " OnlineHeartBeatNotifications")
+		logger.GetLogger().Println("User " + notification.UserVerifyInfo.GetUserName() + " OnlineHeartBeatNotifications")
 
 		userToken := ""
 		if _, ok := OnlineUserInfoCache[userMetaInfo.Name]; !ok {
 			DailyStatisticsInfo.ActiveUserNumber += 1
 			userToken = uuid.NewString()
 			OnlineUserInfoCache[userMetaInfo.Name] = OnlineUserInfo{userMetaInfo, userToken, false, time.Now().Add(30 * time.Second)}
-			log.Println("User " + userMetaInfo.Name + " HeartBeat Init by HeartBeat Notification")
+			logger.GetLogger().Println("User " + userMetaInfo.Name + " HeartBeat Init by HeartBeat Notification")
 		} else {
 			userToken = OnlineUserInfoCache[userMetaInfo.Name].Token
 			onlineUserInfo := OnlineUserInfoCache[userMetaInfo.Name]
 			onlineUserInfo.LastHeartBeatTime = time.Now().Add(30 * time.Second)
 			OnlineUserInfoCache[userMetaInfo.Name] = onlineUserInfo
-			log.Println("User " + onlineUserInfo.UserInfo.Name + " HeartBeat Refresh")
+			logger.GetLogger().Println("User " + onlineUserInfo.UserInfo.Name + " HeartBeat Refresh")
 		}
 
 		return &response.UserOnlineHeartBeatResponse{
@@ -585,7 +584,7 @@ func (D DBMSServerController) GetUserPermissionGroup(ctx context.Context, reques
 		permissionGroupMetaInfo.Base.Uuid = userMetaInfo.PermissionGroupUuid
 		result = dal.QueryPermissionGroupByUuid(&permissionGroupMetaInfo, dal.GetDbInstance())
 		if result.Status {
-			log.Println("User " + request.UserVerifyInfo.GetUserName() + " GetUserPermissionGroup")
+			logger.GetLogger().Println("User " + request.UserVerifyInfo.GetUserName() + " GetUserPermissionGroup")
 			return &response.GetUserPermissionGroupResponse{
 				MetaInfo: &message.ResponseMetaInfoV1{
 					Status:  true,
@@ -632,7 +631,7 @@ func (D DBMSServerController) GetPermissionGroupByUuid(ctx context.Context, requ
 	if result.Status {
 		result = dal.QueryPermissionGroupByUuid(&permissionGroupMetaInfo, dal.GetDbInstance())
 		if result.Status {
-			log.Println("User " + request.UserVerifyInfo.GetUserName() + " GetPermissionGroup")
+			logger.GetLogger().Println("User " + request.UserVerifyInfo.GetUserName() + " GetPermissionGroup")
 			return &response.GetPermissionGroupByUuidResponse{
 				MetaInfo: &message.ResponseMetaInfoV1{
 					Status:  true,
@@ -697,7 +696,7 @@ func (D DBMSServerController) GetPermissionGroupByName(ctx context.Context, requ
 			PermissionGroup: PermissionGroupMetaInfoV1DbmodelToProtobuf(&permissionGroupMetaInfo),
 		}, nil
 	}
-	log.Println("User " + request.UserVerifyInfo.GetUserName() + " GetPermissionGroup")
+	logger.GetLogger().Println("User " + request.UserVerifyInfo.GetUserName() + " GetPermissionGroup")
 	return &response.GetPermissionGroupByNameResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
 			Status:  true,
@@ -752,7 +751,7 @@ func (D DBMSServerController) GetAllPermissionGroup(ctx context.Context, request
 			PermissionGroupList: protoMessage,
 		}, nil
 	}
-	log.Println("User " + request.UserVerifyInfo.GetUserName() + " GetAllPermissionGroup")
+	logger.GetLogger().Println("User " + request.UserVerifyInfo.GetUserName() + " GetAllPermissionGroup")
 	for _, permissionGroupMetaInfo := range permissionGroupList {
 		protoMessage = append(protoMessage, PermissionGroupMetaInfoV1DbmodelToProtobuf(&permissionGroupMetaInfo))
 	}
@@ -834,7 +833,7 @@ func (D DBMSServerController) ChangeUserPermissionGroup(ctx context.Context, req
 
 	result = dal.ModifyUser(targetUserMetaInfo, dal.GetDbInstance())
 
-	log.Println("User " + request.TargetUserName + " PermissionGroup Changed by " + request.UserVerifyInfo.GetUserName())
+	logger.GetLogger().Println("User " + request.TargetUserName + " PermissionGroup Changed by " + request.UserVerifyInfo.GetUserName())
 	return &response.ChangeUserPermissionGroupResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
 			Status:  true,
@@ -922,7 +921,7 @@ func (D DBMSServerController) CreateProject(ctx context.Context, request *reques
 			ProjectInfo: ProjectMetaInfoV1DbmodelToProtobuf(projectMetaInfo),
 		}, nil
 	}
-	log.Println("Project " + request.ProjectInfo.Name + " Created")
+	logger.GetLogger().Println("Project " + request.ProjectInfo.Name + " Created")
 	DailyStatisticsInfo.CreatedProjectNumber += 1
 	return &response.CreateProjectResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
@@ -1012,7 +1011,7 @@ func (D DBMSServerController) DeleteProject(ctx context.Context, request *reques
 			ProjectInfo: ProjectMetaInfoV1DbmodelToProtobuf(&projectMetaInfo),
 		}, nil
 	}
-	log.Println("Project " + request.GetProjectUuid() + " Deleted")
+	logger.GetLogger().Println("Project " + request.GetProjectUuid() + " Deleted")
 	DailyStatisticsInfo.DeletedProjectNumber += 1
 	return &response.DeleteProjectResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
@@ -1151,7 +1150,7 @@ func (D DBMSServerController) UpdateProject(ctx context.Context, request *reques
 		}
 	}
 
-	log.Println("Project " + newProjectMetaInfo.Name + " Updated")
+	logger.GetLogger().Println("Project " + newProjectMetaInfo.Name + " Updated")
 	DailyStatisticsInfo.ModifiedProjectNumber += 1
 	return &response.UpdateProjectResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
@@ -1227,7 +1226,7 @@ func (D DBMSServerController) GetProject(ctx context.Context, request *request.G
 			ProjectInfo: ProjectMetaInfoV1DbmodelToProtobuf(&projectMetaInfo),
 		}, nil
 	}
-	log.Println("Project " + request.UserVerifyInfo.GetUserName() + " Get")
+	logger.GetLogger().Println("Project " + request.UserVerifyInfo.GetUserName() + " Get")
 	DailyStatisticsInfo.ProjectQueryNumber += 1
 	return &response.GetProjectResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
@@ -1287,7 +1286,7 @@ func (D DBMSServerController) GetAllProject(ctx context.Context, request *reques
 		}
 	}
 
-	log.Println("User " + request.UserVerifyInfo.GetUserName() + " Try Get AllProject")
+	logger.GetLogger().Println("User " + request.UserVerifyInfo.GetUserName() + " Try Get AllProject")
 	DailyStatisticsInfo.ProjectQueryNumber += 1
 
 	return &response.GetAllProjectResponse{
@@ -1395,7 +1394,7 @@ func (D DBMSServerController) CreateSwc(ctx context.Context, request *request.Cr
 		if result := dal.QueryProject(&project, dal.GetDbInstance()); result.Status {
 			project.SwcList = append(project.SwcList, swcMetaInfo.Base.Uuid)
 			if result := dal.ModifyProject(project, dal.GetDbInstance()); result.Status {
-				log.Println("Swc " + swcMetaInfo.Base.Uuid + " Created in Project " + project.Name)
+				logger.GetLogger().Println("Swc " + swcMetaInfo.Base.Uuid + " Created in Project " + project.Name)
 			} else {
 				return &response.CreateSwcResponse{
 					MetaInfo: &message.ResponseMetaInfoV1{
@@ -1447,12 +1446,12 @@ func (D DBMSServerController) CreateSwc(ctx context.Context, request *request.Cr
 	resultvs := dal.CreateSnapshot(swcMetaInfo.Base.Uuid, swcSnapshotMetaInfo.SwcSnapshotCollectionName, dal.GetDbInstance())
 	resultms := dal.ModifySwc(*swcMetaInfo, dal.GetDbInstance())
 	if resultvs.Status && resultms.Status {
-		log.Println("Version Control Enabled Successfully for Swc " + swcMetaInfo.Base.Uuid)
+		logger.GetLogger().Println("Version Control Enabled Successfully for Swc " + swcMetaInfo.Base.Uuid)
 	} else {
-		log.Println("Version Control Enabled Failed for Swc " + swcMetaInfo.Base.Uuid)
+		logger.GetLogger().Println("Version Control Enabled Failed for Swc " + swcMetaInfo.Base.Uuid)
 	}
 
-	log.Println("User " + request.UserVerifyInfo.GetUserName() + "Create Swc " + swcMetaInfo.Base.Uuid)
+	logger.GetLogger().Println("User " + request.UserVerifyInfo.GetUserName() + "Create Swc " + swcMetaInfo.Base.Uuid)
 	DailyStatisticsInfo.CreatedSwcNumber += 1
 	return &response.CreateSwcResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
@@ -1582,7 +1581,7 @@ func (D DBMSServerController) DeleteSwc(ctx context.Context, request *request.De
 		}, nil
 	}
 
-	log.Println("User " + request.UserVerifyInfo.GetUserName() + "Delete Swc " + swcMetaInfo.Base.Uuid)
+	logger.GetLogger().Println("User " + request.UserVerifyInfo.GetUserName() + "Delete Swc " + swcMetaInfo.Base.Uuid)
 	DailyStatisticsInfo.DeletedSwcNumber += 1
 	return &response.DeleteSwcResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
@@ -1684,7 +1683,7 @@ func (D DBMSServerController) UpdateSwc(ctx context.Context, request *request.Up
 			},
 		}, nil
 	}
-	log.Println("User " + request.UserVerifyInfo.GetUserName() + " Update SwcMetaInfo " + newSwcMetaInfo.Base.Uuid)
+	logger.GetLogger().Println("User " + request.UserVerifyInfo.GetUserName() + " Update SwcMetaInfo " + newSwcMetaInfo.Base.Uuid)
 	DailyStatisticsInfo.ModifiedSwcNumber += 1
 	return &response.UpdateSwcResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
@@ -1761,7 +1760,7 @@ func (D DBMSServerController) GetSwcMetaInfo(ctx context.Context, request *reque
 		}, nil
 	}
 
-	log.Println("User " + request.UserVerifyInfo.GetUserName() + " Query SwcMetaInfo " + swcMetaInfo.Base.Uuid)
+	logger.GetLogger().Println("User " + request.UserVerifyInfo.GetUserName() + " Query SwcMetaInfo " + swcMetaInfo.Base.Uuid)
 	DailyStatisticsInfo.SwcQueryNumber += 1
 	return &response.GetSwcMetaInfoResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
@@ -1816,7 +1815,7 @@ func (D DBMSServerController) GetAllSwcMetaInfo(ctx context.Context, request *re
 		}, nil
 	}
 
-	log.Println("User " + request.UserVerifyInfo.GetUserName() + " Query All SwcMetaInfo ")
+	logger.GetLogger().Println("User " + request.UserVerifyInfo.GetUserName() + " Query All SwcMetaInfo ")
 
 	for _, dbMessage := range dbmodelMessage {
 		if PermissionVerify(&executorUserMetaInfo, &dbMessage.Permission, "ReadPerimissionQuerySwc") || PermissionGroupVerify(&executorUserMetaInfo, "AllSwcManagementPermission") {
@@ -2009,7 +2008,7 @@ func (D DBMSServerController) GetAllSnapshotMetaInfo(ctx context.Context, reques
 	var protoMessage []*message.SwcSnapshotMetaInfoV1
 	result := dal.QuerySwc(&dbmodelMessage, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + request.UserVerifyInfo.GetUserName() + " Query ")
+		logger.GetLogger().Println("User " + request.UserVerifyInfo.GetUserName() + " Query ")
 		for _, dbMessage := range dbmodelMessage.SwcSnapshotList {
 			protoMessage = append(protoMessage, SwcSnapshotMetaInfoV1MetaInfoV1DbmodelToProtobuf(&dbMessage))
 		}
@@ -2130,7 +2129,7 @@ func (D DBMSServerController) GetAllIncrementOperationMetaInfo(ctx context.Conte
 	var protoMessage []*message.SwcIncrementOperationMetaInfoV1
 	result := dal.QuerySwc(&dbmodelMessage, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + request.UserVerifyInfo.GetUserName() + " Query ")
+		logger.GetLogger().Println("User " + request.UserVerifyInfo.GetUserName() + " Query ")
 		for _, dbMessage := range dbmodelMessage.SwcIncrementOperationList {
 			protoMessage = append(protoMessage, SwcIncrementOperationMetaInfoV1MetaInfoV1DbmodelToProtobuf(&dbMessage))
 		}
@@ -2290,7 +2289,7 @@ func (D DBMSServerController) CreateSwcNodeData(ctx context.Context, request *re
 			},
 		}, nil
 	}
-	log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Create Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Base.Uuid)
+	logger.GetLogger().Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Create Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Base.Uuid)
 	DailyStatisticsInfo.CreateSwcNodeNumber += 1
 
 	operationRecord := dbmodel.SwcIncrementOperationV1{}
@@ -2383,7 +2382,7 @@ func (D DBMSServerController) DeleteSwcNodeData(ctx context.Context, request *re
 
 	result := dal.DeleteSwcData(querySwcMetaInfo.Base.Uuid, swcData, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Delete Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Base.Uuid)
+		logger.GetLogger().Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Delete Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Base.Uuid)
 		DailyStatisticsInfo.DeletedSwcNodeNumber += 1
 
 		operationRecord := dbmodel.SwcIncrementOperationV1{}
@@ -2462,20 +2461,18 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 		}, nil
 	}
 
-	createTime := time.Now()
+	modifiedTime := time.Now()
 
 	var swcData dbmodel.SwcDataV1
 
 	for _, swcNodeData := range request.SwcData.SwcData {
 		var data = *SwcNodeDataV1ProtobufToDbmodel(swcNodeData)
-		data.CreateTime = createTime
-		data.LastModifiedTime = createTime
-		data.Base.Id = primitive.NewObjectID()
+		data.LastModifiedTime = modifiedTime
 		data.Creator = request.GetUserVerifyInfo().GetUserName()
 		swcData = append(swcData, data)
 	}
 
-	querySwcMetaInfo.LastModifiedTime = createTime
+	querySwcMetaInfo.LastModifiedTime = modifiedTime
 
 	if len(swcData) == 0 {
 		return &response.UpdateSwcNodeDataResponse{
@@ -2491,7 +2488,7 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 
 	result := dal.ModifySwcData(querySwcMetaInfo.Base.Uuid, &swcData, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Update Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Base.Uuid)
+		logger.GetLogger().Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Update Swc nodes " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Base.Uuid)
 		DailyStatisticsInfo.ModifiedSwcNodeNumber += 1
 
 		operationRecord := dbmodel.SwcIncrementOperationV1{}
@@ -2500,7 +2497,7 @@ func (D DBMSServerController) UpdateSwcNodeData(ctx context.Context, request *re
 		operationRecord.Base.DataAccessModelVersion = "V1"
 		operationRecord.IncrementOperation = dal.IncrementOp_Update
 		operationRecord.SwcData = swcData
-		operationRecord.CreateTime = createTime
+		operationRecord.CreateTime = modifiedTime
 		dal.CreateIncrementOperation(querySwcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
 
 		return &response.UpdateSwcNodeDataResponse{
@@ -2581,7 +2578,7 @@ func (D DBMSServerController) GetSwcNodeData(ctx context.Context, request *reque
 
 	result := dal.QuerySwcData(querySwcMetaInfo.Base.Uuid, &dbmodelMessage, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + request.UserVerifyInfo.GetUserName() + " Get SwcData " + querySwcMetaInfo.Base.Uuid)
+		logger.GetLogger().Println("User " + request.UserVerifyInfo.GetUserName() + " Get SwcData " + querySwcMetaInfo.Base.Uuid)
 
 		DailyStatisticsInfo.NodeQueryNumber += 1
 
@@ -2664,7 +2661,7 @@ func (D DBMSServerController) GetSwcFullNodeData(ctx context.Context, request *r
 
 	result := dal.QueryAllSwcData(querySwcMetaInfo.Base.Uuid, &dbmodelMessage, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + request.UserVerifyInfo.GetUserName() + " Get SwcFullNodeData " + querySwcMetaInfo.Base.Uuid)
+		logger.GetLogger().Println("User " + request.UserVerifyInfo.GetUserName() + " Get SwcFullNodeData " + querySwcMetaInfo.Base.Uuid)
 		DailyStatisticsInfo.NodeQueryNumber += 1
 		for _, swcNodeData := range dbmodelMessage {
 			protoMessage.SwcData = append(protoMessage.SwcData, SwcNodeDataV1DbmodelToProtobuf(&swcNodeData))
@@ -2772,7 +2769,7 @@ func (D DBMSServerController) GetSwcNodeDataListByTimeAndUser(ctx context.Contex
 
 	result = dal.QuerySwcDataByUserAndTime(querySwcMetaInfo.Base.Uuid, request.UserName, startTime, endTime, &dbmodelMessage, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + request.UserVerifyInfo.UserName + " Get SwcDataByUserAndTime " + querySwcMetaInfo.Base.Uuid)
+		logger.GetLogger().Println("User " + request.UserVerifyInfo.UserName + " Get SwcDataByUserAndTime " + querySwcMetaInfo.Base.Uuid)
 		DailyStatisticsInfo.NodeQueryNumber += 1
 
 		for _, swcNodeData := range dbmodelMessage {
@@ -2866,7 +2863,7 @@ func (D DBMSServerController) CreateDailyStatistics(ctx context.Context, request
 
 	result := dal.CreateDailyStatistics(*dailyStatisticsInfo, dal.GetDbInstance())
 	if result.Status {
-		log.Println("DailyStatistics " + request.DailyStatisticsInfo.Name + " Created")
+		logger.GetLogger().Println("DailyStatistics " + request.DailyStatisticsInfo.Name + " Created")
 		return &response.CreateDailyStatisticsResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  true,
@@ -2930,7 +2927,7 @@ func (D DBMSServerController) DeleteDailyStatistics(ctx context.Context, request
 
 	result := dal.DeleteDailyStatistics(dailyStatisticsInfo, dal.GetDbInstance())
 	if result.Status {
-		log.Println("DailyStatistics " + request.DailyStatisticsName + " Delete")
+		logger.GetLogger().Println("DailyStatistics " + request.DailyStatisticsName + " Delete")
 		return &response.DeleteDailyStatisticsResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  true,
@@ -2970,7 +2967,7 @@ func (D DBMSServerController) UpdateDailyStatistics(ctx context.Context, request
 
 	result := dal.ModifyDailyStatistics(*dailyStatisticsInfo, dal.GetDbInstance())
 	if result.Status {
-		log.Println("DailyStatistics " + request.DailyStatisticsInfo.Name + " Updated")
+		logger.GetLogger().Println("DailyStatistics " + request.DailyStatisticsInfo.Name + " Updated")
 		return &response.UpdateDailyStatisticsResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  true,
@@ -3011,7 +3008,7 @@ func (D DBMSServerController) GetDailyStatistics(ctx context.Context, request *r
 
 	result := dal.QueryDailyStatistics(&dailyStatisticsInfo, dal.GetDbInstance())
 	if result.Status {
-		log.Println("DailyStatistics " + request.GetDailyStatisticsName() + " Get")
+		logger.GetLogger().Println("DailyStatistics " + request.GetDailyStatisticsName() + " Get")
 		return &response.GetDailyStatisticsResponse{
 			MetaInfo: &message.ResponseMetaInfoV1{
 				Status:  true,
@@ -3052,7 +3049,7 @@ func (D DBMSServerController) GetAllDailyStatistics(ctx context.Context, request
 
 	result := dal.QueryAllDailyStatistics(&dailyStatisticsInfo, dal.GetDbInstance())
 	if result.Status {
-		log.Println("User " + request.UserVerifyInfo.GetUserName() + " Get DailyStatistics")
+		logger.GetLogger().Println("User " + request.UserVerifyInfo.GetUserName() + " Get DailyStatistics")
 
 		for _, message := range dailyStatisticsInfo {
 			dailyStatisticsInfoProto = append(dailyStatisticsInfoProto, DailyStatisticsMetaInfoV1DbmodelToProtobuf(&message))
@@ -4737,7 +4734,7 @@ func (D DBMSServerController) UpdateSwcNParentInfo(context context.Context, requ
 		operationRecord.CreateTime = time.Now()
 		dal.CreateIncrementOperation(querySwcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
 	}
-	log.Println("Update Swc NParent Info Successfully! ", "Swc Uuid: ", querySwcMetaInfo.Base.Uuid, "Update Number: ", updateCount, " Same Number: ", noUpdateCount, " Diff Incoming Missing: ", incomingNotExistCount, " Diff DB Missing: ", dbNotExistCount)
+	logger.GetLogger().Println("Update Swc NParent Info Successfully! ", "Swc Uuid: ", querySwcMetaInfo.Base.Uuid, "Update Number: ", updateCount, " Same Number: ", noUpdateCount, " Diff Incoming Missing: ", incomingNotExistCount, " Diff DB Missing: ", dbNotExistCount)
 
 	return &response.UpdateSwcNParentInfoResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
@@ -4822,7 +4819,7 @@ func (D DBMSServerController) ClearAllNodes(context context.Context, request *re
 		operationRecord.CreateTime = time.Now()
 		dal.CreateIncrementOperation(querySwcMetaInfo.CurrentIncrementOperationCollectionName, operationRecord, dal.GetDbInstance())
 	}
-	log.Println("User " + executorUserMetaInfo.Name + " Clear All Nodes at " + querySwcMetaInfo.Base.Uuid)
+	logger.GetLogger().Println("User " + executorUserMetaInfo.Name + " Clear All Nodes at " + querySwcMetaInfo.Base.Uuid)
 
 	return &response.ClearAllNodesResponse{
 		MetaInfo: &message.ResponseMetaInfoV1{
@@ -4936,7 +4933,7 @@ func (D DBMSServerController) OverwriteSwcNodeData(context context.Context, requ
 		}, nil
 	}
 
-	log.Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Overwrite swc data " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Base.Uuid)
+	logger.GetLogger().Println("User " + onlineUserInfoCache.UserInfo.Name + " Want Overwrite swc data " + strconv.Itoa(len(swcData)) + " at " + querySwcMetaInfo.Base.Uuid)
 
 	result = dal.CreateSwcData(request.GetSwcUuid(), &swcData, dal.GetDbInstance())
 	if !result.Status {
@@ -4984,9 +4981,9 @@ func (D DBMSServerController) OverwriteSwcNodeData(context context.Context, requ
 	resultcs := dal.CreateSnapshot(querySwcMetaInfo.Base.Uuid, swcSnapshotMetaInfo.SwcSnapshotCollectionName, dal.GetDbInstance())
 	resultms := dal.ModifySwc(querySwcMetaInfo, dal.GetDbInstance())
 	if resultcs.Status && resultms.Status {
-		log.Println("Overwrite Swc Node Data and create new snapshot Successfully for Swc " + querySwcMetaInfo.Base.Uuid)
+		logger.GetLogger().Println("Overwrite Swc Node Data and create new snapshot Successfully for Swc " + querySwcMetaInfo.Base.Uuid)
 	} else {
-		log.Println("Overwrite Swc Node Data and create new snapshot Failed for Swc " + querySwcMetaInfo.Base.Uuid)
+		logger.GetLogger().Println("Overwrite Swc Node Data and create new snapshot Failed for Swc " + querySwcMetaInfo.Base.Uuid)
 	}
 
 	if !result.Status {
