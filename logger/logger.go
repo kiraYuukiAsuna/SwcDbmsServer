@@ -55,7 +55,7 @@ func createLogFile() (*os.File, error) {
 }
 
 func rotateLogFile() {
-	ticker := time.NewTicker(24 * time.Second)
+	ticker := time.NewTicker(24 * time.Hour)
 	defer ticker.Stop()
 
 	for range ticker.C {
