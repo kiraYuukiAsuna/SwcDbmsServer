@@ -832,15 +832,15 @@ func ModifySwcData(swcUuid string, swcData *dbmodel.SwcDataV1, databaseInfo Mong
 	}
 
 	// 检查结果
-	modifiedCount := result.ModifiedCount
-	if modifiedCount != int64(len(*swcData)) {
-		logger.GetLogger().Printf("Warning: Expected to modify %d documents, but actually modified %d", len(*swcData), modifiedCount)
-		return ReturnWrapper{false, "Warning: Expected to modify " + strconv.Itoa(len(*swcData)) + " documents, but actually modified " + strconv.Itoa(int(modifiedCount))}
+	matchedCount := result.MatchedCount
+	if matchedCount != int64(len(*swcData)) {
+		logger.GetLogger().Printf("Warning: Expected to modify %d documents, but actually modified %d", len(*swcData), matchedCount)
+		return ReturnWrapper{false, "Warning: Expected to match " + strconv.Itoa(len(*swcData)) + " documents, but actually matched " + strconv.Itoa(int(matchedCount))}
 	}
 
-	logger.GetLogger().Printf("Successfully updated %d nodes in DB", modifiedCount)
+	logger.GetLogger().Printf("Successfully updated %d nodes in DB", matchedCount)
 
-	return ReturnWrapper{true, fmt.Sprintf("Modified %d swc nodes successfully", modifiedCount)}
+	return ReturnWrapper{true, fmt.Sprintf("Modified %d swc nodes successfully", matchedCount)}
 
 }
 
