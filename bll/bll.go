@@ -3958,6 +3958,8 @@ func (D DBMSServerController) RevertSwcVersion(context context.Context, request 
 				swcMetaInfo.SwcIncrementOperationList = newIncrementOperationList
 				swcMetaInfo.CurrentIncrementOperationCollectionName = latestIncrementOperation.IncrementOperationCollectionName
 
+				dal.ModifySwc(swcMetaInfo, dal.GetDbInstance())
+
 				return &response.RevertSwcVersionResponse{
 					MetaInfo: &message.ResponseMetaInfoV1{
 						Status:  true,
