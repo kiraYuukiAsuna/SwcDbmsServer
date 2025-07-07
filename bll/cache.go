@@ -92,8 +92,12 @@ func CronHeartBeatValidationAndRefresh() {
 		cron.VerbosePrintfLogger(log.New(os.Stdout, "cron: ", log.LstdFlags))))
 	EntryID, err := c.AddFunc("*/60 * * * * *", func() {
 		logger.GetLogger().Println(time.Now(), "CronHeartBeatValidationAndRefresh...")
+
+		heartbeatTimeout := 8 * time.Hour
+		now := time.Now()
+
 		for key, onlineUserInfo := range OnlineUserInfoCache {
-			if time.Now().After(onlineUserInfo.LastHeartBeatTime) || onlineUserInfo.expired {
+			if now.Sub(onlineUserInfo.LastHeartBeatTime) > heartbeatTimeout || onlineUserInfo.expired {
 				onlineUserInfo.expired = true
 				delete(OnlineUserInfoCache, key)
 				logger.GetLogger().Println("User " + onlineUserInfo.UserInfo.Name + " HeartBeat expired")
