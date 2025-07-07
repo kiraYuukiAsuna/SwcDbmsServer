@@ -9,10 +9,11 @@ import (
 	"DBMS/dbmodel"
 	"DBMS/logger"
 	"context"
-	"go.mongodb.org/mongo-driver/bson"
 	"reflect"
 	"strconv"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -5006,5 +5007,69 @@ func (D DBMSServerController) OverwriteSwcNodeData(context context.Context, requ
 			Message: "Overwrite Swc Node Data Successfully!",
 		},
 		CreatedNodesUuid: nodesUuid,
+	}, nil
+}
+
+func (D DBMSServerController) GetAllFreeSwcMetaInfo(ctx context.Context, request *request.GetAllFreeSwcMetaInfoRequest) (*response.GetAllFreeSwcMetaInfoResponse, error) {
+	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
+	if !apiVersionVerifyResult.Status {
+		return &response.GetAllFreeSwcMetaInfoResponse{
+			MetaInfo: &apiVersionVerifyResult,
+		}, nil
+	}
+
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo())
+	if !responseMetaInfo.Status {
+		return &response.GetAllFreeSwcMetaInfoResponse{
+			MetaInfo: &responseMetaInfo,
+		}, nil
+	}
+
+	var executorUserMetaInfo dbmodel.UserMetaInfoV1
+	executorUserMetaInfo.Name = request.UserVerifyInfo.GetUserName()
+	result := dal.QueryUserByName(&executorUserMetaInfo, dal.GetDbInstance())
+	if !result.Status {
+		return &response.GetAllFreeSwcMetaInfoResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
+	var dbmodelMessage []dbmodel.SwcMetaInfoV1
+
+	var swcUuidNames []*message.SwcUuidName
+	result = dal.QueryAllFreeSwc(&dbmodelMessage, dal.GetDbInstance())
+	if !result.Status {
+		return &response.GetAllFreeSwcMetaInfoResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+			SwcUuidName: swcUuidNames,
+		}, nil
+	}
+
+	logger.GetLogger().Println("User " + request.UserVerifyInfo.GetUserName() + " Query All Free SwcMetaInfo ")
+
+	for _, dbMessage := range dbmodelMessage {
+		if PermissionVerify(&executorUserMetaInfo, &dbMessage.Permission, "ReadPerimissionQuerySwc") || PermissionGroupVerify(&executorUserMetaInfo, "AllSwcManagementPermission") {
+			var swcUuidName message.SwcUuidName
+			swcUuidName.SwcUuid = dbMessage.Base.Uuid
+			swcUuidName.SwcName = dbMessage.Name
+			swcUuidNames = append(swcUuidNames, &swcUuidName)
+		}
+	}
+
+	return &response.GetAllFreeSwcMetaInfoResponse{
+		MetaInfo: &message.ResponseMetaInfoV1{
+			Status:  true,
+			Id:      "",
+			Message: result.Message,
+		},
+		SwcUuidName: swcUuidNames,
 	}, nil
 }

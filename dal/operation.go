@@ -516,6 +516,25 @@ func QueryAllSwc(swcMetaInfoList *[]dbmodel.SwcMetaInfoV1, databaseInfo MongoDbD
 	return ReturnWrapper{true, "Query all swc Success"}
 }
 
+func QueryAllFreeSwc(swcMetaInfoList *[]dbmodel.SwcMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
+	var swcCollection = databaseInfo.MetaInfoDb.Collection(SwcMetaInfoCollectionString)
+
+	cursor, err := swcCollection.Find(
+		context.TODO(),
+		bson.M{"BelongingProjectUuid": ""})
+
+	if err != nil {
+		return ReturnWrapper{false, "Query all free swc failed!"}
+	}
+
+	if err = cursor.All(context.TODO(), swcMetaInfoList); err != nil {
+		logger.GetLogger().Println(err.Error())
+		return ReturnWrapper{false, "Query all free swc failed!"}
+	}
+
+	return ReturnWrapper{true, "Query all free swc Success"}
+}
+
 func CreateDailyStatistics(dailyStatisticsMetaInfo dbmodel.DailyStatisticsMetaInfoV1, databaseInfo MongoDbDataBaseInfo) ReturnWrapper {
 	var dailyStatisticsCollection = databaseInfo.MetaInfoDb.Collection(DailyStatisticsMetaInfoCollectionString)
 
