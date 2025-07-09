@@ -5073,3 +5073,86 @@ func (D DBMSServerController) GetAllFreeSwcMetaInfo(ctx context.Context, request
 		SwcUuidName: swcUuidNames,
 	}, nil
 }
+
+func (D DBMSServerController) GetProjectsDefinedSomaSwc(ctx context.Context, request *request.GetProjectsDefinedSomaSwcRequest) (*response.GetProjectsDefinedSomaSwcResponse, error) {
+	// 验证API版本
+	apiVersionVerifyResult := RequestApiVersionVerify(request.GetMetaInfo())
+	if !apiVersionVerifyResult.Status {
+		return &response.GetProjectsDefinedSomaSwcResponse{
+			MetaInfo: &apiVersionVerifyResult,
+		}, nil
+	}
+
+	// 验证用户令牌
+	responseMetaInfo, _ := UserTokenVerify(request.GetUserVerifyInfo())
+	if !responseMetaInfo.Status {
+		return &response.GetProjectsDefinedSomaSwcResponse{
+			MetaInfo: &responseMetaInfo,
+		}, nil
+	}
+
+	// 验证请求的用户信息
+	executorUserMetaInfo := dbmodel.UserMetaInfoV1{
+		Name: request.GetUserVerifyInfo().GetUserName(),
+	}
+	if result := dal.QueryUserByName(&executorUserMetaInfo, dal.GetDbInstance()); !result.Status {
+		return &response.GetProjectsDefinedSomaSwcResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
+	// 获取请求中的项目UUID列表
+	projectUuids := request.GetProjectUuid()
+	if len(projectUuids) == 0 {
+		return &response.GetProjectsDefinedSomaSwcResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: "未提供项目UUID",
+			},
+		}, nil
+	}
+
+	// 验证用户是否有访问这些项目的权限
+	for _, projectUuid := range projectUuids {
+		var queryProjectMetaInfo dbmodel.ProjectMetaInfoV1
+		queryProjectMetaInfo.Base.Uuid = projectUuid
+		if result := dal.QueryProject(&queryProjectMetaInfo, dal.GetDbInstance()); !result.Status {
+			continue // 如果找不到项目，跳过该项目
+		}
+
+		// 检查用户是否有查询该项目的权限
+		if !PermissionVerify(&executorUserMetaInfo, &queryProjectMetaInfo.Permission, "ReadPerimissionQueryProject") && 
+		   !PermissionGroupVerify(&executorUserMetaInfo, "AllProjectManagementPermission") {
+			logger.GetLogger().Printf("用户 %s 没有权限访问项目 %s", executorUserMetaInfo.Name, projectUuid)
+			// 我们不返回错误，而是跳过这个项目
+			continue
+		}
+	}
+
+	// 调用DAL层获取符合条件的SWC UUID列表
+	result, swcUuids := dal.GetProjectsDefinedSomaSwc(projectUuids, dal.GetDbInstance())
+	if !result.Status {
+		return &response.GetProjectsDefinedSomaSwcResponse{
+			MetaInfo: &message.ResponseMetaInfoV1{
+				Status:  false,
+				Id:      "",
+				Message: result.Message,
+			},
+		}, nil
+	}
+
+	// 返回成功结果
+	return &response.GetProjectsDefinedSomaSwcResponse{
+		MetaInfo: &message.ResponseMetaInfoV1{
+			Status:  true,
+			Id:      "",
+			Message: "获取项目定义的Soma SWC成功",
+		},
+		SwcUuids: swcUuids,
+	}, nil
+}

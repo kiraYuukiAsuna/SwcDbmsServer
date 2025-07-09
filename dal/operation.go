@@ -1374,6 +1374,60 @@ func QueryAttachmentSwcData(attachmentCollectionName string, swcData *dbmodel.Sw
 	return ReturnWrapper{true, "Query Swc Attachment Success"}
 }
 
+// 检查SWC附件集合是否有数据
+func CheckAttachmentSwcHasData(attachmentCollectionName string, databaseInfo MongoDbDataBaseInfo) (ReturnWrapper, bool) {
+	collection := databaseInfo.AttachmentDb.Collection(attachmentCollectionName)
+	
+	// 创建一个计数器，只计数一个文档即可判断是否有数据
+	count, err := collection.CountDocuments(context.TODO(), bson.D{{}}, options.Count().SetLimit(1))
+	if err != nil {
+		return ReturnWrapper{false, "Check Attachment Swc Has Data failed!"}, false
+	}
+	
+	// 如果计数大于0，表示有数据
+	hasData := count > 0
+	return ReturnWrapper{true, "Check Attachment Swc Has Data Success"}, hasData
+}
+
+// 获取项目定义的Soma SWC
+func GetProjectsDefinedSomaSwc(projectUuids []string, databaseInfo MongoDbDataBaseInfo) (ReturnWrapper, []string) {
+	var swcCollection = databaseInfo.MetaInfoDb.Collection(SwcMetaInfoCollectionString)
+	var result []string
+
+	// 首先查询所有指定项目下的SWC
+	cursor, err := swcCollection.Find(context.TODO(), bson.M{"BelongingProjectUuid": bson.M{"$in": projectUuids}})
+	if err != nil {
+		return ReturnWrapper{false, "查询项目SWC失败: " + err.Error()}, nil
+	}
+	defer cursor.Close(context.TODO())
+
+	// 解析所有符合条件的SWC元数据
+	var allSwcMetaInfo []dbmodel.SwcMetaInfoV1
+	if err = cursor.All(context.TODO(), &allSwcMetaInfo); err != nil {
+		return ReturnWrapper{false, "解析SWC元数据失败: " + err.Error()}, nil
+	}
+
+	// 遍历所有SWC，检查是否有SwcAttachmentSwcUuid且对应集合有数据
+	for _, swcInfo := range allSwcMetaInfo {
+		if swcInfo.SwcAttachmentSwcUuid == "" {
+			continue
+		}
+
+		// 检查SwcAttachmentSwcUuid指向的集合是否有数据
+		returnWrapper, hasData := CheckAttachmentSwcHasData(swcInfo.SwcAttachmentSwcUuid, databaseInfo)
+		if !returnWrapper.Status {
+			logger.GetLogger().Printf("检查SWC %s 的附件数据时出错: %s\n", swcInfo.Base.Uuid, returnWrapper.Message)
+			continue
+		}
+
+		if hasData {
+			result = append(result, swcInfo.Base.Uuid)
+		}
+	}
+
+	return ReturnWrapper{true, "查询项目Soma SWC成功"}, result
+}
+
 func UpdateSwcNParent(swcUuid string, nodeNParent *[]dbmodel.NodeNParentV1, databaseInfo MongoDbDataBaseInfo) (ReturnWrapper, int, int, int, int, []string, []string, []string) {
 	// Get the collection for the given swcUuid
 	collection := databaseInfo.SwcDb.Collection(swcUuid)
